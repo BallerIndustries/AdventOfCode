@@ -38,6 +38,21 @@ class Puzzle12Test {
         val commands = puzzle.parseCommandText("jnz a 2")
         assertEquals(commands, listOf(Puzzle12.Jump("a", "2")))
     }
+
+    @Test
+    fun `state after a copy value command`() {
+        val initialState = Puzzle12.State()
+        val currentState = Puzzle12.Copy("12", "a").execute(initialState)
+        assertEquals(currentState, Puzzle12.State(1, mapOf("a" to 12)))
+    }
+
+    @Test
+    fun `state after a copy register command`() {
+        val initialState = Puzzle12.State()
+        val state1 = Puzzle12.Copy("12", "a").execute(initialState)
+        val state2 = Puzzle12.Copy("a", "b").execute(state1)
+        assertEquals(state2, Puzzle12.State(2, mapOf("a" to 12, "b" to 12)))
+    }
 }
 
 class Puzzle12 {
@@ -55,13 +70,39 @@ class Puzzle12 {
         }
     }
 
-    interface Command
+    interface Command {
+        fun execute(state: State): State
+    }
 
-    data class Copy(val valueOrRegister: String, val destinationRegister: String) : Command
+    data class Copy(val valueOrRegister: String, val destinationRegister: String) : Command {
+        override fun execute(state: State): State {
+            val newProgramCounter = state.programCounter + 1
+            val mutableRegisters = state.registers + mapOf(destinationRegister to state.getValueOrValueFromRegister(valueOrRegister))
+            return State(newProgramCounter, mutableRegisters)
+        }
+    }
 
-    data class IncrementRegister(val sourceRegister: String) : Command
+    data class IncrementRegister(val sourceRegister: String) : Command {
+        override fun execute(state: State): State {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+    }
 
-    data class DecrementRegister(val sourceRegister: String) : Command
+    data class DecrementRegister(val sourceRegister: String) : Command {
+        override fun execute(state: State): State {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+    }
 
-    data class Jump(val conditionalValueOrRegister: String, val deltaValueOrRegister: String) : Command
+    data class Jump(val conditionalValueOrRegister: String, val deltaValueOrRegister: String) : Command {
+        override fun execute(state: State): State {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+    }
+
+    data class State(val programCounter: Int = 0, val registers: Map<String, Int> = mapOf()) {
+        fun getValueOrValueFromRegister(valueOrRegister: String): Int {
+            return if (valueOrRegister.toIntOrNull() != null) valueOrRegister.toInt() else registers[valueOrRegister]!!
+        }
+    }
 }
