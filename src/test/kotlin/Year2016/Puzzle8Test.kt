@@ -69,14 +69,14 @@ class Puzzle8Test {
 
     @Test
     fun `puzzle part a`() {
-        val commands = Puzzle1Test::class.java.getResource("/2016/puzzle8.txt").readText().split('\n')
+        val commands = Puzzle1Test::class.java.getResource("/2016/puzzle8.txt").readText().split(System.lineSeparator())
         commands.forEach { puzzle.sendCommand(it) }
         assertEquals(puzzle.countLitPixels(), 119)
     }
 
     @Test
     fun `puzzle part b`() {
-        val commands = Puzzle1Test::class.java.getResource("/2016/puzzle8.txt").readText().split('\n')
+        val commands = Puzzle1Test::class.java.getResource("/2016/puzzle8.txt").readText().split(System.lineSeparator())
         commands.forEach { puzzle.sendCommand(it) }
         assertEquals(puzzle.toString(),
                 "####.####.#..#.####..###.####..##...##..###...##..\n" +
