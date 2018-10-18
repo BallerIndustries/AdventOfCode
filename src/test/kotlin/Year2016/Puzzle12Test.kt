@@ -83,6 +83,34 @@ class Puzzle12Test {
         val stateTwo = Puzzle12.JumpIfNotZero("a", "7").execute(stateOne)
         assertEquals(stateTwo, State(8, mapOf("a" to 1, "b" to 0, "c" to 0, "d" to 0)))
     }
+
+    @Test
+    fun `example input`() {
+        val input = "cpy 41 a\n" +
+                "inc a\n" +
+                "inc a\n" +
+                "dec a\n" +
+                "jnz a 2\n" +
+                "dec a"
+
+        val finalState = puzzle.runCommands(input)
+        assertEquals(finalState, State(6, mapOf("a" to 42, "b" to 0, "c" to 0, "d" to 0)))
+    }
+
+    @Test
+    fun `puzzle part a`() {
+        val input = Puzzle12::class.java.getResource("/2016/puzzle12.txt").readText().replace("\r", "")
+        val finalState = puzzle.runCommands(input)
+        assertEquals(finalState, State(23, mapOf("a" to 318077, "b" to 196418, "c" to 0, "d" to 0)))
+    }
+
+    @Test
+    fun `puzzle part b`() {
+        val input = Puzzle12::class.java.getResource("/2016/puzzle12.txt").readText().replace("\r", "")
+        val initialState = State(0, mapOf("a" to 0, "b" to 0, "c" to 1, "d" to 0))
+        val finalState = puzzle.runCommands(input, initialState)
+        assertEquals(finalState, State(23, mapOf("a" to 9227731, "b" to 5702887, "c" to 0, "d" to 0)))
+    }
 }
 
 class Puzzle12 {
@@ -98,6 +126,18 @@ class Puzzle12 {
                 else -> throw RuntimeException("Sorry don't support that command. command = ${tmp[0]}")
             }
         }
+    }
+
+    fun runCommands(commandText: String, initialState: State = State()): State {
+        var state = initialState
+        val commands = parseCommandText(commandText)
+
+        while (state.programCounter < commands.size) {
+            val command = commands[state.programCounter]
+            state = command.execute(state)
+        }
+
+        return state
     }
 
     interface Command {
@@ -140,9 +180,9 @@ class Puzzle12 {
         }
     }
 
-    data class State(val programCounter: Int = 0, val registers: Map<String, Int> = initialState) {
+    data class State(val programCounter: Int = 0, val registers: Map<String, Int> = initialRegisters) {
         companion object {
-            val initialState = mapOf("a" to 0, "b" to 0, "c" to 0, "d" to 0)
+            val initialRegisters = mapOf("a" to 0, "b" to 0, "c" to 0, "d" to 0)
         }
 
         fun getValueOrValueFromRegister(valueOrRegister: String): Int {
