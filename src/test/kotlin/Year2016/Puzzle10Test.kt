@@ -118,27 +118,25 @@ class Puzzle10Test {
 
     @Test
     fun `puzzle part a`() {
-        val commandText = Puzzle10Test::class.java.getResource("/2016/puzzle10.txt").readText()
+        val commandText = Puzzle10Test::class.java.getResource("/2016/puzzle10.txt").readText().replace("\r\n","\n")
         val botName = puzzle.findBotResponsibleForComparing(commandText, setOf(61, 17))
         assertEquals(botName, "bot 147")
     }
 
     @Test
     fun `puzzle part b`() {
-        val commandText = Puzzle10Test::class.java.getResource("/2016/puzzle10.txt").readText()
+        val commandText = Puzzle10Test::class.java.getResource("/2016/puzzle10.txt").readText().replace("\r\n","\n")
         val result = puzzle.moveStuffAroundPlease(commandText)
         println(result)
         val horse = result["output 0"]!!.first() * result["output 1"]!!.first() * result["output 2"]!!.first()
-        assertEquals(horse, 100)
+        assertEquals(horse, 55637)
 
     }
 }
 
-
-
 class Puzzle10 {
     fun parseToCommands(commandText: String): List<Command> {
-        return commandText.split('\n').map { command ->
+        return commandText.split("\n").map { command ->
             val temp = command.split(' ')
 
             if (command.startsWith("value")) {

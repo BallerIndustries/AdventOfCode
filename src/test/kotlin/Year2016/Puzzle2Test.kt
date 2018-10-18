@@ -15,7 +15,7 @@ class Puzzle2Test {
 
     @Test
     fun `puzzle part a`() {
-        val input = Puzzle1Test::class.java.getResource("/2016/puzzle2.txt").readText()
+        val input = Puzzle1Test::class.java.getResource("/2016/puzzle2.txt").readText().replace("\r\n","\n")
         val result = puzzleTwo.decipher(input)
         assertEquals(result, "47978")
     }
@@ -29,7 +29,7 @@ class Puzzle2Test {
 
     @Test
     fun `puzzle part b`() {
-        val input = Puzzle1Test::class.java.getResource("/2016/puzzle2.txt").readText()
+        val input = Puzzle1Test::class.java.getResource("/2016/puzzle2.txt").readText().replace("\r\n","\n")
         val result = puzzleTwo.decipherWithCrazyPinpad(input)
         assertEquals(result, "659AD")
     }

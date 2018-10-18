@@ -32,14 +32,14 @@ class Puzzle6Test {
 
     @Test
     fun `puzzle part a`() {
-        val input = Puzzle1Test::class.java.getResource("/2016/puzzle6.txt").readText()
+        val input = Puzzle1Test::class.java.getResource("/2016/puzzle6.txt").readText().replace("\r\n","\n")
         val result = puzzle.errorCorrect(input)
         assertEquals(result, "tkspfjcc")
     }
 
     @Test
     fun `puzzle part b`() {
-        val input = Puzzle1Test::class.java.getResource("/2016/puzzle6.txt").readText()
+        val input = Puzzle1Test::class.java.getResource("/2016/puzzle6.txt").readText().replace("\r\n","\n")
         val result = puzzle.errorCorrectTwo(input)
         assertEquals(result, "xrlmbypn")
     }
