@@ -1,6 +1,6 @@
 package Year2016
 
-import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class Puzzle13Test {
@@ -10,13 +10,13 @@ class Puzzle13Test {
     @Test
     fun `coord 0,0 should be an open space`() {
         val state = puzzle.getTile(0, 0, 10)
-        Assert.assertEquals(state, Puzzle13.Tile.OPEN_SPACE)
+        assertEquals(state, Puzzle13.Tile.OPEN_SPACE)
     }
 
     @Test
     fun `coord 1,0 should be a wall`() {
         val state = puzzle.getTile(1, 0, 10)
-        Assert.assertEquals(state, Puzzle13.Tile.WALL)
+        assertEquals(state, Puzzle13.Tile.WALL)
     }
 
     @Test
@@ -29,58 +29,56 @@ class Puzzle13Test {
 ..##....#.
 #...##.###"""
 
-        val board = puzzle.generateBoard(10, 7, 10)
-        Assert.assertEquals(expectedBoard, board.toString())
+        val board = puzzle.generateFloorPlan(10, 7, 10)
+        assertEquals(expectedBoard, board.toString())
     }
 
     @Test
     fun `should be able to find a path through 10x7 grid`() {
-        val board = puzzle.generateBoard(10, 7, 10)
-        val path = board.findPath(1, 1, 7, 4)
-        Assert.assertEquals(path, listOf(Pair(1, 1)))
+        val floorPlan = puzzle.generateFloorPlan(10, 7, 10)
+        val path = floorPlan.findPath(1, 1, 7, 4)
+        val expected = listOf(
+            Pair(1, 1),
+            Pair(1, 2),
+            Pair(2, 2),
+            Pair(3, 2),
+            Pair(3, 3),
+            Pair(3, 4),
+            Pair(4, 4),
+            Pair(4, 5),
+            Pair(5, 5),
+            Pair(6, 5),
+            Pair(7, 5),
+            Pair(7, 4)
+        )
+
+        assertEquals(expected, path)
+    }
+
+    @Test
+    fun `should take eleven steps to go from 1,1, to 7,4`() {
+        val floorPlan = puzzle.generateFloorPlan(10, 7, 10)
+        val steps = floorPlan.countSteps(1, 1, 7, 4)
+        assertEquals(11, steps)
     }
 
     @Test
     fun `show me a big board`() {
-        println(puzzle.generateBoard(40, 40, 1364).toString())
+        println(puzzle.generateFloorPlan(40, 40, 1364).toString())
+    }
+
+    @Test
+    fun `puzzle part a`() {
+        val floorPlan = puzzle.generateFloorPlan(50, 50, 1364)
+        val steps = floorPlan.countSteps(1, 1, 31, 39)
+        assertEquals(86, steps)
+    }
+
+    @Test
+    fun `puzzle part b`() {
+        val floorPlan = puzzle.generateFloorPlan(1000, 1000, 1364)
+        val uniqueLocations = floorPlan.countUniqueLocationsInFiftySteps(1, 1)
+        assertEquals(127, uniqueLocations)
     }
 }
 
-class Puzzle13 {
-    fun getTile(x: Int, y: Int, favouriteNumber: Int): Tile {
-        val numberOfOnes = ((x*x + 3*x + 2*x*y + y + y*y) + favouriteNumber)
-                .toString(2)
-                .count { it == '1' }
-
-        return if (numberOfOnes % 2 == 0) Tile.OPEN_SPACE else Tile.WALL
-    }
-
-    fun generateBoard(width: Int, height: Int, favouriteNumber: Int): Board {
-        val state: List<List<Tile>> = (0 until height).map { y ->
-            (0 until width).map { x ->
-               getTile(x, y, favouriteNumber)
-            }
-        }
-
-        return Board(state)
-    }
-
-    class Board(val state: List<List<Tile>>) {
-        override fun toString(): String {
-            val dog: String = state.map { row -> row.map { it.toString() }.joinToString("") }.joinToString("\n")
-            return dog
-        }
-
-        fun findPath(x1: Int, y1: Int, x2: Int, y2: Int): List<Pair<Int, Int>> {
-            return listOf()
-        }
-    }
-
-    enum class Tile {
-        OPEN_SPACE, WALL;
-
-        override fun toString(): String {
-            return if (this == OPEN_SPACE) "." else "#"
-        }
-    }
-}
