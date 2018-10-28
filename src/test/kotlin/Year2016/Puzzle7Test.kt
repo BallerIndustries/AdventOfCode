@@ -92,7 +92,7 @@ class Puzzle7Test {
 
     @Test
     fun `puzzle part b`() {
-        val input = Puzzle1Test::class.java.getResource("/2016/puzzle7.txt").readText()
+        val input = Puzzle1Test::class.java.getResource("/2016/puzzle7.txt").readText().replace("\r\n", "\n")
         val count = puzzle.countSSLIpAddresses(input)
         Assert.assertEquals(count, 242)
     }

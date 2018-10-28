@@ -55,7 +55,7 @@ class Puzzle7 {
     }
 
     fun countSSLIpAddresses(input: String): Int {
-        return input.split("\r\n").filter(this::supportsSSL).count()
+        return input.split("\n").filter(this::supportsSSL).count()
     }
 
     fun getUnbracketedText(input: String): List<String> {
