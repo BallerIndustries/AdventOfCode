@@ -19,10 +19,11 @@ class Puzzle15Test {
 
     @Test
     fun `first disc at position zero at t=6`() {
+        throw RuntimeException()
 //        val discPositions = puzzle.parseText(inputText)
 
-        val discPositions = puzzle.discPositionsAsOf(inputText, 5).map { it.currentPosition }
-        assertEquals(listOf(0, ), discPositions)
+//        val discPositions = puzzle.discPositionsAsOf(inputText, 5).map { it.currentPosition }
+//        assertEquals(listOf(0, ), discPositions)
 
     }
 }
