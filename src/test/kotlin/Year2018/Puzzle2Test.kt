@@ -1,22 +1,22 @@
 package Year2018
 
+import junit.framework.Assert.assertEquals
 import org.junit.Test
 
 class Puzzle2Test {
-
     val puzzle = Puzzle2()
-    val puzzleText = this::class.java.getResource("/2018/puzzle2.txt").readText()
+    val puzzleText = this::class.java.getResource("/2018/puzzle2.txt").readText().replace("\r", "")
 
     @Test
     fun `puzzle part a`() {
         val ohrse = puzzle.solve(puzzleText)
-        println(ohrse)
+        assertEquals(7163, ohrse)
     }
 
     @Test
     fun `puzzle part b`() {
         val dog = puzzle.solveTwo(puzzleText)
-        println(dog)
+        assertEquals("ighfbyijnoumxjlxevacpwqtr", dog)
     }
 }
 
@@ -76,6 +76,4 @@ class Puzzle2 {
 
         return true
     }
-
-
 }
