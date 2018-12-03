@@ -5,8 +5,8 @@ import org.junit.Test
 
 class Puzzle3Test {
     val puzzle = Puzzle3()
-    val puzzleText = this::class.java.getResource("/2018/puzzle3.txt").readText()
-    val jurText = this::class.java.getResource("/2018/puzzle3-jur.txt").readText()
+    val puzzleText = this::class.java.getResource("/2018/puzzle3.txt").readText().replace("\r", "")
+    val jurText = this::class.java.getResource("/2018/puzzle3-jur.txt").readText().replace("\r", "")
     val exampleText = "#1 @ 1,3: 4x4\n" +
             "#2 @ 3,1: 4x4\n" +
             "#3 @ 5,5: 2x2"
