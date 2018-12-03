@@ -5,7 +5,6 @@ import org.junit.Test
 class Puzzle2Test {
 
     val puzzle = Puzzle2()
-
     val puzzleText = this::class.java.getResource("/2018/puzzle2.txt").readText()
 
     @Test
