@@ -71,5 +71,4 @@ class Puzzle5 {
 
         return buffer
     }
-
 }

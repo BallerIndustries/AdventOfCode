@@ -27,7 +27,6 @@ class Puzzle3Test {
     fun `puzzle part a`() {
         val horse = puzzle.solve(puzzleText)
         assertEquals(horse, 113966)
-        println(horse)
     }
 
     @Test

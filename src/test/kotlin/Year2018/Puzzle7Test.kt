@@ -11,22 +11,22 @@ class Puzzle7Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(0, result)
+        assertEquals("a", result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(0, result)
+        assertEquals("b", result)
     }
 }
 
 class Puzzle7 {
-    fun solveOne(puzzleText: String): Int {
-        return 1
+    fun solveOne(puzzleText: String): String {
+        return ""
     }
 
-    fun solveTwo(puzzleText: String): Int {
-        return 2
+    fun solveTwo(puzzleText: String): String {
+        return ""
     }
 }

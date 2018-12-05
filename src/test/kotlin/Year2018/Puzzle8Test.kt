@@ -3,10 +3,10 @@ package Year2018
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 
-class Puzzle6Test {
+class Puzzle8Test {
     val puzzleText = this::class.java.getResource(
-            "/2018/puzzle6.txt").readText()
-    val puzzle = Puzzle6()
+            "/2018/puzzle8.txt").readText()
+    val puzzle = Puzzle8()
 
     @Test
     fun `puzzle part a`() {
@@ -19,14 +19,19 @@ class Puzzle6Test {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals("b", result)
     }
+
+    class Puzzle8 {
+        fun solveOne(puzzleText: String): String {
+            return ""
+        }
+
+        fun solveTwo(puzzleText: String): String {
+            return ""
+        }
+    }
 }
 
-class Puzzle6 {
-    fun solveOne(puzzleText: String): String {
-        return ""
-    }
 
-    fun solveTwo(puzzleText: String): String {
-        return ""
-    }
-}
+
+
+
