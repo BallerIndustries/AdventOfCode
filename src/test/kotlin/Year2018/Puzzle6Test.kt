@@ -80,28 +80,11 @@ class Puzzle6 {
             }
         }
 
-//        val horse = nearestPointList.filterNot { it == top.id && it == bottom.id && it == left.id && it == right.id }
         val horse = nearestPointList.filterNot { it.x == leftMax && it.x == rightMax && it.y == topMax && it.y == bottomMax}
-
-
         val dog = horse.groupBy { it }.maxBy { it.value.size }
 
-
         println(dog!!.value.count())
-        //println(nearestPointList.groupBy { it })
-
-
         return dog.value.count()
-
-
-
-
-
-
-
-
-
-
     }
 
     fun createPointMap(puzzleText: String): Map<Pair<Int, Int>, Point> {
