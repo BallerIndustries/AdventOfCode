@@ -33,7 +33,7 @@ class Puzzle4Test {
 
     @Test
     fun `puzzle part a`() {
-        val input = Puzzle1Test::class.java.getResource("/2016/puzzle4.txt").readText().replace("\r\n","\n")
+        val input = Puzzle1Test::class.java.getResource("/2016/puzzle4.txt").readText().replace("\r","")
         val result = puzzle.sumRealRoomNumbers(input)
         Assert.assertEquals(result, 158835)
     }
