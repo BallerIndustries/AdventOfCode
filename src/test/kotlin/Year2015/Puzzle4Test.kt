@@ -12,13 +12,13 @@ class Puzzle4Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(0, result)
+        assertEquals(282749, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(0, result)
+        assertEquals(9962624, result)
     }
 }
 
