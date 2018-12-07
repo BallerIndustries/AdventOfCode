@@ -23,13 +23,13 @@ class Puzzle1Test {
     @Test
     fun `puzzle part a`() {
         val text = this::class.java.getResource("/2015/puzzle1.txt").readText()
-        assertEquals(puzzle.getFloor(text), 0)
+        assertEquals(puzzle.getFloor(text), 138)
     }
 
     @Test
     fun `puzzle part b`() {
         val text = this::class.java.getResource("/2015/puzzle1.txt").readText()
-        assertEquals(puzzle.getCharacterWhenHitMinusOne(text), 1771)
+        assertEquals(puzzle.getCharacterWhenHitMinusOne(text), 1772)
     }
 }
 
