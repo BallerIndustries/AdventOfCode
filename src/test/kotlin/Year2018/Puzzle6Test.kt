@@ -11,7 +11,7 @@ class Puzzle6Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(0, result)
+        assertEquals(3010, result)
     }
 
     @Test
@@ -37,17 +37,15 @@ class Puzzle6Test {
                 "8, 9"
         val pointMap = puzzle.createPointMap(dog)
 
-        assertEquals("0", puzzle.findNearestPoint(pointMap, 1, 1))
-        assertEquals("1", puzzle.findNearestPoint(pointMap, 1, 6))
-        assertEquals(null, puzzle.findNearestPoint(pointMap, 5, 1))
+        assertEquals("0", puzzle.findNearestPoint(pointMap, 1, 1)?.id)
+        assertEquals("1", puzzle.findNearestPoint(pointMap, 1, 6)?.id)
+        assertEquals(null, puzzle.findNearestPoint(pointMap, 5, 1)?.id)
     }
-
-
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(0, result)
+        assertEquals(48034, result)
     }
 }
 
@@ -66,35 +64,16 @@ class Puzzle6 {
         val bottomMax = bottom!!.y
         val rightMax = right!!.x
         val leftMax = left!!.x
-        var buffer = ""
 
-
-        println("gridArea = ${Math.abs(topMax - bottomMax) * Math.abs(leftMax - rightMax)}")
-
-        println("topMax = $topMax bottomMax = $bottomMax rightMax = $rightMax leftMax = $leftMax")
         val nearestPointMap = mutableMapOf<Point, Point>()
-
-
-        val jur: List<Char> = ('A' .. 'Z').map { it }
 
         (topMax .. bottomMax ).forEach { y ->
             (leftMax .. rightMax ).forEach { x ->
-
-
-
                 val nearestPoint = findNearestPoint(pointMap, x, y)
                 if (nearestPoint != null) nearestPointMap.put(Point("bob", x, y), nearestPoint)
-
-//                if (nearestPoint == null) buffer += "."
-//                else buffer += jur.get(nearestPoint.id.toInt())
-
-
             }
-
-//            buffer += "\n"
         }
 
-//        println(buffer)
 
         // Remove points that are on the edge
         val infinitePoints = nearestPointMap.filter {
@@ -102,11 +81,9 @@ class Puzzle6 {
         }.map { it.value }.toSet()
 
         val nonInfiniteShite = nearestPointMap.filterNot { infinitePoints.contains(it.value) }.values
-
         val dog = nonInfiniteShite.groupBy { it }.maxBy { it.value.size }
 
-        println(dog!!.value.count())
-        return dog.value.count()
+        return dog!!.value.count()
     }
 
     fun createPointMap(puzzleText: String): Map<Pair<Int, Int>, Point> {
@@ -125,7 +102,6 @@ class Puzzle6 {
         val minDistance: Pair<Point, Int>? = distances.minBy { it.second }
 
         if (distances.filter { it.second == minDistance!!.second }.size > 1) return null
-
         return minDistance!!.first
     }
 
@@ -146,15 +122,10 @@ class Puzzle6 {
         val rightMax = right!!.x
         val leftMax = left!!.x
 
-        val nearestPointMap = mutableMapOf<Point, Point>()
         var counter = 0
 
         (topMax .. bottomMax ).forEach { y ->
             (leftMax .. rightMax ).forEach { x ->
-
-//                val nearestPoint = findNearestPoint(pointMap, x, y)
-//                if (nearestPoint != null) nearestPointMap.put(Point("bob", x, y), nearestPoint)
-
                 val sum = calcManDistToOtherPoints(x, y, pointMap)
 
                 if (sum < 10000) {
@@ -163,17 +134,12 @@ class Puzzle6 {
             }
         }
 
-        return counter;
-
-
+        return counter
     }
 
     private fun calcManDistToOtherPoints(x: Int, y: Int, pointMap: Map<Pair<Int, Int>, Point>): Int {
-
         return pointMap.values.sumBy {
             manhattanDistance(x, y, it.x, it.y)
         }
-
-
     }
 }

@@ -14,13 +14,13 @@ class Puzzle4Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(1, result)
+        assertEquals(95199, result.first)
     }
 
     @Test
     fun `puzzle part b`() {
-        val result = puzzle.solveTwo(puzzleText)
-        assertEquals(2, result)
+        val result = puzzle.solveOne(puzzleText)
+        assertEquals(7887, result.second)
     }
 }
 
@@ -29,7 +29,7 @@ data class Horse(val date: LocalDateTime, val text: String)
 //data class MinuteFlag()
 
 class Puzzle4 {
-    fun solveOne(puzzleText: String): Int {
+    fun solveOne(puzzleText: String): Pair<Int, Int> {
         val horses = puzzleText.split("\n").map { line ->
             val tmp = line.split(" ")
             val dateString = tmp[0].replace("[", "") + " " + tmp[1].replace("]", "")
@@ -94,6 +94,8 @@ class Puzzle4 {
                 .maxBy { it.value.count() }
 
 
+        val answerOne = maxSleepingGuardId.substring(1).toInt() * dog!!.key
+
         var maxMinute = -1
         var maxGuardId: String = ""
         var octopus = -1
@@ -117,17 +119,9 @@ class Puzzle4 {
 
 
 
+        val answerTwo = octopus * maxGuardId.replace("#", "").toInt()
 
-        println("octoups $octopus maxGuardId = $maxGuardId")
-
-
-
-
-
-
-
-
-        return 1
+        return Pair(answerOne, answerTwo)
     }
 
     fun solveTwo(puzzleText: String): Int {

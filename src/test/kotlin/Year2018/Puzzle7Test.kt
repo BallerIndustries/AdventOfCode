@@ -11,18 +11,17 @@ class Puzzle7Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals("a", result)
+        assertEquals("GKRVWBESYAMZDPTIUCFXQJLHNO", result)
     }
 
     @Test
     fun `puzzle part b`() {
-
         // Not 912
         // Not 913
         // Not 919
         // Not 930
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(0, result)
+        assertEquals(903, result)
     }
 }
 
@@ -68,8 +67,6 @@ class Puzzle7 {
             val stepNamesWeCanDo = stepToDependencies
                 .filter { it.value.isEmpty() }
                 .map { it.key }
-
-            println(stepToDependencies)
 
             val stepWeWillDo = stepNamesWeCanDo.sorted().first()
 
@@ -160,9 +157,7 @@ class Puzzle7 {
             stepsToDo.forEach { stepToDependencies.remove(it) }
         }
 
-        println(workerState)
-
-        return 0
+        return workerState.count { it.workers.any { it != null } }
     }
 
     fun markCalendarAsBusy(workerState: MutableList<JurState>, indexOfFreeWorker: Int, fromSecond: Int,
