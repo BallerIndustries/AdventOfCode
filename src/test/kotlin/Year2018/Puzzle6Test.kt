@@ -11,8 +11,6 @@ class Puzzle6Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-
-        // Not 3920!
         assertEquals(0, result)
     }
 
@@ -49,7 +47,7 @@ class Puzzle6Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("b", result)
+        assertEquals(0, result)
     }
 }
 
@@ -61,27 +59,51 @@ class Puzzle6 {
 
         val top = pointMap.values.minBy { it.y }
         val bottom = pointMap.values.maxBy { it.y }
-        val right = pointMap.values.maxBy { it.x }
         val left = pointMap.values.minBy { it.x }
+        val right = pointMap.values.maxBy { it.x }
 
         val topMax = top!!.y
         val bottomMax = bottom!!.y
         val rightMax = right!!.x
         val leftMax = left!!.x
+        var buffer = ""
+
+
+        println("gridArea = ${Math.abs(topMax - bottomMax) * Math.abs(leftMax - rightMax)}")
 
         println("topMax = $topMax bottomMax = $bottomMax rightMax = $rightMax leftMax = $leftMax")
-        val nearestPointList = mutableListOf<Point>()
+        val nearestPointMap = mutableMapOf<Point, Point>()
+
+
+        val jur: List<Char> = ('A' .. 'Z').map { it }
 
         (topMax .. bottomMax ).forEach { y ->
-            (leftMax .. rightMax).forEach { x ->
+            (leftMax .. rightMax ).forEach { x ->
 
-                val nearestPointId = findNearestPoint(pointMap, x, y)
-                if (nearestPointId != null) nearestPointList.add(nearestPointId)
+
+
+                val nearestPoint = findNearestPoint(pointMap, x, y)
+                if (nearestPoint != null) nearestPointMap.put(Point("bob", x, y), nearestPoint)
+
+//                if (nearestPoint == null) buffer += "."
+//                else buffer += jur.get(nearestPoint.id.toInt())
+
+
             }
+
+//            buffer += "\n"
         }
 
-        val horse = nearestPointList.filterNot { it.x == leftMax && it.x == rightMax && it.y == topMax && it.y == bottomMax}
-        val dog = horse.groupBy { it }.maxBy { it.value.size }
+//        println(buffer)
+
+        // Remove points that are on the edge
+        val infinitePoints = nearestPointMap.filter {
+            it.key.x == leftMax || it.key.x == rightMax || it.key.y == topMax || it.key.y == bottomMax
+        }.map { it.value }.toSet()
+
+        val nonInfiniteShite = nearestPointMap.filterNot { infinitePoints.contains(it.value) }.values
+
+        val dog = nonInfiniteShite.groupBy { it }.maxBy { it.value.size }
 
         println(dog!!.value.count())
         return dog.value.count()
@@ -100,7 +122,7 @@ class Puzzle6 {
             point to manhattanDistance(x, y, point.x, point.y)
         }
 
-        val minDistance = distances.minBy { it.second }
+        val minDistance: Pair<Point, Int>? = distances.minBy { it.second }
 
         if (distances.filter { it.second == minDistance!!.second }.size > 1) return null
 
@@ -111,7 +133,47 @@ class Puzzle6 {
         return Math.abs(x1 - x2) + Math.abs(y1 - y2)
     }
 
-    fun solveTwo(puzzleText: String): String {
-        return ""
+    fun solveTwo(puzzleText: String): Int {
+        val pointMap = createPointMap(puzzleText)
+
+        val top = pointMap.values.minBy { it.y }
+        val bottom = pointMap.values.maxBy { it.y }
+        val left = pointMap.values.minBy { it.x }
+        val right = pointMap.values.maxBy { it.x }
+
+        val topMax = top!!.y
+        val bottomMax = bottom!!.y
+        val rightMax = right!!.x
+        val leftMax = left!!.x
+
+        val nearestPointMap = mutableMapOf<Point, Point>()
+        var counter = 0
+
+        (topMax .. bottomMax ).forEach { y ->
+            (leftMax .. rightMax ).forEach { x ->
+
+//                val nearestPoint = findNearestPoint(pointMap, x, y)
+//                if (nearestPoint != null) nearestPointMap.put(Point("bob", x, y), nearestPoint)
+
+                val sum = calcManDistToOtherPoints(x, y, pointMap)
+
+                if (sum < 10000) {
+                    counter++
+                }
+            }
+        }
+
+        return counter;
+
+
+    }
+
+    private fun calcManDistToOtherPoints(x: Int, y: Int, pointMap: Map<Pair<Int, Int>, Point>): Int {
+
+        return pointMap.values.sumBy {
+            manhattanDistance(x, y, it.x, it.y)
+        }
+
+
     }
 }
