@@ -20,12 +20,11 @@ class Puzzle8SlickTest {
     }
 
     class Puzzle8 {
-        private var numbers: List<Int> = listOf()
+        private var numbers = listOf<Int>()
         private var index = 0
 
         private fun nextInt(): Int {
-            index++
-            return numbers[index - 1]
+            return numbers[index++]
         }
 
         fun solveOne(puzzleText: String): Int {
@@ -37,7 +36,6 @@ class Puzzle8SlickTest {
         fun solveTwo(puzzleText: String): Int {
             numbers = puzzleText.split(" ").map { it.toInt() }
             val root = readTree()
-
             return sumPartTwo(root)
         }
 
@@ -62,16 +60,7 @@ class Puzzle8SlickTest {
         }
 
         private fun sumMetaData(node: Node): Int {
-            var ans = 0
-            ans += node.metadata.sum()
-            ans += node.children.sumBy { sumMetaData(it) }
-
-            return ans
+            return node.metadata.sum() + node.children.sumBy { sumMetaData(it) }
         }
     }
 }
-
-
-
-
-

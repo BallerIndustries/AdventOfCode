@@ -5,8 +5,7 @@ import junit.framework.Assert.assertEquals
 import org.junit.Test
 
 class Puzzle9Test {
-    val puzzleText = this::class.java.getResource(
-            "/2018/puzzle9.txt").readText()
+    val puzzleText = this::class.java.getResource("/2018/puzzle9.txt").readText().replace("\r", "")
     val puzzle = Puzzle9()
 
     @Test
