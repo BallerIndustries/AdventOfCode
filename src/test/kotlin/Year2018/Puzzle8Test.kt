@@ -278,7 +278,16 @@ class Puzzle8Test {
         }
 
         fun sumMetaData(nodes: List<Node>): Int {
-            return nodes.sumBy { node -> node.metaData.sum() }
+            val allNodes = mutableListOf<Node>()
+            val processList = mutableListOf(nodes.first())
+
+            while (processList.isNotEmpty()) {
+                val item = processList.removeAt(0)
+                allNodes.add(item)
+                processList.addAll(item.children)
+            }
+
+            return allNodes.sumBy { it.metaData.sum() }
         }
 
 
