@@ -123,7 +123,7 @@ class Puzzle9Test {
     @Test
     fun `puzzle part b fast`() {
         val result = puzzle.solveTwoFast(puzzleText)
-        assertEquals(0, result)
+        assertEquals(3037741441, result)
     }
 
     class LinkedListNode(var previous: LinkedListNode?, var next: LinkedListNode?, var data: Int)
@@ -141,20 +141,16 @@ class Puzzle9Test {
 
         data class AddCommand(val index: Int, val value: Int)
 
-        fun addNodeXToTheRight(head: LinkedListNode, nodeToAdd: LinkedListNode, places: Int): LinkedListNode {
-            var beforeNode: LinkedListNode = head
-            (0 until places).forEach { beforeNode = beforeNode.next!! }
+        fun getNodeXToTheRight(head: LinkedListNode, places: Int): LinkedListNode {
+            var node = head
+            (0 until places).forEach { node = node.next!! }
+            return node
+        }
 
-            val afterNode: LinkedListNode = beforeNode.next!!
-
-
-            beforeNode.next = nodeToAdd
-            afterNode.previous = nodeToAdd
-
-            nodeToAdd.previous = beforeNode
-            nodeToAdd.next = afterNode
-
-            return nodeToAdd
+        fun getNodeXToTheLeft(head: LinkedListNode, places: Int): LinkedListNode {
+            var node = head
+            (0 until places).forEach { node = node.previous!! }
+            return node
         }
 
         fun printList(head: LinkedListNode) {
@@ -169,24 +165,84 @@ class Puzzle9Test {
             println(output)
         }
 
+
+
+        fun insertNodeBetween(before: LinkedListNode, after: LinkedListNode, data: Int): LinkedListNode {
+            val inserted = LinkedListNode(before, after, data)
+            before.next = inserted
+            after.previous = inserted
+            return inserted
+        }
+
         fun highPerfGetWinningScore(playerCount: Int, lastMarble: Int): Long {
             val elvesToScores = (1 .. playerCount).associate { it to 0L }.toMutableMap()
 
             val head = LinkedListNode(null, null, 0)
             head.previous = head
             head.next = head
-//            addNodeXToTheRight(head, LinkedListNode(null, null, 1), 2)
 
             var currentNode = head
 
-            (1 .. 23).forEach { marbleNumber ->
-                printList(head)
-                currentNode = addNodeXToTheRight(currentNode, LinkedListNode(null, null, marbleNumber), 2)
+            (1 .. lastMarble).forEach { marbleNumber ->
+                if (marbleNumber % 23 == 0) {
+
+                    // Go back seven places
+                    val toBeRemoved = getNodeXToTheLeft(currentNode, 7)
+
+                    // The one after this is the current node
+                    currentNode = toBeRemoved.next!!
+
+                    // Add the score to the elf score map
+                    val elfNumber = (marbleNumber % elvesToScores.size) + 1
+                    elvesToScores[elfNumber] = elvesToScores[elfNumber]!! + marbleNumber + toBeRemoved.data
+
+                    // Remove the node
+                    toBeRemoved.previous!!.next = toBeRemoved.next
+                    toBeRemoved.next!!.previous = toBeRemoved.previous
+                }
+                else {
+                    val twoAhead = getNodeXToTheRight(currentNode, 2)
+                    val oneAhead = twoAhead.previous!!
+                    currentNode = insertNodeBetween(oneAhead, twoAhead, marbleNumber)
+                }
             }
 
-            printList(head)
-            return 0L
+            return elvesToScores.values.max()!!
+
+//            printList(head)
+//            return 0L
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         data class Shift(val from: Int, val to: Int)
 
