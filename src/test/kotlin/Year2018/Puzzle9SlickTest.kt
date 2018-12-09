@@ -1,7 +1,6 @@
 package Year2018
 
-import junit.framework.Assert.assertEquals
-import org.junit.Ignore
+import junit.framework.TestCase.assertEquals
 import org.junit.Test
 
 class Puzzle9SlickTest {
@@ -23,7 +22,7 @@ class Puzzle9SlickTest {
     class Node(var previous: Node?, var next: Node?, var data: Int) {
         companion object {
             fun createHead(data: Int): Node {
-                val head = Node(null, null, 0)
+                val head = Node(null, null, data)
                 head.previous = head
                 head.next = head
                 return head
@@ -66,7 +65,7 @@ class Puzzle9SlickTest {
             return getWinningScore(playerCount, lastMarble * 100)
         }
 
-        fun getWinningScore(playerCount: Int, lastMarble: Int): Long {
+        private fun getWinningScore(playerCount: Int, lastMarble: Int): Long {
             val elvesToScores = (1 .. playerCount).associate { it to 0L }.toMutableMap()
             val head = Node.createHead(0)
 

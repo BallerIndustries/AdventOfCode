@@ -29,14 +29,12 @@ class Puzzle8SlickTest {
 
         fun solveOne(puzzleText: String): Int {
             numbers = puzzleText.split(" ").map { it.toInt() }
-            val root = readTree()
-            return sumMetaData(root)
+            return sumMetaData(readTree())
         }
 
         fun solveTwo(puzzleText: String): Int {
             numbers = puzzleText.split(" ").map { it.toInt() }
-            val root = readTree()
-            return sumPartTwo(root)
+            return sumPartTwo(readTree())
         }
 
         private fun sumPartTwo(node: Node): Int {

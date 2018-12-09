@@ -112,7 +112,7 @@ class Puzzle9Test {
         assertEquals(375465, result)
     }
 
-    @Ignore
+    @Ignore("Too fucking slow, runs in 75 minutes on my fast PC")
     @Test
     fun `puzzle part b slow`() {
         val result = puzzle.solveTwo(puzzleText)
