@@ -19,10 +19,10 @@ class Puzzle9SlickTest {
         assertEquals(3037741441, result)
     }
 
-    class Node(var previous: Node?, var next: Node?, var data: Int) {
+    data class Node(var previous: Node? = null, var next: Node? = null, var data: Int) {
         companion object {
             fun createHead(data: Int): Node {
-                val head = Node(null, null, data)
+                val head = Node(data = data)
                 head.previous = head
                 head.next = head
                 return head
