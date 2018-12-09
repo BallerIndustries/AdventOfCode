@@ -126,7 +126,7 @@ class Puzzle9Test {
         assertEquals(0, result)
     }
 
-    data class LinkedListNode(var previous: LinkedListNode, var next: LinkedListNode, var data: Int)
+    class LinkedListNode(var previous: LinkedListNode?, var next: LinkedListNode?, var data: Int)
 
     class Puzzle9 {
         fun solveOne(puzzleText: String): Long {
@@ -141,58 +141,51 @@ class Puzzle9Test {
 
         data class AddCommand(val index: Int, val value: Int)
 
+        fun addNodeXToTheRight(head: LinkedListNode, nodeToAdd: LinkedListNode, places: Int): LinkedListNode {
+            var beforeNode: LinkedListNode = head
+            (0 until places).forEach { beforeNode = beforeNode.next!! }
+
+            val afterNode: LinkedListNode = beforeNode.next!!
+
+
+            beforeNode.next = nodeToAdd
+            afterNode.previous = nodeToAdd
+
+            nodeToAdd.previous = beforeNode
+            nodeToAdd.next = afterNode
+
+            return nodeToAdd
+        }
+
+        fun printList(head: LinkedListNode) {
+            val output = mutableListOf(head.data)
+            var current = head.next!!
+
+            while (current != head) {
+                output.add(current.data)
+                current = current.next!!
+            }
+
+            println(output)
+        }
+
         fun highPerfGetWinningScore(playerCount: Int, lastMarble: Int): Long {
             val elvesToScores = (1 .. playerCount).associate { it to 0L }.toMutableMap()
 
-            val orders = mutableListOf<AddCommand>()
-            var arrayList = mutableListOf<Int>()
-            arrayList.add(0)
-            arrayList.add(1)
+            val head = LinkedListNode(null, null, 0)
+            head.previous = head
+            head.next = head
+//            addNodeXToTheRight(head, LinkedListNode(null, null, 1), 2)
 
-            var currentMarbleIndex = 1
+            var currentNode = head
 
-            (2 .. lastMarble).forEach { marbleNumber ->
-
-                if (marbleNumber % 100000 == 0) println(marbleNumber)
-
-                if (marbleNumber % 23 == 0) {
-
-                    // Process the orders that have built up
-                    arrayList = processOrders(arrayList, orders).toMutableList()
-                    orders.clear()
-
-                    val elfNumber = (marbleNumber % elvesToScores.size) + 1
-                    val currentScore = elvesToScores[elfNumber]!!
-
-                    // Find the marble seven to the left of the currentMarble
-                    val indexSevenDown =  if (currentMarbleIndex - 7 >= 0) currentMarbleIndex - 7 else arrayList.size + (currentMarbleIndex - 7)
-                    val marbleNumberSevenDown = arrayList[indexSevenDown]
-
-                    // Add the marble number to the current score
-                    elvesToScores[elfNumber] = currentScore + marbleNumber + marbleNumberSevenDown
-
-                    // Remove the marble number that is seven down
-                    currentMarbleIndex = if (indexSevenDown == arrayList.lastIndex) 0 else indexSevenDown
-
-                    arrayList.removeAt(indexSevenDown)
-                }
-                else {
-                    // Figure out what index to put this marble into
-                    val indexOneAheadClockWise = (currentMarbleIndex + 1) % arrayList.size
-                    val indexTwoAheadClockWise = (currentMarbleIndex + 2) % arrayList.size
-
-                    if (indexOneAheadClockWise > indexTwoAheadClockWise) {
-                        orders.add(AddCommand(0, marbleNumber))
-                        currentMarbleIndex = arrayList.lastIndex
-                    }
-                    else {
-                        orders.add(AddCommand(indexTwoAheadClockWise, marbleNumber))
-                        currentMarbleIndex = indexTwoAheadClockWise
-                    }
-                }
+            (1 .. 23).forEach { marbleNumber ->
+                printList(head)
+                currentNode = addNodeXToTheRight(currentNode, LinkedListNode(null, null, marbleNumber), 2)
             }
 
-            return elvesToScores.values.max()!!
+            printList(head)
+            return 0L
         }
 
         data class Shift(val from: Int, val to: Int)
