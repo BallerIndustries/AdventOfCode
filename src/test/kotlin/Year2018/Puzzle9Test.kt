@@ -81,7 +81,6 @@ class Puzzle9Test {
         assertEquals(listOf(100, 98, 1, 2, 3, 99), result)
     }
 
-
     @Test
     fun `example 1`() {
         assertEquals(8317, puzzle.getWinningScore(10, 1618))
@@ -120,15 +119,11 @@ class Puzzle9Test {
         assertEquals(0, result)
     }
 
-    @Test
-    fun `puzzle part b fast`() {
-        val result = puzzle.solveTwoFast(puzzleText)
-        assertEquals(3037741441, result)
-    }
-
-    class LinkedListNode(var previous: LinkedListNode?, var next: LinkedListNode?, var data: Int)
-
     class Puzzle9 {
+        data class AddCommand(val index: Int, val value: Int)
+
+        data class Shift(val from: Int, val to: Int)
+
         fun solveOne(puzzleText: String): Long {
             val (playerCount, lastMarble) = puzzleText.split(" ").mapNotNull { it.toIntOrNull() }
             return getWinningScore(playerCount, lastMarble)
@@ -138,113 +133,6 @@ class Puzzle9Test {
             val (playerCount, lastMarble) = puzzleText.split(" ").mapNotNull { it.toIntOrNull() }
             return getWinningScore(playerCount, lastMarble * 100)
         }
-
-        data class AddCommand(val index: Int, val value: Int)
-
-        fun getNodeXToTheRight(head: LinkedListNode, places: Int): LinkedListNode {
-            var node = head
-            (0 until places).forEach { node = node.next!! }
-            return node
-        }
-
-        fun getNodeXToTheLeft(head: LinkedListNode, places: Int): LinkedListNode {
-            var node = head
-            (0 until places).forEach { node = node.previous!! }
-            return node
-        }
-
-        fun printList(head: LinkedListNode) {
-            val output = mutableListOf(head.data)
-            var current = head.next!!
-
-            while (current != head) {
-                output.add(current.data)
-                current = current.next!!
-            }
-
-            println(output)
-        }
-
-
-
-        fun insertNodeBetween(before: LinkedListNode, after: LinkedListNode, data: Int): LinkedListNode {
-            val inserted = LinkedListNode(before, after, data)
-            before.next = inserted
-            after.previous = inserted
-            return inserted
-        }
-
-        fun highPerfGetWinningScore(playerCount: Int, lastMarble: Int): Long {
-            val elvesToScores = (1 .. playerCount).associate { it to 0L }.toMutableMap()
-
-            val head = LinkedListNode(null, null, 0)
-            head.previous = head
-            head.next = head
-
-            var currentNode = head
-
-            (1 .. lastMarble).forEach { marbleNumber ->
-                if (marbleNumber % 23 == 0) {
-
-                    // Go back seven places
-                    val toBeRemoved = getNodeXToTheLeft(currentNode, 7)
-
-                    // The one after this is the current node
-                    currentNode = toBeRemoved.next!!
-
-                    // Add the score to the elf score map
-                    val elfNumber = (marbleNumber % elvesToScores.size) + 1
-                    elvesToScores[elfNumber] = elvesToScores[elfNumber]!! + marbleNumber + toBeRemoved.data
-
-                    // Remove the node
-                    toBeRemoved.previous!!.next = toBeRemoved.next
-                    toBeRemoved.next!!.previous = toBeRemoved.previous
-                }
-                else {
-                    val twoAhead = getNodeXToTheRight(currentNode, 2)
-                    val oneAhead = twoAhead.previous!!
-                    currentNode = insertNodeBetween(oneAhead, twoAhead, marbleNumber)
-                }
-            }
-
-            return elvesToScores.values.max()!!
-
-//            printList(head)
-//            return 0L
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        data class Shift(val from: Int, val to: Int)
 
         fun processOrders(arrayList: List<Int>, orders: List<AddCommand>): List<Int> {
             // convert orders into shifts
@@ -284,7 +172,6 @@ class Puzzle9Test {
             normalisedOrders.forEach { order -> returnArray[order.index] = order.value}
             return returnArray
         }
-
 
         fun getWinningScore(playerCount: Int, lastMarble: Int): Long {
             val elvesToScores = (1 .. playerCount).associate { it to 0L }.toMutableMap()
@@ -332,11 +219,6 @@ class Puzzle9Test {
             }
 
             return elvesToScores.values.max()!!
-        }
-
-        fun solveTwoFast(puzzleText: String): Long {
-            val (playerCount, lastMarble) = puzzleText.split(" ").mapNotNull { it.toIntOrNull() }
-            return highPerfGetWinningScore(playerCount, lastMarble * 100)
         }
     }
 }
