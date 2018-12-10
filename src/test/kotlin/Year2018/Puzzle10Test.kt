@@ -58,21 +58,14 @@ class Puzzle10Test {
                 val height = maxY - minY
                 val area = width.toLong() * height.toLong()
 
-                Pair(second, area)
+                Triple(second, points, area)
             }
             .minBy {
-                it.second
+                it.third
             }
 
-            println(closest!!.first)
-
-
-
-
-
-//            println("closest area = ${closest}")
-//            printPoints(closest!!.first)
-
+            println("message appears at second = ${closest!!.first}")
+            printPoints(closest.second)
 
             return ""
         }
@@ -88,7 +81,7 @@ class Puzzle10Test {
             val minY = points.minBy { it.y }!!.y
             val maxY = points.maxBy { it.y }!!.y
 
-            val width = maxX - minX
+            val width = maxX - minX + 1
             val height = maxY - minY
 
             val normalisedPoints = pointSet.map { Point(it.x - minX, it.y - minY) }.toSet()
