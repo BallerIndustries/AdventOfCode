@@ -22,12 +22,84 @@ class Puzzle10Test {
     }
 
     class Puzzle10 {
+
+        data class Point(val x: Int, val y: Int)
+
+        data class Dog(val x: Int, val y: Int, val deltaX: Int, val deltaY: Int)
+
         fun solveOne(puzzleText: String): String {
+            val dogs = puzzleText.split("\n").map { line ->
+
+                val tmp = line.replace("position=", "")
+                    .replace("velocity=", ",")
+                        .replace("<", "")
+                        .replace(">", "")
+                        .split(",")
+                        .map { it.trim() }
+                        .map { it.toInt() }
+
+            Dog(tmp[0], tmp[1], tmp[2], tmp[3])
+            }
+
+
+            // Now simlulate one thousand seconds
+            val closest = (0 until 20000).map { second ->
+                val points = dogs.map { dog ->
+                    Point(dog.x + (dog.deltaX * second), dog.y + (dog.deltaY * second))
+                }
+
+                // Find the minimum area
+                val minX = points.minBy { it.x }!!.x
+                val maxX = points.maxBy { it.x }!!.x
+                val minY = points.minBy { it.y }!!.y
+                val maxY = points.maxBy { it.y }!!.y
+
+                val width = maxX - minX
+                val height = maxY - minY
+                val area = width.toLong() * height.toLong()
+
+                Pair(second, area)
+            }
+            .minBy {
+                it.second
+            }
+
+            println(closest!!.first)
+
+
+
+
+
+//            println("closest area = ${closest}")
+//            printPoints(closest!!.first)
+
+
             return ""
         }
 
         fun solveTwo(puzzleText: String): String {
             return ""
+        }
+
+        fun printPoints(points: List<Point>) {
+            val pointSet = points.toSet()
+            val minX = points.minBy { it.x }!!.x
+            val maxX = points.maxBy { it.x }!!.x
+            val minY = points.minBy { it.y }!!.y
+            val maxY = points.maxBy { it.y }!!.y
+
+            val width = maxX - minX
+            val height = maxY - minY
+
+            val normalisedPoints = pointSet.map { Point(it.x - minX, it.y - minY) }.toSet()
+            val buffer: List<List<Char>> = (0 until height).map { y ->
+                (0 until width).map { x ->
+                    if (normalisedPoints.contains(Point(x, y))) '#' else '.'
+                }
+            }
+
+            val gridText = buffer.map { it.joinToString("") }.joinToString("\n")
+            println(gridText)
         }
     }
 }
