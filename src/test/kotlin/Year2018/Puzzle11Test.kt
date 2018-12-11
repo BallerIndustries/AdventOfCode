@@ -60,7 +60,7 @@ class Puzzle11Test {
                     Pair(Point(x + 1, y + 1), sum)
                 }
             }
-            .maxBy { it.second }
+                .maxBy { it.second }
 
             return "${max?.first?.x},${max?.first?.y}"
         }
@@ -82,24 +82,20 @@ class Puzzle11Test {
 
             // Now find the max 3x3 square
             val max =
-            (0 until 300).map { y ->
-                (0 until 300).map { x ->
-                    val (squareSize, maxSum) = getMaxSubSquareSum(powerLevels, x, y)
-                    val point = Point(x + 1, y + 1)
-                    Triple(point, maxSum, squareSize)
+                (0 until 300).map { y ->
+                    (0 until 300).map { x ->
+                        val (squareSize, maxSum) = getMaxSubSquareSum(powerLevels, x, y)
+                        val point = Point(x + 1, y + 1)
+                        Triple(point, maxSum, squareSize)
+                    }
                 }
-            }
-            .flatten()
-            .maxBy { it.second }
+                .flatten()
+                .maxBy { it.second }
 
             return "${max?.first?.x},${max?.first?.y},${max?.third}"
         }
 
         private fun getMaxSubSquareSum(powerLevels: List<List<Int>>, x: Int, y: Int): Pair<Int, Long> {
-//            if (x == 233 && y == 40) {
-//                println("That's the ticket!")
-//            }
-
             val sizeToSum = createSizeToSum(powerLevels, x, y)
             return sizeToSum.maxBy { it.second }!!
         }
@@ -132,12 +128,12 @@ class Puzzle11Test {
         }
 
         private fun doTheLSum(powerLevels: List<List<Int>>, bottomLeft: Point, bottomRight: Point, topRight: Point): Long? {
-                if (bottomRight.x > powerLevels.lastIndex || bottomRight.y > powerLevels.lastIndex) {
-                    return null
-                }
+            if (bottomRight.x > powerLevels.lastIndex || bottomRight.y > powerLevels.lastIndex) {
+                return null
+            }
 
-                return (bottomLeft.x .. bottomRight.x).sumBy { x -> powerLevels[x][bottomLeft.y] } +
-                        (topRight.y until bottomRight.y).sumBy { y -> powerLevels[topRight.x][y] }.toLong()
+            return (bottomLeft.x..bottomRight.x).sumBy { x -> powerLevels[x][bottomLeft.y] } +
+                (topRight.y until bottomRight.y).sumBy { y -> powerLevels[topRight.x][y] }.toLong()
         }
 
         fun createPowerLevels(gridSerialNumber: Int): List<List<Int>> {
