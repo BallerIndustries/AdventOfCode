@@ -190,7 +190,7 @@ class Puzzle9Test {
                     val elfNumber = (marbleNumber % elvesToScores.size) + 1
                     val currentScore = elvesToScores[elfNumber]!!
 
-                    // Find the marble seven to the left of the currentMarble
+                    // Find the marble seven to the source of the currentMarble
                     val indexSevenDown =  if (currentMarbleIndex - 7 >= 0) currentMarbleIndex - 7 else arrayList.size + (currentMarbleIndex - 7)
                     val marbleNumberSevenDown = arrayList[indexSevenDown]
 
