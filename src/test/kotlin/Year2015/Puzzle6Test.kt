@@ -1,5 +1,6 @@
 package Year2015
 
+import generateGrid
 import junit.framework.Assert.*
 import org.junit.Test
 
@@ -23,12 +24,9 @@ class Puzzle6Test {
 
 class Puzzle6 {
     fun solveOne(puzzleText: String): Int {
-        val lights = (0 until 1000).map { x ->
-            (0 until 1000).map { y -> false }.toMutableList()
-        }.toMutableList()
+        val lights = generateGrid(1000, 1000, false)
 
         puzzleText.split("\n").forEach { line ->
-
             val (from, to) = parsePointsFromLine(line)
 
             if (line.startsWith("turn on")) {
@@ -46,12 +44,9 @@ class Puzzle6 {
     }
 
     fun solveTwo(puzzleText: String): Int {
-        val lights = (0 until 1000).map { _ ->
-            (0 until 1000).map { _ -> 0 }.toMutableList()
-        }.toMutableList()
+        val lights = generateGrid(1000, 1000, 0)
 
         puzzleText.split("\n").forEach { line ->
-
             val (from, to) = parsePointsFromLine(line)
 
             if (line.startsWith("turn on")) {
