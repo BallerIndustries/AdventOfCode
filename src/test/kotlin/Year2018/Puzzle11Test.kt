@@ -5,8 +5,7 @@ import org.junit.Ignore
 import org.junit.Test
 
 class Puzzle11Test {
-    val puzzleText = this::class.java.getResource("/2018/puzzle11.txt")
-            .readText().replace("\r", "")
+    val puzzleText = this::class.java.getResource("/2018/puzzle11.txt").readText().replace("\r", "")
     val puzzle = Puzzle11()
 
     @Test
@@ -47,19 +46,18 @@ class Puzzle11Test {
             val powerLevels = createPowerLevels(gridSerialNumber)
 
             // Now find the max 3x3 square
-            val max = (0 until 300).map { y ->
-                (0 until 300).map { x ->
+            val max = (0 until 300).flatMap { x ->
+                (0 until 300).mapNotNull { y ->
                     val sum = sumSquare(powerLevels, x, y, 3)
-                    Pair(Point(y + 1, x + 1), sum)
+                    Pair(Point(x + 1, y + 1), sum)
                 }
             }
-            .flatten()
             .maxBy { it.second }
 
             return "${max?.first?.x},${max?.first?.y}"
         }
 
-        fun sumSquare(powerLevels: List<List<Int>>, initX: Int, initY: Int, squareSize: Int): Long {
+        private fun sumSquare(powerLevels: List<List<Int>>, initX: Int, initY: Int, squareSize: Int): Long {
             if (initX + squareSize > powerLevels.lastIndex) return Long.MIN_VALUE
             if (initY + squareSize > powerLevels.lastIndex) return Long.MIN_VALUE
 
@@ -77,13 +75,9 @@ class Puzzle11Test {
             // Now find the max 3x3 square
             val max =
             (0 until 300).map { y ->
-                println(y)
-
                 (0 until 300).map { x ->
-
-
                     val (squareSize, maxSum) = getMaxSubSquareSum(powerLevels, x, y)
-                    val point = Point(y + 1, x + 1)
+                    val point = Point(x + 1, y + 1)
                     Triple(point, maxSum, squareSize)
                 }
             }
@@ -97,7 +91,11 @@ class Puzzle11Test {
             var sum = powerLevels[x][y].toLong()
             val squareOneToSum = 1 to sum
 
-            val sizeToSum = (2 .. 300).map { squareSize ->
+            if (x == 233 && y == 40) {
+                println("That's the ticket!")
+            }
+
+            val sizeToSum = (2 .. 300).mapNotNull { squareSize ->
                 val squareDelta = squareSize - 1
 
                 // We want to calculate the L shape around the previous square
@@ -106,9 +104,14 @@ class Puzzle11Test {
                 val topRight = Point(x + squareDelta, y)
 
                 val sumOfL = doTheLSum(powerLevels, bottomLeft, bottomRight, topRight)
-                sum += sumOfL
 
-                squareSize to sum
+                if (sumOfL != null) {
+                    sum += sumOfL
+                    squareSize to sum
+                }
+                else {
+                    null
+                }
             }.toMutableList()
 
             // Add the size 1 square
@@ -117,18 +120,18 @@ class Puzzle11Test {
             return sizeToSum.maxBy { it.second }!!
         }
 
-        private fun doTheLSum(powerLevels: List<List<Int>>, bottomLeft: Point, bottomRight: Point, topRight: Point): Int {
+        private fun doTheLSum(powerLevels: List<List<Int>>, bottomLeft: Point, bottomRight: Point, topRight: Point): Long? {
                 if (bottomRight.x > powerLevels.lastIndex || bottomRight.y > powerLevels.lastIndex) {
-                    return Int.MIN_VALUE
+                    return null
                 }
 
                 return (bottomLeft.x .. bottomRight.x).sumBy { x -> powerLevels[x][bottomLeft.y] } +
-                        (topRight.y .. bottomRight.y).sumBy { y -> powerLevels[topRight.x][y] }
+                        (topRight.y .. bottomRight.y).sumBy { y -> powerLevels[topRight.x][y] }.toLong()
         }
 
         private fun createPowerLevels(gridSerialNumber: Int): List<List<Int>> {
-            return (1..300).map { y ->
-                (1..300).map { x ->
+            return (1..300).map { x ->
+                (1..300).map { y ->
                     val rackId = x + 10
                     var powerLevel = rackId * y
                     powerLevel += gridSerialNumber
