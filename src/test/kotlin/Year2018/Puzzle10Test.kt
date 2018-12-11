@@ -16,6 +16,12 @@ class Puzzle10Test {
     }
 
     @Test
+    fun `can be a dog`() {
+        val text = "position=< 30528, -20119> velocity=<-3,  2>"
+        println(text.removeSurrounding("<", ">"))
+    }
+
+    @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals("b", result)
@@ -82,7 +88,7 @@ class Puzzle10Test {
             val maxY = points.maxBy { it.y }!!.y
 
             val width = maxX - minX + 1
-            val height = maxY - minY
+            val height = maxY - minY + 1
 
             val normalisedPoints = pointSet.map { Point(it.x - minX, it.y - minY) }.toSet()
             val buffer: List<List<Char>> = (0 until height).map { y ->

@@ -1,6 +1,7 @@
 package Year2018
 
 import junit.framework.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 
 class Puzzle11Test {
@@ -15,7 +16,7 @@ class Puzzle11Test {
     }
 
     @Test
-    fun example() {
+    fun `example part a`() {
         val result = puzzle.solveOne("18")
         assertEquals("33,45", result)
     }
@@ -24,6 +25,18 @@ class Puzzle11Test {
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals("233,40,13", result)
+    }
+
+    @Test
+    fun `example 1 part b`() {
+        val result = puzzle.solveTwo("18")
+        assertEquals("90,269,16", result)
+    }
+
+    @Test
+    fun `example 2 part b`() {
+        val result = puzzle.solveTwo("42")
+        assertEquals("232,251,12", result)
     }
 
     data class Point(val x: Int, val y: Int)
@@ -64,22 +77,53 @@ class Puzzle11Test {
             // Now find the max 3x3 square
             val max =
             (0 until 300).map { y ->
-                (0 until 300).map { x ->
-                    println("($x,$y)")
+                println(y)
 
-                    (1 .. 300).map { squareSize ->
-                        val sum = sumSquare(powerLevels, x, y, squareSize)
-                        Triple(Point(y + 1, x + 1), sum, squareSize)
-                    }
+                (0 until 300).map { x ->
+
+
+                    val (squareSize, maxSum) = getMaxSubSquareSum(powerLevels, x, y)
+                    val point = Point(y + 1, x + 1)
+                    Triple(point, maxSum, squareSize)
                 }
             }
             .flatten()
-            .flatten()
             .maxBy { it.second }
 
-//            .maxBy { }
-
             return "${max?.first?.x},${max?.first?.y},${max?.third}"
+        }
+
+        private fun getMaxSubSquareSum(powerLevels: List<List<Int>>, x: Int, y: Int): Pair<Int, Long> {
+            var sum = powerLevels[x][y].toLong()
+            val squareOneToSum = 1 to sum
+
+            val sizeToSum = (2 .. 300).map { squareSize ->
+                val squareDelta = squareSize - 1
+
+                // We want to calculate the L shape around the previous square
+                val bottomLeft = Point(x, y + squareDelta)
+                val bottomRight = Point(x + squareDelta, y + squareDelta)
+                val topRight = Point(x + squareDelta, y)
+
+                val sumOfL = doTheLSum(powerLevels, bottomLeft, bottomRight, topRight)
+                sum += sumOfL
+
+                squareSize to sum
+            }.toMutableList()
+
+            // Add the size 1 square
+            sizeToSum.add(squareOneToSum)
+
+            return sizeToSum.maxBy { it.second }!!
+        }
+
+        private fun doTheLSum(powerLevels: List<List<Int>>, bottomLeft: Point, bottomRight: Point, topRight: Point): Int {
+                if (bottomRight.x > powerLevels.lastIndex || bottomRight.y > powerLevels.lastIndex) {
+                    return Int.MIN_VALUE
+                }
+
+                return (bottomLeft.x .. bottomRight.x).sumBy { x -> powerLevels[x][bottomLeft.y] } +
+                        (topRight.y .. bottomRight.y).sumBy { y -> powerLevels[topRight.x][y] }
         }
 
         private fun createPowerLevels(gridSerialNumber: Int): List<List<Int>> {
@@ -101,6 +145,4 @@ class Puzzle11Test {
             }
         }
     }
-
-
 }
