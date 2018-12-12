@@ -1,7 +1,6 @@
 package Year2018
 
 import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertTrue
 import org.junit.Test
 
 class Puzzle12Test {
@@ -15,7 +14,21 @@ class Puzzle12Test {
 
         // Not 860
         // Not 3547 too low
-        assertEquals(0, result)
+        assertEquals(4110, result)
+    }
+
+    @Test
+    fun `looking for cycles`() {
+        var diff = puzzle.solveOne(puzzleText, 154) - puzzle.solveOne(puzzleText, 153)
+        println(diff)
+
+        diff = puzzle.solveOne(puzzleText, 155) - puzzle.solveOne(puzzleText, 154)
+        println(diff)
+
+
+
+//        println(puzzle.solveOne(puzzleText, 153))
+//        println(puzzle.solveOne(puzzleText, 154))
     }
 
     @Test
@@ -65,7 +78,7 @@ class Puzzle12Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("b", result)
+        assertEquals(2650000000466L, result)
     }
 
     @Test
@@ -76,19 +89,23 @@ class Puzzle12Test {
 
     class Puzzle12 {
         fun solveOne(puzzleText: String, numberOfGens: Int): Int {
-            val state = stateAfterGeneration(puzzleText, 20)
+            val state = stateAfterGeneration(puzzleText, numberOfGens)
 
             val indexesOfPotsWithPlants = state.mapIndexed { index, character ->
-                if (character == '#') index - 30 else null
+                if (character == '#') index - 200 else null
             }.filterNotNull().sum()
 
             return indexesOfPotsWithPlants
         }
 
         fun stateAfterGeneration(puzzleText: String, numberOfGens: Int): String {
+            val allDogs = mutableSetOf<String>()
+
             val lines = puzzleText.split("\n")
-            val padding = (0 until 30).map { '.' }.joinToString("")
+            val padding = (0 until 200).map { '.' }.joinToString("")
             val initialState = lines[0].replace("initial state: ", "")
+            allDogs.add(initialState)
+
             val paddedState = padding + initialState + padding
 
             val rules = lines.subList(2, lines.size).associate { line ->
@@ -100,8 +117,19 @@ class Puzzle12Test {
 
             (0 until numberOfGens).forEach {
                 nextState = showMeTheNextGenShit(nextState, rules)
-                println(nextState)
+
+                val withoutPs = nextState.trimPeriods()
+
+//                if (!allDogs.add(withoutPs)) {
+//                    println("CYCLE! at generation = $it withoutPs = $withoutPs")
+//                }
+
+
+
+//                println(nextState)
             }
+
+            println(nextState)
 
             return nextState
         }
@@ -124,8 +152,26 @@ class Puzzle12Test {
             return listOf(twoBefore, oneBefore, text[index], oneAfter, twoAfter).joinToString("")
         }
 
-        fun solveTwo(puzzleText: String): String {
-            return ""
+        fun solveTwo(puzzleText: String): Long {
+
+
+            val first = solveOne(puzzleText, 153).toLong()
+            val second = solveOne(puzzleText, 154).toLong()
+            var diff = second - first
+
+            val bigNumber = 50000000000L
+
+
+            val dog = bigNumber - 153L
+            val hugeGen = (diff * dog) + first
+
+            return hugeGen
+
+
+//            println(diff)
+//
+//            diff = puzzle.solveOne(puzzleText, 155) - puzzle.solveOne(puzzleText, 154)
+//            println(diff)
         }
     }
 }
