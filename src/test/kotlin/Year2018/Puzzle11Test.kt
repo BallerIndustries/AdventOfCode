@@ -53,6 +53,8 @@ class Puzzle11Test {
             val gridSerialNumber = puzzleText.toInt()
             val powerLevels = createPowerLevels(gridSerialNumber)
 
+
+
             // Now find the max 3x3 square
             val max = (0 until 300).flatMap { x ->
                 (0 until 300).mapNotNull { y ->
