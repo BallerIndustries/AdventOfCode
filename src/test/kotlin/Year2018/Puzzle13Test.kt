@@ -197,15 +197,13 @@ class Puzzle13Test {
 
         private fun getInitialCarState(theGrid: Map<Point, Char>): MutableList<Car> {
             return theGrid.mapNotNull { (point, tile) ->
-                if (tile == '<') {
-                    Car(point, Direction.LEFT, Turn.LEFT)
-                } else if (tile == '^') {
-                    Car(point, Direction.UP, Turn.LEFT)
-                } else if (tile == '>') {
-                    Car(point, Direction.RIGHT, Turn.LEFT)
-                } else if (tile == 'v') {
-                    Car(point, Direction.DOWN, Turn.LEFT)
-                } else null
+                when (tile) {
+                    '<' -> Car(point, Direction.LEFT, Turn.LEFT)
+                    '^' -> Car(point, Direction.UP, Turn.LEFT)
+                    '>' -> Car(point, Direction.RIGHT, Turn.LEFT)
+                    'v' -> Car(point, Direction.DOWN, Turn.LEFT)
+                    else -> null
+                }
             }.toMutableList()
         }
 
@@ -253,16 +251,12 @@ class Puzzle13Test {
             val pointAhead = car.pointAhead()
             val tileAhead = theGridWithoutCars[pointAhead]!!
 
-            return if (tileAhead == '-' || tileAhead == '|') {
-                car.copy(position = pointAhead)
-            } else if (tileAhead == '+') {
-                car.copy(position = pointAhead).turn()
-            } else if (tileAhead == '\\' || tileAhead == '/') {
-                car.copy(position = pointAhead).handleCorner(tileAhead)
-            } else if (tileAhead == ' ') {
-                throw RuntimeException("Woah! Fell off the tracks!")
-            } else {
-                throw RuntimeException("Woah! Met a character I have not seen before! character = $tileAhead")
+            return when (tileAhead) {
+                '-', '|'    -> car.copy(position = pointAhead)
+                '+'         -> car.copy(position = pointAhead).turn()
+                '\\', '/'   -> car.copy(position = pointAhead).handleCorner(tileAhead)
+                ' '         -> throw RuntimeException("Woah! Fell off the tracks!")
+                else        -> throw RuntimeException("Woah! Met a character I have not seen before! character = $tileAhead")
             }
         }
 
@@ -304,8 +298,8 @@ class Puzzle13Test {
                     }
                 }
 
-                // A tick has gone by. Filter out the collided cars
-                carState = carState.filter { it.collided == false }.toMutableList()
+                // A tick has gone by. Filter out the cars that have crashed
+                carState = carState.filter { !it.collided }.toMutableList()
 
                 if (carState.size == 1) {
                     val onlyCar = carState[0]
