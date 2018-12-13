@@ -8,6 +8,20 @@ class Puzzle13Test {
     val puzzle = Puzzle13()
 
     @Test
+    fun `example a`() {
+        val exmaple = """
+            /->-\
+            |   |  /----\
+            | /-+--+-\  |
+            | | |  | v  |
+            \-+-/  \-+--/
+              \------/
+        """.trimIndent()
+
+        puzzle.solveOne(exmaple)
+    }
+
+    @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
         assertEquals("a", result)
@@ -112,65 +126,80 @@ class Puzzle13Test {
             val maxWidth = lines.maxBy { it.length }!!.length
 
             // Create a 2D grid to chars
-            val theGrid = (0 until maxWidth).map { x ->
+            println("aaa")
+
+            val theGrid =
+            (0 until maxWidth).map { x ->
                 (0 until maxHeight).map { y ->
-                    if (x > lines.lastIndex || y > lines[x].lastIndex) ' ' else lines[x][y]
+                    val point = Point(x, y)
+                    val char = if (y < lines.size && x < lines[y].length) lines[y][x] else ' '
+
+                    point to char
                 }
-            }
+            }.flatten().toMap()
+
+            println()
 
             // Find the position and direction of the cars
-            val cars = (0 until maxWidth).flatMap { x ->
-                (0 until maxHeight).mapNotNull { y ->
-                    if (theGrid[x][y] == '<') {
-                        Car(Point(x, y), Direction.LEFT, Turn.LEFT)
-                    } else if (theGrid[x][y] == '^') {
-                        Car(Point(x, y), Direction.UP, Turn.LEFT)
-                    } else if (theGrid[x][y] == '>') {
-                        Car(Point(x, y), Direction.RIGHT, Turn.LEFT)
-                    } else if (theGrid[x][y] == 'v') {
-                        Car(Point(x, y), Direction.DOWN, Turn.LEFT)
-                    } else null
-                }
+//            val cars =
+//            (0 until maxHeight).flatMap { y ->
+//                (0 until maxWidth).mapNotNull { x ->
+
+            val cars = theGrid.mapNotNull { entry ->
+                val point = entry.key
+                val tile = entry.value
+
+                if (tile == '<') {
+                    Car(point, Direction.LEFT, Turn.LEFT)
+                } else if (tile == '^') {
+                    Car(point, Direction.UP, Turn.LEFT)
+                } else if (tile == '>') {
+                    Car(point, Direction.RIGHT, Turn.LEFT)
+                } else if (tile == 'v') {
+                    Car(point, Direction.DOWN, Turn.LEFT)
+                } else null
             }
 
-            val theGridWithoutCars = (0 until maxWidth).flatMap { x ->
-                (0 until maxHeight).map { y ->
-                    val char = theGrid[x][y]
-                    val point = Point(x, y)
-
-
-                    val newChar = if (char == '<' || char == '>') '-'
-                    else if (char == '^' || char == 'v') '|'
-                    else char
-
-                    point to newChar
-                }
-            }.toMap()
-
-            var carStates = cars.map { car ->
-                val pointAhead = car.pointAhead()
-                val tileAhead = theGridWithoutCars[pointAhead]!!
-
-                if (tileAhead == '-' || tileAhead == '|') {
-                    car.copy(position = pointAhead)
-                }
-                else if (tileAhead == '+') {
-                    car.copy(position = pointAhead).turn()
-                }
-                else if (tileAhead == '\\' || tileAhead == '/') {
-                    car.handleCorner(tileAhead)
-                }
-                else if (tileAhead == ' ') {
-                    throw RuntimeException("Woah! Fell off the tracks!")
-                }
-                else {
-                    throw RuntimeException("Woah! Met a character I have not seen before! character = $tileAhead")
-                }
-            }
-
-
-
-
+            println("Hello")
+//
+//            val theGridWithoutCars = (0 until maxWidth).flatMap { x ->
+//                (0 until maxHeight).map { y ->
+//                    val char = theGrid[x][y]
+//                    val point = Point(x, y)
+//
+//
+//                    val newChar = if (char == '<' || char == '>') '-'
+//                    else if (char == '^' || char == 'v') '|'
+//                    else char
+//
+//                    point to newChar
+//                }
+//            }.toMap()
+//
+//            var carStates = cars.map { car ->
+//                val pointAhead = car.pointAhead()
+//                val tileAhead = theGridWithoutCars[pointAhead]!!
+//
+//                if (tileAhead == '-' || tileAhead == '|') {
+//                    car.copy(position = pointAhead)
+//                }
+//                else if (tileAhead == '+') {
+//                    car.copy(position = pointAhead).turn()
+//                }
+//                else if (tileAhead == '\\' || tileAhead == '/') {
+//                    car.handleCorner(tileAhead)
+//                }
+//                else if (tileAhead == ' ') {
+//                    throw RuntimeException("Woah! Fell off the tracks!")
+//                }
+//                else {
+//                    throw RuntimeException("Woah! Met a character I have not seen before! character = $tileAhead")
+//                }
+//            }
+//
+//
+//
+//
 
 
             return ""
