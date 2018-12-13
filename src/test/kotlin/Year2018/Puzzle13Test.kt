@@ -8,15 +8,49 @@ class Puzzle13Test {
     val puzzle = Puzzle13()
 
     @Test
+    fun `example part a`() {
+        val exampleText = """
+            /->-\
+            |   |  /----\
+            | /-+--+-\  |
+            | | |  | v  |
+            \-+-/  \-+--/
+              \------/
+        """.trimIndent()
+
+        val result = puzzle.solveOne(exampleText)
+        assertEquals("7,3", result)
+    }
+
+    @Test
+    fun `example part b`() {
+        val exampleText = """
+            />-<\
+            |   |
+            | /<+-\
+            | | | v
+            \>+</ |
+              |   ^
+              \<->/
+        """.trimIndent()
+
+        val result = puzzle.solveTwo(exampleText)
+        assertEquals("6,4", result)
+    }
+
+    @Test
     fun `puzzle part a`() {
+        // NOT 94,65
+        // NOT 65,9
+        // NOT 26,44
         val result = puzzle.solveOne(puzzleText)
-        assertEquals("a", result)
+        assertEquals("115,138", result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("b", result)
+        assertEquals("0,98", result)
     }
 
     class Puzzle13 {
@@ -59,7 +93,7 @@ class Puzzle13Test {
         }
 
         data class Point(val x: Int, val y: Int)
-        data class Car(val position: Point, val direction: Direction, val turn: Turn) {
+        data class Car(val position: Point, val direction: Direction, val turn: Turn, val collided: Boolean = false) {
 
             fun turn(): Car {
                 val nextDirection = when (turn) {
@@ -76,8 +110,8 @@ class Puzzle13Test {
                 return when (direction) {
                     Direction.UP -> this.position.copy(y = position.y - 1)
                     Direction.DOWN -> this.position.copy(y = position.y + 1)
-                    Direction.LEFT -> this.position.copy(y = position.x - 1)
-                    Direction.RIGHT -> this.position.copy(y = position.x + 1)
+                    Direction.LEFT -> this.position.copy(x = position.x - 1)
+                    Direction.RIGHT -> this.position.copy(x = position.x + 1)
                 }
             }
 
@@ -89,20 +123,27 @@ class Puzzle13Test {
                         Direction.LEFT -> Direction.DOWN
                         Direction.RIGHT -> Direction.UP
                     }
-                }
-                else if (tileAhead == '\\') {
+                } else if (tileAhead == '\\') {
                     when (this.direction) {
                         Direction.UP -> Direction.LEFT
                         Direction.DOWN -> Direction.RIGHT
                         Direction.LEFT -> Direction.UP
                         Direction.RIGHT -> Direction.DOWN
                     }
-                }
-                else {
+                } else {
                     throw RuntimeException("Hey! I only want to handle '/' or '\\' characters")
                 }
 
                 return this.copy(direction = nextDirection)
+            }
+
+            fun toChar(): Char {
+                return when (this.direction) {
+                    Direction.UP -> '^'
+                    Direction.DOWN -> 'v'
+                    Direction.LEFT -> '<'
+                    Direction.RIGHT -> '>'
+                }
             }
         }
 
@@ -112,75 +153,178 @@ class Puzzle13Test {
             val maxWidth = lines.maxBy { it.length }!!.length
 
             // Create a 2D grid to chars
-            val theGrid = (0 until maxWidth).map { x ->
-                (0 until maxHeight).map { y ->
-                    if (x > lines.lastIndex || y > lines[x].lastIndex) ' ' else lines[x][y]
-                }
-            }
+            val theGrid = parseTheGrid(maxWidth, maxHeight, lines)
 
             // Find the position and direction of the cars
-            val cars = (0 until maxWidth).flatMap { x ->
-                (0 until maxHeight).mapNotNull { y ->
-                    if (theGrid[x][y] == '<') {
-                        Car(Point(x, y), Direction.LEFT, Turn.LEFT)
-                    } else if (theGrid[x][y] == '^') {
-                        Car(Point(x, y), Direction.UP, Turn.LEFT)
-                    } else if (theGrid[x][y] == '>') {
-                        Car(Point(x, y), Direction.RIGHT, Turn.LEFT)
-                    } else if (theGrid[x][y] == 'v') {
-                        Car(Point(x, y), Direction.DOWN, Turn.LEFT)
-                    } else null
+            var carState = getInitialCarState(theGrid)
+
+            val theGridWithoutCars = getGridWithoutCars(theGrid)
+
+            while (true) {
+                carState = sortCars(carState)
+
+                for (index in 0 until carState.size) {
+                    carState[index] = moveCarAhead(carState[index], theGridWithoutCars)
+
+                    if (hasCollisions(carState)) {
+                        return getCollision(carState)
+                    }
                 }
             }
+        }
 
-            val theGridWithoutCars = (0 until maxWidth).flatMap { x ->
-                (0 until maxHeight).map { y ->
-                    val char = theGrid[x][y]
-                    val point = Point(x, y)
+        private fun getGridWithoutCars(theGrid: Map<Point, Char>): Map<Point, Char> {
+            return theGrid.map { (point, tile) ->
+                val newChar = if (tile == '<' || tile == '>') '-'
+                else if (tile == '^' || tile == 'v') '|'
+                else tile
 
-
-                    val newChar = if (char == '<' || char == '>') '-'
-                    else if (char == '^' || char == 'v') '|'
-                    else char
-
-                    point to newChar
-                }
+                point to newChar
             }.toMap()
+        }
 
-            var carStates = cars.map { car ->
-                val pointAhead = car.pointAhead()
-                val tileAhead = theGridWithoutCars[pointAhead]!!
+        private fun parseTheGrid(maxWidth: Int, maxHeight: Int, lines: List<String>): Map<Point, Char> {
+            return (0 until maxWidth).map { x ->
+                (0 until maxHeight).map { y ->
 
-                if (tileAhead == '-' || tileAhead == '|') {
-                    car.copy(position = pointAhead)
+                    val point = Point(x, y)
+                    val tile = if (y > lines.lastIndex || x > lines[y].lastIndex) ' ' else lines[y][x]
+
+                    point to tile
                 }
-                else if (tileAhead == '+') {
-                    car.copy(position = pointAhead).turn()
-                }
-                else if (tileAhead == '\\' || tileAhead == '/') {
-                    car.handleCorner(tileAhead)
-                }
-                else if (tileAhead == ' ') {
-                    throw RuntimeException("Woah! Fell off the tracks!")
-                }
-                else {
-                    throw RuntimeException("Woah! Met a character I have not seen before! character = $tileAhead")
-                }
+            }.flatten().toMap()
+        }
+
+        private fun getInitialCarState(theGrid: Map<Point, Char>): MutableList<Car> {
+            return theGrid.mapNotNull { (point, tile) ->
+                if (tile == '<') {
+                    Car(point, Direction.LEFT, Turn.LEFT)
+                } else if (tile == '^') {
+                    Car(point, Direction.UP, Turn.LEFT)
+                } else if (tile == '>') {
+                    Car(point, Direction.RIGHT, Turn.LEFT)
+                } else if (tile == 'v') {
+                    Car(point, Direction.DOWN, Turn.LEFT)
+                } else null
+            }.toMutableList()
+        }
+
+        private fun getCollision(carState: List<Car>): String {
+            val collisionPoint = carState
+                .map { it.position }
+                .groupBy { it }
+                .map { it.key to it.value.count() }
+                .maxBy { it.second }!!.first
+
+            return "${collisionPoint.x},${collisionPoint.y}"
+        }
+
+        private fun outputGrid(carState: List<Car>, theGridWithoutCars: Map<Point, Char>) {
+            val width = theGridWithoutCars.keys.maxBy { it.x }!!.x
+            val height = theGridWithoutCars.keys.maxBy { it.y }!!.y
+
+            val dog = (0..height).map { y ->
+                (0..width).map { x ->
+
+                    val point = Point(x, y)
+                    val carAtThisPoint = carState.find { it.position == point }
+
+                    if (carAtThisPoint != null) {
+                        carAtThisPoint.toChar()
+                    } else {
+                        theGridWithoutCars[point]!!
+                    }
+                }.joinToString("")
+            }.joinToString("\n")
+
+            println(dog)
+        }
+
+        private fun hasCollisions(carState: List<Car>): Boolean {
+            return carState.map { it.position }.toSet().size < carState.size
+        }
+
+        private fun moveCarsAhead(cars: List<Car>, theGridWithoutCars: Map<Point, Char>): List<Car> {
+            val sortedCars = sortCars(cars)
+            return sortedCars.map { car -> moveCarAhead(car, theGridWithoutCars) }
+        }
+
+        private fun moveCarAhead(car: Car, theGridWithoutCars: Map<Point, Char>): Car {
+            val pointAhead = car.pointAhead()
+            val tileAhead = theGridWithoutCars[pointAhead]!!
+
+            return if (tileAhead == '-' || tileAhead == '|') {
+                car.copy(position = pointAhead)
+            } else if (tileAhead == '+') {
+                car.copy(position = pointAhead).turn()
+            } else if (tileAhead == '\\' || tileAhead == '/') {
+                car.copy(position = pointAhead).handleCorner(tileAhead)
+            } else if (tileAhead == ' ') {
+                throw RuntimeException("Woah! Fell off the tracks!")
+            } else {
+                throw RuntimeException("Woah! Met a character I have not seen before! character = $tileAhead")
             }
+        }
 
+        private fun sortCars(cars: List<Car>): MutableList<Car> {
+            val sortedCars = cars.sortedWith(Comparator { a, b ->
+                when {
+                    a.position.y > b.position.y -> 1
+                    a.position.y < b.position.y -> -1
+                    a.position.x > b.position.x -> 1
+                    a.position.x < b.position.x -> -1
+                    else -> 0
+                }
+            })
 
-
-
-
-
-            return ""
+            return sortedCars.toMutableList()
         }
 
         fun solveTwo(puzzleText: String): String {
-            return ""
+            val lines = puzzleText.split("\n")
+            val maxHeight = lines.count()
+            val maxWidth = lines.maxBy { it.length }!!.length
+
+            // Create a 2D grid to chars
+            val theGrid = parseTheGrid(maxWidth, maxHeight, lines)
+
+            // Find the position and direction of the cars
+            var carState = getInitialCarState(theGrid)
+
+            val theGridWithoutCars = getGridWithoutCars(theGrid)
+
+            while (true) {
+                carState = sortCars(carState)
+
+                for (index in 0 until carState.size) {
+                    carState[index] = moveCarAhead(carState[index], theGridWithoutCars)
+
+                    if (hasCollisions(carState)) {
+                        carState = markCollidedCars(carState)
+                    }
+                }
+
+                // A tick has gone by. Filter out the collided cars
+                carState = carState.filter { it.collided == false }.toMutableList()
+
+                if (carState.size == 1) {
+                    val onlyCar = carState[0]
+                    return "${onlyCar.position.x},${onlyCar.position.y}"
+                }
+            }
         }
 
+        private fun markCollidedCars(carState: MutableList<Car>): MutableList<Car> {
+            val pointsWithCollisions = carState
+                .groupBy { it.position }
+                .filter { it.value.count() > 1 }
+                .map { it.key }
+                .toSet()
 
+            return carState.map { car ->
+                if (pointsWithCollisions.contains(car.position)) car.copy(collided = true) else car
+            }.toMutableList()
+        }
     }
 }
 
