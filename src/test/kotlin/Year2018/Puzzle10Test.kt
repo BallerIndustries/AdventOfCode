@@ -12,7 +12,20 @@ class Puzzle10Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals("a", result)
+        val expected = """
+            #####....####...#####...#....#..#....#..#....#..#....#....##..
+            #....#..#....#..#....#..#...#...#....#..#...#...##...#...#..#.
+            #....#..#.......#....#..#..#....#....#..#..#....##...#..#....#
+            #....#..#.......#....#..#.#.....#....#..#.#.....#.#..#..#....#
+            #####...#.......#####...##......######..##......#.#..#..#....#
+            #..#....#..###..#..#....##......#....#..##......#..#.#..######
+            #...#...#....#..#...#...#.#.....#....#..#.#.....#..#.#..#....#
+            #...#...#....#..#...#...#..#....#....#..#..#....#...##..#....#
+            #....#..#...##..#....#..#...#...#....#..#...#...#...##..#....#
+            #....#...###.#..#....#..#....#..#....#..#....#..#....#..#....#
+        """.trimIndent()
+
+        assertEquals(expected, result.first)
     }
 
     @Test
@@ -23,8 +36,8 @@ class Puzzle10Test {
 
     @Test
     fun `puzzle part b`() {
-        val result = puzzle.solveTwo(puzzleText)
-        assertEquals("b", result)
+        val result = puzzle.solveOne(puzzleText)
+        assertEquals(10117, result.second)
     }
 
     class Puzzle10 {
@@ -33,7 +46,7 @@ class Puzzle10Test {
 
         data class Dog(val x: Int, val y: Int, val deltaX: Int, val deltaY: Int)
 
-        fun solveOne(puzzleText: String): String {
+        fun solveOne(puzzleText: String): Pair<String, Int> {
             val dogs = puzzleText.split("\n").map { line ->
 
                 val tmp = line.replace("position=", "")
@@ -71,16 +84,15 @@ class Puzzle10Test {
             }
 
             println("message appears at second = ${closest!!.first}")
-            printPoints(closest.second)
-
-            return ""
+            val text = printPoints(closest.second)
+            return text to closest.first
         }
 
         fun solveTwo(puzzleText: String): String {
             return ""
         }
 
-        fun printPoints(points: List<Point>) {
+        fun printPoints(points: List<Point>): String {
             val pointSet = points.toSet()
             val minX = points.minBy { it.x }!!.x
             val maxX = points.maxBy { it.x }!!.x
@@ -99,6 +111,8 @@ class Puzzle10Test {
 
             val gridText = buffer.map { it.joinToString("") }.joinToString("\n")
             println(gridText)
+
+            return gridText
         }
     }
 }
