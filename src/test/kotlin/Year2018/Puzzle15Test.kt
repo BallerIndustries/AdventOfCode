@@ -23,33 +23,30 @@ class Puzzle15Test {
     @Test
     fun `can find shortest path for two points right next to each other`() {
         val grid = puzzle.parseGrid(puzzleText)
-        val shortestPath = puzzle.getAllPaths(grid, Puzzle15.Point(3, 4), Puzzle15.Point(4, 4), setOf(), listOf())
+        val shortestPath = puzzle.getAllPaths(grid, Puzzle15.Point(3, 4), Puzzle15.Point(4, 4))
         assertEquals(listOf(Puzzle15.Point(3, 4), Puzzle15.Point(4, 4)), shortestPath)
     }
 
     @Test
     fun `can find shortest path for two points right two units away from each other`() {
         val grid = puzzle.parseGrid(puzzleText)
-        val shortestPath = puzzle.getAllPaths(grid, Puzzle15.Point(3, 4), Puzzle15.Point(5, 4), setOf(), listOf())
+        val shortestPath = puzzle.getAllPaths(grid, Puzzle15.Point(3, 4), Puzzle15.Point(5, 4))
         assertEquals(listOf(Puzzle15.Point(3, 4), Puzzle15.Point(4, 4)), shortestPath)
     }
 
     class Puzzle15 {
 
         fun getAllPaths(grid: Map<Point, Char>, a: Point, b: Point): List<List<Point>> {
-            val startPath = listOf(a)
-            val adjacentTiles = a.getFreeAdjacentTiles(grid)
+            val dog = mutableListOf(mutableListOf(a))
+            val afterOneStep = dog.flatMap { list ->
+                val lastItem = list.last()!!
+                val nextTiles = lastItem.getFreeAdjacentTiles(grid).filter { !list.contains(it) }
 
-            val allPaths = adjacentTiles.map { adjacentTile -> octopusOut(grid, adjacentTile, b, startPath) }
-            return allPaths
+                nextTiles.map { nextTile -> list + nextTile }
+            }
+
+            return afterOneStep
         }
-
-        fun octopusOut(grid: Map<Point, Char>, a: Point, b: Point, path: List<Point>): List<Point> {
-            if (a == b) return path
-
-
-        }
-
 
         enum class Type { ELF, GOBLIN }
 
@@ -61,9 +58,9 @@ class Puzzle15Test {
                 val eastPoint = this.copy(x = this.x + 1)
 
                 return listOf(northPoint, southPoint, westPoint, eastPoint)
-                    .map { it to grid[it] }
-                    .filter { it.second != null && it.second == '.' }
-                    .map { it.first }
+                        .map { it to grid[it] }
+                        .filter { it.second != null && it.second == '.' }
+                        .map { it.first }
             }
         }
 
@@ -114,20 +111,19 @@ class Puzzle15Test {
                 // Already next to an enemy, do not need to move
                 if (pointAdjacentToEnemy.contains(currentUnit.position)) {
 
-                }
-                else {
+                } else {
 
                     val reachablePoints = pointAdjacentToEnemy
-                        .filter { point -> isReachable(grid, currentUnit.position, point) }
-                        .map { point -> point to manhattanDistance(currentUnit.position, point) }
+                            .filter { point -> isReachable(grid, currentUnit.position, point) }
+                            .map { point -> point to manhattanDistance(currentUnit.position, point) }
 
                     val minDistance: Int = reachablePoints.minBy { it.second }!!.second
 
                     val chosenPoint = reachablePoints
-                        .filter { it.second == minDistance }
-                        .map { it.first }
-                        .sortedWith(pointCompare)
-                        .first()
+                            .filter { it.second == minDistance }
+                            .map { it.first }
+                            .sortedWith(pointCompare)
+                            .first()
                 }
 
                 // 3. attack the enemy unit if you are already in range of it.
@@ -154,7 +150,7 @@ class Puzzle15Test {
                 visited.add(currentPoint)
 
                 val adjacentTiles: List<Point> = currentPoint.getFreeAdjacentTiles(grid)
-                    .filter { !visited.contains(it) }
+                        .filter { !visited.contains(it) }
 
                 // Add adjacent tiles we have not visited
                 toProcess.addAll(adjacentTiles)
@@ -173,7 +169,6 @@ class Puzzle15Test {
             }.sortedWith(unitCompare)
             return units
         }
-
 
 
         fun manhattanDistance(a: Point, b: Point): Int {
