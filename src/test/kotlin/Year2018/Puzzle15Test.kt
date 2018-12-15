@@ -109,11 +109,9 @@ class Puzzle15Test {
                 // which aren't already occupied by a wall or another unit.
                 val pointAdjacentToEnemy = enemyUnits.flatMap { enemy -> enemy.getFreeAdjacentTiles(grid) }.toSet()
 
-                // Already next to an enemy, do not need to move
-                if (pointAdjacentToEnemy.contains(currentUnit.position)) {
-    
-                } else {
-
+                // need to move
+                if (!pointAdjacentToEnemy.contains(currentUnit.position)) {
+                    
                     val reachablePoints = pointAdjacentToEnemy
                             .filter { point -> isReachable(grid, currentUnit.position, point) }
                             
@@ -124,7 +122,21 @@ class Puzzle15Test {
                             .first()
 
                     units[index] = currentUnit.copy(position = chosenPoint)
-            
+                    // TODO: UPDATE STATE TO INCLUDE THE MOVE YOU DID
+                }
+                
+                // ATTACK IF NEXT TO AN ENEMY
+                val listOFENEMIESSNEXTTOME
+                
+                if (listofenemies.isNOTEMPTY) {
+                    
+                    val enemyToAttack = jur.
+                        .sortedWith(hpAndPointCompare)
+                        .first()
+                    
+                    val damagedEnemy = enemyToAttack.copy(hp = eta.hp - 3)
+                    // TODO: UPDATE STATE TO INCLUDE THE DAMAGED ENEMY
+                    
                 }
 
                 
