@@ -37,16 +37,17 @@ class Puzzle15Test {
     class Puzzle15 {
 
         fun getAllPaths(grid: Map<Point, Char>, a: Point, b: Point): List<List<Point>> {
-            val dog = mutableListOf(mutableListOf(a))
-            val afterOneStep = dog.flatMap { list ->
+            var dog = mutableListOf(mutableListOf(a))
+            while (dog.any { it.last() == b } == false) {
+            dog = dog.flatMap { list ->
                 val lastItem = list.last()!!
                 val nextTiles = lastItem.getFreeAdjacentTiles(grid).filter { !list.contains(it) }
 
                 nextTiles.map { nextTile -> list + nextTile }
             }
 
-            return afterOneStep
-        }
+            return dog.filter { it.last() == b }
+        }}
 
         enum class Type { ELF, GOBLIN }
 
