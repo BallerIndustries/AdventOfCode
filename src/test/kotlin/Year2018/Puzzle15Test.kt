@@ -23,31 +23,57 @@ class Puzzle15Test {
     @Test
     fun `can find shortest path for two points right next to each other`() {
         val grid = puzzle.parseGrid(puzzleText)
-        val shortestPath = puzzle.getAllPaths(grid, Puzzle15.Point(3, 4), Puzzle15.Point(4, 4))
-        assertEquals(listOf(Puzzle15.Point(3, 4), Puzzle15.Point(4, 4)), shortestPath)
+        val shortestPath = puzzle.getShortestPaths(grid, Puzzle15.Point(3, 4), Puzzle15.Point(4, 4))
+        assertEquals(listOf(listOf(Puzzle15.Point(3, 4), Puzzle15.Point(4, 4))), shortestPath)
     }
 
     @Test
     fun `can find shortest path for two points right two units away from each other`() {
         val grid = puzzle.parseGrid(puzzleText)
-        val shortestPath = puzzle.getAllPaths(grid, Puzzle15.Point(3, 4), Puzzle15.Point(5, 4))
-        assertEquals(listOf(Puzzle15.Point(3, 4), Puzzle15.Point(4, 4)), shortestPath)
+        val shortestPath = puzzle.getShortestPaths(grid, Puzzle15.Point(3, 4), Puzzle15.Point(5, 4))
+        assertEquals(listOf(listOf(Puzzle15.Point(3, 4), Puzzle15.Point(4, 4), Puzzle15.Point(5, 4))), shortestPath)
+    }
+
+    @Test
+    fun `can find two equally short paths`() {
+        val text = """
+            ...
+            ...
+            ...
+        """.trimIndent()
+
+        val grid = puzzle.parseGrid(text)
+        val shortestPath = puzzle.getShortestPaths(grid, Puzzle15.Point(0, 0), Puzzle15.Point(1, 1))
+
+        assertEquals(listOf(
+            listOf(Puzzle15.Point(0, 0), Puzzle15.Point(0, 1), Puzzle15.Point(1, 1)),
+            listOf(Puzzle15.Point(0, 0), Puzzle15.Point(1, 0), Puzzle15.Point(1, 1))
+            ), shortestPath)
     }
 
     class Puzzle15 {
 
-        fun getAllPaths(grid: Map<Point, Char>, a: Point, b: Point): List<List<Point>> {
-            var dog = mutableListOf(mutableListOf(a))
-            while (dog.any { it.last() == b } == false) {
-            dog = dog.flatMap { list ->
-                val lastItem = list.last()!!
-                val nextTiles = lastItem.getFreeAdjacentTiles(grid).filter { !list.contains(it) }
+        fun getShortestPaths(grid: Map<Point, Char>, a: Point, b: Point): List<List<Point>> {
+            var dog = listOf(listOf(a))
 
-                nextTiles.map { nextTile -> list + nextTile }
+            while (true) {
+                val tailPoints = dog.map { it.last() }
+
+                if (tailPoints.any { it == b }) {
+                    break
+                }
+
+                dog = dog.flatMap { list ->
+                    val lastItem = list.last()!!
+                    val nextTiles = lastItem.getFreeAdjacentTiles(grid).filter { !list.contains(it) }
+
+                    nextTiles.map { nextTile -> list + nextTile }
+                }
             }
 
+
             return dog.filter { it.last() == b }
-        }}
+        }
 
         enum class Type { ELF, GOBLIN }
 
@@ -65,18 +91,22 @@ class Puzzle15Test {
             }
         }
 
-        data class Elf(override val position: Point, override val type: Type = Type.ELF, override val hp: Int = 200, override val attack: Int = 3) : Soldier
+        data class Elf(override var position: Point, override val type: Type = Type.ELF, override val hp: Int = 200, override val attack: Int = 3) : Soldier
 
-        data class Goblin(override val position: Point, override val type: Type = Type.GOBLIN, override val hp: Int = 200, override val attack: Int = 3) : Soldier
+        data class Goblin(override var position: Point, override val type: Type = Type.GOBLIN, override val hp: Int = 200, override val attack: Int = 3) : Soldier
 
         interface Soldier {
             val type: Type
-            val position: Point
+            var position: Point
             val hp: Int
             val attack: Int
 
             fun getFreeAdjacentTiles(grid: Map<Point, Char>): List<Point> {
                 return position.getFreeAdjacentTiles(grid)
+            }
+
+            fun moveTo(chosenPoint: Point) {
+                this.position = chosenPoint
             }
         }
 
@@ -113,31 +143,30 @@ class Puzzle15Test {
                 if (!pointAdjacentToEnemy.contains(currentUnit.position)) {
                     
                     val reachablePoints = pointAdjacentToEnemy
-                            .filter { point -> isReachable(grid, currentUnit.position, point) }
+                        .filter { point -> isReachable(grid, currentUnit.position, point) }
                             
                     val chosenPoint = reachablePoints
-                            .map { getShortestPaths(grid, currentUNIT.position, it) }
-                            .map { it.first() } 
-                            .sortedWith(pointCompare) 
-                            .first()
-
-                    units[index] = currentUnit.copy(position = chosenPoint)
-                    // TODO: UPDATE STATE TO INCLUDE THE MOVE YOU DID
-                }
-                
-                // ATTACK IF NEXT TO AN ENEMY
-                val listOFENEMIESSNEXTTOME
-                
-                if (listofenemies.isNOTEMPTY) {
-                    
-                    val enemyToAttack = jur.
-                        .sortedWith(hpAndPointCompare)
+                        .map { getShortestPaths(grid, currentUnit.position, it) }
+                        .flatMap{ it.first() }
+                        .sortedWith(pointCompare)
                         .first()
-                    
-                    val damagedEnemy = enemyToAttack.copy(hp = eta.hp - 3)
-                    // TODO: UPDATE STATE TO INCLUDE THE DAMAGED ENEMY
-                    
+
+                    currentUnit.moveTo(chosenPoint)
                 }
+                
+//                // ATTACK IF NEXT TO AN ENEMY
+//                val listOFENEMIESSNEXTTOME
+//
+//                if (listofenemies.isNOTEMPTY) {
+//
+//                    val enemyToAttack = jur.
+//                        .sortedWith(hpAndPointCompare)
+//                        .first()
+//
+//                    val damagedEnemy = enemyToAttack.copy(hp = eta.hp - 3)
+//                    // TODO: UPDATE STATE TO INCLUDE THE DAMAGED ENEMY
+//
+//                }
 
                 
 
