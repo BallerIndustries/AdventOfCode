@@ -20,7 +20,37 @@ class Puzzle15Test {
         assertEquals("b", result)
     }
 
+    @Test
+    fun `can find shortest path for two points right next to each other`() {
+        val grid = puzzle.parseGrid(puzzleText)
+        val shortestPath = puzzle.getAllPaths(grid, Puzzle15.Point(3, 4), Puzzle15.Point(4, 4), setOf(), listOf())
+        assertEquals(listOf(Puzzle15.Point(3, 4), Puzzle15.Point(4, 4)), shortestPath)
+    }
+
+    @Test
+    fun `can find shortest path for two points right two units away from each other`() {
+        val grid = puzzle.parseGrid(puzzleText)
+        val shortestPath = puzzle.getAllPaths(grid, Puzzle15.Point(3, 4), Puzzle15.Point(5, 4), setOf(), listOf())
+        assertEquals(listOf(Puzzle15.Point(3, 4), Puzzle15.Point(4, 4)), shortestPath)
+    }
+
     class Puzzle15 {
+
+        fun getAllPaths(grid: Map<Point, Char>, a: Point, b: Point): List<List<Point>> {
+            val startPath = listOf(a)
+            val adjacentTiles = a.getFreeAdjacentTiles(grid)
+
+            val allPaths = adjacentTiles.map { adjacentTile -> octopusOut(grid, adjacentTile, b, startPath) }
+            return allPaths
+        }
+
+        fun octopusOut(grid: Map<Point, Char>, a: Point, b: Point, path: List<Point>): List<Point> {
+            if (a == b) return path
+
+
+        }
+
+
         enum class Type { ELF, GOBLIN }
 
         data class Point(val x: Int, val y: Int) {
@@ -98,36 +128,11 @@ class Puzzle15Test {
                         .map { it.first }
                         .sortedWith(pointCompare)
                         .first()
-
-
-
-
-//                        .minBy { it.second }
-
-
-
-
-
-
-
-
                 }
-
-
-
-
-
-
-
 
                 // 3. attack the enemy unit if you are already in range of it.
 
-
-
             }
-
-
-
 
             return ""
         }
@@ -169,11 +174,13 @@ class Puzzle15Test {
             return units
         }
 
+
+
         fun manhattanDistance(a: Point, b: Point): Int {
             return Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
         }
 
-        private fun parseGrid(puzzleText: String): Map<Point, Char> {
+        fun parseGrid(puzzleText: String): Map<Point, Char> {
             val lines = puzzleText.split("\n")
             val width = lines[0].length
             val height = lines.size
