@@ -111,23 +111,23 @@ class Puzzle15Test {
 
                 // Already next to an enemy, do not need to move
                 if (pointAdjacentToEnemy.contains(currentUnit.position)) {
-
+    
                 } else {
 
                     val reachablePoints = pointAdjacentToEnemy
                             .filter { point -> isReachable(grid, currentUnit.position, point) }
-                            .map { point -> point to manhattanDistance(currentUnit.position, point) }
-
-                    val minDistance: Int = reachablePoints.minBy { it.second }!!.second
-
+                            
                     val chosenPoint = reachablePoints
-                            .filter { it.second == minDistance }
-                            .map { it.first }
-                            .sortedWith(pointCompare)
+                            .map { getShortestPaths(grid, currentUNIT.position, it) }
+                            .map { it.first() } 
+                            .sortedWith(pointCompare) 
                             .first()
+
+                    units[index] = currentUnit.copy(position = chosenPoint)
+            
                 }
 
-                // 3. attack the enemy unit if you are already in range of it.
+                
 
             }
 
