@@ -92,16 +92,18 @@ class Puzzle15Test {
 
     class Puzzle15 {
 
+
         fun solveOne(puzzleText: String): String {
             var gridState = parseGrid(puzzleText)
             val soldiers = getSoldiers(gridState)
             var cycle = 0
 
-            while (true) {
-                for (index in 0 until soldiers.size) {
-                    cycle++
-                    println(cycle)
+//            while (true) {
 
+            (0 until 4).forEach {
+                outputGrid(gridState)
+
+                for (index in 0 until soldiers.size) {
                     val currentUnit = soldiers[index]
 
                     // 1. identifying all possible targets (enemy units)
@@ -110,24 +112,34 @@ class Puzzle15Test {
                     // 2. identifies all of the open squares (.) that are in range of each target;
                     // these are the squares which are adjacent (immediately up, down, left, or right) to any target and
                     // which aren't already occupied by a wall or another unit.
-                    val pointAdjacentToEnemy = enemyUnits.flatMap { enemy -> enemy.getFreeAdjacentTiles(gridState) }.toSet()
+                    val pointsAdjacentToEnemies = enemyUnits.flatMap { enemy -> enemy.getFreeAdjacentTiles(gridState) }.toSet()
 
                     // move elf, get on your way, get on your way elf get on your way
-                    if (!pointAdjacentToEnemy.contains(currentUnit.position)) {
+                    if (!pointsAdjacentToEnemies.contains(currentUnit.position)) {
 
-                        val reachablePoints = pointAdjacentToEnemy
+                        val reachablePoints = pointsAdjacentToEnemies
                             .filter { point -> isReachable(gridState, currentUnit.position, point) }
 
-                        val chosenPoint = reachablePoints
-                            .map { getShortestPaths(gridState, currentUnit.position, it) }
-                            .flatMap{ it.first() }
+                        val pathsToPoints = reachablePoints
+                            .flatMap { getShortestPaths(gridState, currentUnit.position, it) }
+
+                        val minPathLength = pathsToPoints.minBy { it.size }!!.size
+                        val possibleNextSteps  = pathsToPoints
+                            .filter { it.size == minPathLength }
+                            .map { it.first() }
+                            .distinct()
                             .sortedWith(pointCompare)
-                            .first()
 
-                        currentUnit.moveTo(chosenPoint)
-                        gridState = updateGridState(gridState, soldiers)
+
+                        val chosenPoint = possibleNextSteps.firstOrNull()
+
+                        println("")
+
+                        if (chosenPoint != null) {
+                            currentUnit.moveTo(chosenPoint)
+                            gridState = updateGridState(gridState, soldiers)
+                        }
                     }
-
 
                     // TODO: Attack part comes back later, lets just get moving right for now
 //                    // Get a list of enemies next to this soldier
@@ -149,28 +161,58 @@ class Puzzle15Test {
 //                    }
                 }
             }
+
+            return ""
+        }
+
+        private fun outputGrid(grid: Map<Puzzle15.Point, Char>) {
+            val width = grid.keys.maxBy { it.x }!!.x
+            val height = grid.keys.maxBy { it.y }!!.y
+
+            val dog = (0..height).map { y ->
+                (0..width).map { x ->
+
+                    val point = Point(x, y)
+                    grid[point]!!
+
+//                    val point = Puzzle13Test.Puzzle13.Point(x, y)
+//                    val carAtThisPoint = carState.find { it.position == point }
+//
+//                    if (carAtThisPoint != null) {
+//                        carAtThisPoint.toChar()
+//                    } else {
+//                        theGridWithoutCars[point]!!
+//                    }
+                }.joinToString("")
+            }.joinToString("\n")
+
+            println(dog)
         }
 
 
         fun getShortestPaths(grid: Map<Point, Char>, a: Point, b: Point): List<List<Point>> {
-            var dog = listOf(listOf(a))
+            var allPaths = listOf(listOf(a))
 
             while (true) {
-                val tailPoints = dog.map { it.last() }
+                val tailPoints = allPaths.map { it.last() }
 
                 if (tailPoints.any { it == b }) {
                     break
                 }
 
-                dog = dog.flatMap { list ->
+                allPaths = allPaths.flatMap { list ->
                     val lastItem = list.last()!!
                     val nextTiles = lastItem.getFreeAdjacentTiles(grid).filter { !list.contains(it) }
-
                     nextTiles.map { nextTile -> list + nextTile }
                 }
             }
 
-            return dog.filter { it.last() == b }
+            val pathsTheEndAtB = allPaths
+                .filter { it.last() == b }
+                .map { it.subList(1, it.size) }
+
+            val minPathLength = pathsTheEndAtB.minBy { it.size }!!.size
+            return pathsTheEndAtB.filter { it.size == minPathLength }
         }
 
         enum class Type(val char: Char) { ELF('E'), GOBLIN('G') }
@@ -271,7 +313,6 @@ class Puzzle15Test {
 
             while (toProcess.isNotEmpty()) {
                 val currentPoint = toProcess.pop()
-                //println(currentPoint)
 
                 if (currentPoint == end) {
                     return true
@@ -279,8 +320,9 @@ class Puzzle15Test {
 
                 visited.add(currentPoint)
 
-                val adjacentTiles: List<Point> = currentPoint.getFreeAdjacentTiles(grid)
-                        .filter { !visited.contains(it) }
+                val adjacentTiles: List<Point> = currentPoint
+                    .getFreeAdjacentTiles(grid)
+                    .filter { !visited.contains(it) }
 
                 // Add adjacent tiles we have not visited
                 toProcess.addAll(adjacentTiles)
