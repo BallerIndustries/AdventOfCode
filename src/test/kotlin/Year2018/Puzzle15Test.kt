@@ -2,6 +2,7 @@ package Year2018
 
 import junit.framework.Assert.assertEquals
 import org.junit.Test
+import java.lang.RuntimeException
 import java.util.*
 
 class Puzzle15Test {
@@ -75,21 +76,27 @@ class Puzzle15Test {
             return dog.filter { it.last() == b }
         }
 
-        enum class Type { ELF, GOBLIN }
+        enum class Type(val char: Char) { ELF('E'), GOBLIN('G') }
 
         data class Point(val x: Int, val y: Int) {
             fun getFreeAdjacentTiles(grid: Map<Point, Char>): List<Point> {
+                return getAdjacentTiles()
+                        .map { it to grid[it] }
+                        .filter { it.second != null && it.second == '.' }
+                        .map { it.first }
+            }
+
+            fun getAdjacentTiles(): List<Point> {
                 val northPoint = this.copy(y = this.y - 1)
                 val southPoint = this.copy(y = this.y + 1)
                 val westPoint = this.copy(x = this.x - 1)
                 val eastPoint = this.copy(x = this.x + 1)
 
                 return listOf(northPoint, southPoint, westPoint, eastPoint)
-                        .map { it to grid[it] }
-                        .filter { it.second != null && it.second == '.' }
-                        .map { it.first }
             }
         }
+
+
 
         data class Elf(override var position: Point, override val type: Type = Type.ELF, override val hp: Int = 200, override val attack: Int = 3) : Soldier
 
@@ -101,6 +108,8 @@ class Puzzle15Test {
             val hp: Int
             val attack: Int
 
+
+
             fun getFreeAdjacentTiles(grid: Map<Point, Char>): List<Point> {
                 return position.getFreeAdjacentTiles(grid)
             }
@@ -108,10 +117,15 @@ class Puzzle15Test {
             fun moveTo(chosenPoint: Point) {
                 this.position = chosenPoint
             }
+
+            fun toChar(): Char {
+                return this.type.char
+            }
         }
 
         val unitCompare = Comparator<Soldier> { a, b -> pointCompare.compare(a.position, b.position) }
 
+        // TODO: Defer to the comparator on the integers?
         val pointCompare = Comparator<Point> { a, b ->
             when {
                 a.y > b.y -> 1
@@ -123,56 +137,78 @@ class Puzzle15Test {
         }
 
         fun solveOne(puzzleText: String): String {
-            val grid = parseGrid(puzzleText)
+            var gridState = parseGrid(puzzleText)
+            val soldiers = getSoldiers(gridState)
 
-            // Go through the grid, find a list of goblins
-            val units = getUnits(grid)
+            while (true) {
+                for (index in 0 until soldiers.size) {
+                    val currentUnit = soldiers[index]
 
-            for (index in 0 until units.size) {
-                val currentUnit = units[index]
+                    // 1. identifying all possible targets (enemy units)
+                    val enemyUnits = soldiers.filter { it.type != currentUnit.type }
 
-                // 1. identifying all possible targets (enemy units)
-                val enemyUnits = units.filter { it.type != currentUnit.type }
+                    // 2. identifies all of the open squares (.) that are in range of each target;
+                    // these are the squares which are adjacent (immediately up, down, left, or right) to any target and
+                    // which aren't already occupied by a wall or another unit.
+                    val pointAdjacentToEnemy = enemyUnits.flatMap { enemy -> enemy.getFreeAdjacentTiles(gridState) }.toSet()
 
-                // 2. identifies all of the open squares (.) that are in range of each target;
-                // these are the squares which are adjacent (immediately up, down, left, or right) to any target and
-                // which aren't already occupied by a wall or another unit.
-                val pointAdjacentToEnemy = enemyUnits.flatMap { enemy -> enemy.getFreeAdjacentTiles(grid) }.toSet()
+                    // move elf, get on your way, get on your way elf get on your way
+                    if (!pointAdjacentToEnemy.contains(currentUnit.position)) {
 
-                // need to move
-                if (!pointAdjacentToEnemy.contains(currentUnit.position)) {
-                    
-                    val reachablePoints = pointAdjacentToEnemy
-                        .filter { point -> isReachable(grid, currentUnit.position, point) }
-                            
-                    val chosenPoint = reachablePoints
-                        .map { getShortestPaths(grid, currentUnit.position, it) }
-                        .flatMap{ it.first() }
-                        .sortedWith(pointCompare)
-                        .first()
+                        val reachablePoints = pointAdjacentToEnemy
+                            .filter { point -> isReachable(gridState, currentUnit.position, point) }
 
-                    currentUnit.moveTo(chosenPoint)
+                        val chosenPoint = reachablePoints
+                            .map { getShortestPaths(gridState, currentUnit.position, it) }
+                            .flatMap{ it.first() }
+                            .sortedWith(pointCompare)
+                            .first()
+
+                        currentUnit.moveTo(chosenPoint)
+                        gridState = updateGridState(gridState, soldiers)
+                    }
+
+                    // Get a list of enemies next to this elf
+                    val enemiesNextToMe = currentUnit.position.getAdjacentTiles().filter {  }
+
+                    // ATTACK IF NEXT TO AN ENEMY
+                    if (pointAdjacentToEnemy.contains(currentUnit.position)) {
+
+//                        val enemyToAttack = jur.
+//                            .sortedWith(hpAndPointCompare)
+//                            .first()
+//
+//                        val damagedEnemy = enemyToAttack.copy(hp = eta.hp - 3)
+
+                        // TODO: UPDATE STATE TO INCLUDE THE DAMAGED ENEMY
+
+                    }
                 }
-                
-//                // ATTACK IF NEXT TO AN ENEMY
-//                val listOFENEMIESSNEXTTOME
-//
-//                if (listofenemies.isNOTEMPTY) {
-//
-//                    val enemyToAttack = jur.
-//                        .sortedWith(hpAndPointCompare)
-//                        .first()
-//
-//                    val damagedEnemy = enemyToAttack.copy(hp = eta.hp - 3)
-//                    // TODO: UPDATE STATE TO INCLUDE THE DAMAGED ENEMY
-//
-//                }
-
-                
-
             }
 
             return ""
+        }
+
+        private fun updateGridState(gridState: Map<Point, Char>, soldiers: List<Soldier>): Map<Point, Char> {
+            val dog: Map<Point, Char> = gridState.entries.associate { (position, char) ->
+                // Look for a soldier at this position
+                val soldierAtThisPoint = soldiers.find { it.position == position }
+
+                if (soldierAtThisPoint != null) {
+                    position to soldierAtThisPoint.toChar()
+                }
+                else if (char == 'G' || char == 'E') {
+                     position to '.'
+                }
+                else if (char == '#' || char == '.') {
+                    position to char
+                }
+                else {
+                    throw RuntimeException("Woah! Didn't expect that! char = $char")
+                }
+            }
+
+            return dog
         }
 
         private fun isReachable(grid: Map<Point, Char>, start: Point, end: Point): Boolean {
@@ -201,7 +237,7 @@ class Puzzle15Test {
             return false
         }
 
-        private fun getUnits(grid: Map<Point, Char>): List<Soldier> {
+        private fun getSoldiers(grid: Map<Point, Char>): List<Soldier> {
             val units = grid.mapNotNull { (point, char) ->
                 when (char) {
                     'G' -> Goblin(point)
