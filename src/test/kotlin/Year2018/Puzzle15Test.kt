@@ -118,28 +118,28 @@ class Puzzle15Test {
                 val currentUnit = soldiers[index]
 
                 mutableGridState = tryMoveSoldier(currentUnit, mutableGridState, soldiers)
-
-                // TODO: Attack part comes back later, lets just get moving right for now
-        //                    // Get a list of enemies next to this soldier
-        //                    val enemiesNextToMe = currentUnit
-        //                        .position.getAdjacentTiles()
-        //                        .mapNotNull { point ->
-        //                            enemyUnits.find { it.position == point }
-        //                        }
-        //
-        //                    // ATTACK IF NEXT TO AN ENEMY
-        //                    if (enemiesNextToMe.isNotEmpty()) {
-        //
-        //                        val enemyToAttack = enemiesNextToMe
-        //                            .sortedWith(hpAndPointCompare)
-        //                            .first()
-        //
-        //                        enemyToAttack.receiveDamage(3)
-        //                        gridState = updateGridState(gridState, soldiers)
-        //                    }
+                mutableGridState = tryAttackEnemy(currentUnit, mutableGridState, soldiers)
             }
 
             return mutableGridState
+        }
+
+        private fun tryAttackEnemy(currentUnit: Soldier, grid: Map<Point, Char>, soldiers: List<Soldier>): Map<Point, Char> {
+            val enemyUnits = soldiers.filter { it.type != currentUnit.type }
+
+            val enemiesNextToMe = currentUnit
+                .position.getAdjacentTiles()
+                .mapNotNull { point -> enemyUnits.find { it.position == point } }
+
+            if (enemiesNextToMe.isEmpty()) {
+                return grid
+            }
+
+            // Attack
+            val enemyToAttack = enemiesNextToMe.sortedWith(hpAndPointCompare).first()
+            enemyToAttack.receiveDamage(3)
+
+            return updateGridState(grid, soldiers)
         }
 
         private fun tryMoveSoldier(currentUnit: Soldier, grid: Map<Point, Char>, soldiers: List<Soldier>): Map<Point, Char> {
@@ -223,9 +223,9 @@ class Puzzle15Test {
         data class Point(val x: Int, val y: Int) {
             fun getFreeAdjacentTiles(grid: Map<Point, Char>): List<Point> {
                 return getAdjacentTiles()
-                        .map { it to grid[it] }
-                        .filter { it.second != null && it.second == '.' }
-                        .map { it.first }
+                    .map { it to grid[it] }
+                    .filter { it.second != null && it.second == '.' }
+                    .map { it.first }
             }
 
             fun getAdjacentTiles(): List<Point> {
@@ -294,14 +294,11 @@ class Puzzle15Test {
 
                 if (soldierAtThisPoint != null && !soldierAtThisPoint.isDead()) {
                     position to soldierAtThisPoint.toChar()
-                }
-                else if (char == 'G' || char == 'E') {
-                     position to '.'
-                }
-                else if (char == '#' || char == '.') {
+                } else if (char == 'G' || char == 'E') {
+                    position to '.'
+                } else if (char == '#' || char == '.') {
                     position to char
-                }
-                else {
+                } else {
                     throw RuntimeException("Woah! Didn't expect that! char = $char")
                 }
             }
