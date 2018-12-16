@@ -1,6 +1,7 @@
 package Year2018
 
 import junit.framework.Assert.assertEquals
+import junit.framework.Assert.assertTrue
 import org.junit.Test
 import java.lang.RuntimeException
 import java.util.*
@@ -70,7 +71,86 @@ class Puzzle15Test {
 
     }
 
+    @Test
+    fun `example a, goblin 1 should be able to reach elf`() {
+        val text = """
+            #########
+            #G..G..G#
+            #.......#
+            #.......#
+            #G..E..G#
+            #.......#
+            #.......#
+            #G..G..G#
+            #########
+        """.trimIndent()
+
+        val grid = puzzle.parseGrid(text)
+        val canBeReached = puzzle.isReachable(grid, Puzzle15.Point(1, 1), Puzzle15.Point(3, 4))
+        assertTrue(canBeReached)
+    }
+
     class Puzzle15 {
+
+        fun solveOne(puzzleText: String): String {
+            var gridState = parseGrid(puzzleText)
+            val soldiers = getSoldiers(gridState)
+            var cycle = 0
+
+            while (true) {
+                for (index in 0 until soldiers.size) {
+                    cycle++
+                    println(cycle)
+
+                    val currentUnit = soldiers[index]
+
+                    // 1. identifying all possible targets (enemy units)
+                    val enemyUnits = soldiers.filter { it.type != currentUnit.type }
+
+                    // 2. identifies all of the open squares (.) that are in range of each target;
+                    // these are the squares which are adjacent (immediately up, down, left, or right) to any target and
+                    // which aren't already occupied by a wall or another unit.
+                    val pointAdjacentToEnemy = enemyUnits.flatMap { enemy -> enemy.getFreeAdjacentTiles(gridState) }.toSet()
+
+                    // move elf, get on your way, get on your way elf get on your way
+                    if (!pointAdjacentToEnemy.contains(currentUnit.position)) {
+
+                        val reachablePoints = pointAdjacentToEnemy
+                            .filter { point -> isReachable(gridState, currentUnit.position, point) }
+
+                        val chosenPoint = reachablePoints
+                            .map { getShortestPaths(gridState, currentUnit.position, it) }
+                            .flatMap{ it.first() }
+                            .sortedWith(pointCompare)
+                            .first()
+
+                        currentUnit.moveTo(chosenPoint)
+                        gridState = updateGridState(gridState, soldiers)
+                    }
+
+
+                    // TODO: Attack part comes back later, lets just get moving right for now
+//                    // Get a list of enemies next to this soldier
+//                    val enemiesNextToMe = currentUnit
+//                        .position.getAdjacentTiles()
+//                        .mapNotNull { point ->
+//                            enemyUnits.find { it.position == point }
+//                        }
+//
+//                    // ATTACK IF NEXT TO AN ENEMY
+//                    if (enemiesNextToMe.isNotEmpty()) {
+//
+//                        val enemyToAttack = enemiesNextToMe
+//                            .sortedWith(hpAndPointCompare)
+//                            .first()
+//
+//                        enemyToAttack.receiveDamage(3)
+//                        gridState = updateGridState(gridState, soldiers)
+//                    }
+                }
+            }
+        }
+
 
         fun getShortestPaths(grid: Map<Point, Char>, a: Point, b: Point): List<List<Point>> {
             var dog = listOf(listOf(a))
@@ -162,63 +242,6 @@ class Puzzle15Test {
             }
         }
 
-        fun solveOne(puzzleText: String): String {
-            var gridState = parseGrid(puzzleText)
-            val soldiers = getSoldiers(gridState)
-            var cycle = 0
-
-            while (true) {
-                for (index in 0 until soldiers.size) {
-                    cycle++
-                    println(cycle)
-
-                    val currentUnit = soldiers[index]
-
-                    // 1. identifying all possible targets (enemy units)
-                    val enemyUnits = soldiers.filter { it.type != currentUnit.type }
-
-                    // 2. identifies all of the open squares (.) that are in range of each target;
-                    // these are the squares which are adjacent (immediately up, down, left, or right) to any target and
-                    // which aren't already occupied by a wall or another unit.
-                    val pointAdjacentToEnemy = enemyUnits.flatMap { enemy -> enemy.getFreeAdjacentTiles(gridState) }.toSet()
-
-                    // move elf, get on your way, get on your way elf get on your way
-                    if (!pointAdjacentToEnemy.contains(currentUnit.position)) {
-
-                        val reachablePoints = pointAdjacentToEnemy
-                            .filter { point -> isReachable(gridState, currentUnit.position, point) }
-
-                        val chosenPoint = reachablePoints
-                            .map { getShortestPaths(gridState, currentUnit.position, it) }
-                            .flatMap{ it.first() }
-                            .sortedWith(pointCompare)
-                            .first()
-
-                        currentUnit.moveTo(chosenPoint)
-                        gridState = updateGridState(gridState, soldiers)
-                    }
-
-                    // Get a list of enemies next to this soldier
-                    val enemiesNextToMe = currentUnit
-                        .position.getAdjacentTiles()
-                        .mapNotNull { point ->
-                            enemyUnits.find { it.position == point }
-                        }
-
-                    // ATTACK IF NEXT TO AN ENEMY
-                    if (enemiesNextToMe.isNotEmpty()) {
-
-                        val enemyToAttack = enemiesNextToMe
-                            .sortedWith(hpAndPointCompare)
-                            .first()
-
-                        enemyToAttack.receiveDamage(3)
-                        gridState = updateGridState(gridState, soldiers)
-                    }
-                }
-            }
-        }
-
         private fun updateGridState(gridState: Map<Point, Char>, soldiers: List<Soldier>): Map<Point, Char> {
             val dog: Map<Point, Char> = gridState.entries.associate { (position, char) ->
                 // Look for a soldier at this position
@@ -241,15 +264,14 @@ class Puzzle15Test {
             return dog
         }
 
-        private fun isReachable(grid: Map<Point, Char>, start: Point, end: Point): Boolean {
-            if (end == start) return true
-
-            // Start at start
+        fun isReachable(grid: Map<Point, Char>, start: Point, end: Point): Boolean {
+            val visited = mutableSetOf(start)
             val toProcess = LinkedList<Point>()
-            val visited = mutableSetOf<Point>()
+            toProcess.add(start)
 
             while (toProcess.isNotEmpty()) {
                 val currentPoint = toProcess.pop()
+                //println(currentPoint)
 
                 if (currentPoint == end) {
                     return true
@@ -262,6 +284,7 @@ class Puzzle15Test {
 
                 // Add adjacent tiles we have not visited
                 toProcess.addAll(adjacentTiles)
+                visited.addAll(adjacentTiles)
             }
 
             return false
