@@ -2,6 +2,7 @@ package Year2018
 
 import junit.framework.Assert.assertEquals
 import junit.framework.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import java.lang.RuntimeException
 import java.util.*
@@ -10,183 +11,185 @@ class Puzzle15Test {
     val puzzleText = this::class.java.getResource("/2018/puzzle15.txt").readText().replace("\r", "")
     val puzzle = Puzzle15()
 
+    val exampleText = """
+            #########
+            #G..G..G#
+            #.......#
+            #.......#
+            #G..E..G#
+            #.......#
+            #.......#
+            #G..G..G#
+            #########
+        """.trimIndent()
+
     @Test
+    @Ignore
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
         assertEquals("a", result)
     }
 
     @Test
+    @Ignore
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals("b", result)
     }
 
-    @Test
-    fun `can find shortest path for two points right next to each other`() {
-        val grid = puzzle.parseGrid(puzzleText)
-        val shortestPath = puzzle.getShortestPaths(grid, Puzzle15.Point(3, 4), Puzzle15.Point(4, 4))
-        assertEquals(listOf(listOf(Puzzle15.Point(3, 4), Puzzle15.Point(4, 4))), shortestPath)
-    }
 
     @Test
-    fun `can find shortest path for two points right two units away from each other`() {
-        val grid = puzzle.parseGrid(puzzleText)
-        val shortestPath = puzzle.getShortestPaths(grid, Puzzle15.Point(3, 4), Puzzle15.Point(5, 4))
-        assertEquals(listOf(listOf(Puzzle15.Point(3, 4), Puzzle15.Point(4, 4), Puzzle15.Point(5, 4))), shortestPath)
-    }
-
-    @Test
-    fun `can find two equally short paths`() {
-        val text = """
-            ...
-            ...
-            ...
-        """.trimIndent()
-
-        val grid = puzzle.parseGrid(text)
-        val shortestPath = puzzle.getShortestPaths(grid, Puzzle15.Point(0, 0), Puzzle15.Point(1, 1))
-
-        assertEquals(listOf(
-            listOf(Puzzle15.Point(0, 0), Puzzle15.Point(0, 1), Puzzle15.Point(1, 1)),
-            listOf(Puzzle15.Point(0, 0), Puzzle15.Point(1, 0), Puzzle15.Point(1, 1))
-            ), shortestPath)
-    }
-
-    @Test
-    fun `example a`() {
-        val text = """
+    fun `example a, after one step`() {
+        val expected = """
             #########
+            #.G...G.#
+            #...G...#
+            #...E..G#
+            #.G.....#
+            #.......#
             #G..G..G#
             #.......#
-            #.......#
-            #G..E..G#
-            #.......#
-            #.......#
-            #G..G..G#
             #########
         """.trimIndent()
 
-        val dog = puzzle.solveOne(text)
+        val actual = puzzle.solveOne(exampleText, 1)
+        assertEquals(expected, actual)
+    }
 
+    @Test
+    fun `example a, after two steps`() {
+        val expected = """
+            #########
+            #..G.G..#
+            #...G...#
+            #.G.E.G.#
+            #.......#
+            #G..G..G#
+            #.......#
+            #.......#
+            #########
+        """.trimIndent()
+
+        val oneToTwo = puzzle.solveOne(exampleText, 2)
+        assertEquals(expected, oneToTwo)
+    }
+
+    @Test
+    fun `example a, after three steps`() {
+        val expected = """
+            #########
+            #.......#
+            #..GGG..#
+            #..GEG..#
+            #G..G...#
+            #......G#
+            #.......#
+            #.......#
+            #########
+        """.trimIndent()
+
+        val actual = puzzle.solveOne(exampleText, 3)
+        assertEquals(expected, actual)
     }
 
     @Test
     fun `example a, goblin 1 should be able to reach elf`() {
-        val text = """
-            #########
-            #G..G..G#
-            #.......#
-            #.......#
-            #G..E..G#
-            #.......#
-            #.......#
-            #G..G..G#
-            #########
-        """.trimIndent()
-
-        val grid = puzzle.parseGrid(text)
+        val grid = puzzle.parseGrid(exampleText)
         val canBeReached = puzzle.isReachable(grid, Puzzle15.Point(1, 1), Puzzle15.Point(3, 4))
         assertTrue(canBeReached)
     }
 
     class Puzzle15 {
-
-
-        fun solveOne(puzzleText: String): String {
+        fun solveOne(puzzleText: String, numCycles: Int = 10): String {
             var gridState = parseGrid(puzzleText)
-            val soldiers = getSoldiers(gridState)
-            var cycle = 0
 
-//            while (true) {
-
-            (0 until 4).forEach {
-                outputGrid(gridState)
-
-                for (index in 0 until soldiers.size) {
-                    val currentUnit = soldiers[index]
-
-                    // 1. identifying all possible targets (enemy units)
-                    val enemyUnits = soldiers.filter { it.type != currentUnit.type }
-
-                    // 2. identifies all of the open squares (.) that are in range of each target;
-                    // these are the squares which are adjacent (immediately up, down, left, or right) to any target and
-                    // which aren't already occupied by a wall or another unit.
-                    val pointsAdjacentToEnemies = enemyUnits.flatMap { enemy -> enemy.getFreeAdjacentTiles(gridState) }.toSet()
-
-                    // move elf, get on your way, get on your way elf get on your way
-                    if (!pointsAdjacentToEnemies.contains(currentUnit.position)) {
-
-                        val reachablePoints = pointsAdjacentToEnemies
-                            .filter { point -> isReachable(gridState, currentUnit.position, point) }
-
-                        val pathsToPoints = reachablePoints
-                            .flatMap { getShortestPaths(gridState, currentUnit.position, it) }
-
-                        val minPathLength = pathsToPoints.minBy { it.size }!!.size
-                        val possibleNextSteps  = pathsToPoints
-                            .filter { it.size == minPathLength }
-                            .map { it.first() }
-                            .distinct()
-                            .sortedWith(pointCompare)
-
-
-                        val chosenPoint = possibleNextSteps.firstOrNull()
-
-                        println("")
-
-                        if (chosenPoint != null) {
-                            currentUnit.moveTo(chosenPoint)
-                            gridState = updateGridState(gridState, soldiers)
-                        }
-                    }
-
-                    // TODO: Attack part comes back later, lets just get moving right for now
-//                    // Get a list of enemies next to this soldier
-//                    val enemiesNextToMe = currentUnit
-//                        .position.getAdjacentTiles()
-//                        .mapNotNull { point ->
-//                            enemyUnits.find { it.position == point }
-//                        }
-//
-//                    // ATTACK IF NEXT TO AN ENEMY
-//                    if (enemiesNextToMe.isNotEmpty()) {
-//
-//                        val enemyToAttack = enemiesNextToMe
-//                            .sortedWith(hpAndPointCompare)
-//                            .first()
-//
-//                        enemyToAttack.receiveDamage(3)
-//                        gridState = updateGridState(gridState, soldiers)
-//                    }
-                }
+            (0 until numCycles).forEach {
+                gridState = runCycle(gridState)
             }
 
-            return ""
+            return outputGrid(gridState)
         }
 
-        private fun outputGrid(grid: Map<Puzzle15.Point, Char>) {
+        private fun runCycle(gridState: Map<Point, Char>): Map<Point, Char> {
+            val soldiers = getSoldiers(gridState)
+            var mutableGridState = gridState
+
+            for (index in 0 until soldiers.size) {
+                val currentUnit = soldiers[index]
+
+                mutableGridState = tryMoveSoldier(currentUnit, mutableGridState, soldiers)
+
+                // TODO: Attack part comes back later, lets just get moving right for now
+        //                    // Get a list of enemies next to this soldier
+        //                    val enemiesNextToMe = currentUnit
+        //                        .position.getAdjacentTiles()
+        //                        .mapNotNull { point ->
+        //                            enemyUnits.find { it.position == point }
+        //                        }
+        //
+        //                    // ATTACK IF NEXT TO AN ENEMY
+        //                    if (enemiesNextToMe.isNotEmpty()) {
+        //
+        //                        val enemyToAttack = enemiesNextToMe
+        //                            .sortedWith(hpAndPointCompare)
+        //                            .first()
+        //
+        //                        enemyToAttack.receiveDamage(3)
+        //                        gridState = updateGridState(gridState, soldiers)
+        //                    }
+            }
+
+            return mutableGridState
+        }
+
+        private fun tryMoveSoldier(currentUnit: Soldier, grid: Map<Point, Char>, soldiers: List<Soldier>): Map<Point, Char> {
+            val enemyUnits = soldiers.filter { it.type != currentUnit.type }
+            val pointsAdjacentToEnemies = enemyUnits.flatMap { enemy -> enemy.position.getAdjacentTiles() }.toSet()
+
+            // Already standing next to an enemy. No need to move.
+            if (pointsAdjacentToEnemies.contains(currentUnit.position)) {
+                return grid
+            }
+
+            val reachablePoints = pointsAdjacentToEnemies
+                .filter { point -> isReachable(grid, currentUnit.position, point) }
+
+            val pathsToPoints = reachablePoints
+                .flatMap { getShortestPaths(grid, currentUnit.position, it) }
+
+            // Ah shit, there are no paths to this point. No moving
+            if (pathsToPoints.isEmpty()) {
+                return grid
+            }
+
+            val minPathLength = pathsToPoints.minBy { it.size }!!.size
+
+            val possibleNextSteps = pathsToPoints
+                .filter { it.size == minPathLength }
+                .map { it.first() }
+                .distinct()
+                .sortedWith(pointCompare)
+
+            // Move the soldier to the chosen point
+            val chosenPoint = possibleNextSteps.first()
+            currentUnit.moveTo(chosenPoint)
+
+            return updateGridState(grid, soldiers)
+        }
+
+        private fun outputGrid(grid: Map<Puzzle15.Point, Char>): String {
             val width = grid.keys.maxBy { it.x }!!.x
             val height = grid.keys.maxBy { it.y }!!.y
 
             val dog = (0..height).map { y ->
                 (0..width).map { x ->
-
                     val point = Point(x, y)
                     grid[point]!!
-
-//                    val point = Puzzle13Test.Puzzle13.Point(x, y)
-//                    val carAtThisPoint = carState.find { it.position == point }
-//
-//                    if (carAtThisPoint != null) {
-//                        carAtThisPoint.toChar()
-//                    } else {
-//                        theGridWithoutCars[point]!!
-//                    }
                 }.joinToString("")
             }.joinToString("\n")
 
-            println(dog)
+//            println(dog)
+            return dog
         }
 
 
@@ -235,9 +238,9 @@ class Puzzle15Test {
             }
         }
 
-        data class Elf(override var position: Point, override val type: Type = Type.ELF, override var hp: Int = 200, override val attack: Int = 3) : Soldier
+        class Elf(override var position: Point, override val type: Type = Type.ELF, override var hp: Int = 200, override val attack: Int = 3) : Soldier
 
-        data class Goblin(override var position: Point, override val type: Type = Type.GOBLIN, override var hp: Int = 200, override val attack: Int = 3) : Soldier
+        class Goblin(override var position: Point, override val type: Type = Type.GOBLIN, override var hp: Int = 200, override val attack: Int = 3) : Soldier
 
         interface Soldier {
             val type: Type
