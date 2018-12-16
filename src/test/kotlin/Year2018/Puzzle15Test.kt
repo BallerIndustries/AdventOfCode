@@ -52,6 +52,24 @@ class Puzzle15Test {
             ), shortestPath)
     }
 
+    @Test
+    fun `example a`() {
+        val text = """
+            #########
+            #G..G..G#
+            #.......#
+            #.......#
+            #G..E..G#
+            #.......#
+            #.......#
+            #G..G..G#
+            #########
+        """.trimIndent()
+
+        val dog = puzzle.solveOne(text)
+
+    }
+
     class Puzzle15 {
 
         fun getShortestPaths(grid: Map<Point, Char>, a: Point, b: Point): List<List<Point>> {
@@ -71,7 +89,6 @@ class Puzzle15Test {
                     nextTiles.map { nextTile -> list + nextTile }
                 }
             }
-
 
             return dog.filter { it.last() == b }
         }
@@ -96,19 +113,15 @@ class Puzzle15Test {
             }
         }
 
+        data class Elf(override var position: Point, override val type: Type = Type.ELF, override var hp: Int = 200, override val attack: Int = 3) : Soldier
 
-
-        data class Elf(override var position: Point, override val type: Type = Type.ELF, override val hp: Int = 200, override val attack: Int = 3) : Soldier
-
-        data class Goblin(override var position: Point, override val type: Type = Type.GOBLIN, override val hp: Int = 200, override val attack: Int = 3) : Soldier
+        data class Goblin(override var position: Point, override val type: Type = Type.GOBLIN, override var hp: Int = 200, override val attack: Int = 3) : Soldier
 
         interface Soldier {
             val type: Type
             var position: Point
-            val hp: Int
+            var hp: Int
             val attack: Int
-
-
 
             fun getFreeAdjacentTiles(grid: Map<Point, Char>): List<Point> {
                 return position.getFreeAdjacentTiles(grid)
@@ -121,6 +134,12 @@ class Puzzle15Test {
             fun toChar(): Char {
                 return this.type.char
             }
+
+            fun receiveDamage(damage: Int) {
+                hp -= damage
+            }
+
+            fun isDead() = hp <= 0
         }
 
         val unitCompare = Comparator<Soldier> { a, b -> pointCompare.compare(a.position, b.position) }
@@ -136,12 +155,23 @@ class Puzzle15Test {
             }
         }
 
+        val hpAndPointCompare = Comparator<Soldier> { a, b ->
+            when {
+                a.hp != b.hp -> a.hp.compareTo(b.hp)
+                else -> unitCompare.compare(a, b)
+            }
+        }
+
         fun solveOne(puzzleText: String): String {
             var gridState = parseGrid(puzzleText)
             val soldiers = getSoldiers(gridState)
+            var cycle = 0
 
             while (true) {
                 for (index in 0 until soldiers.size) {
+                    cycle++
+                    println(cycle)
+
                     val currentUnit = soldiers[index]
 
                     // 1. identifying all possible targets (enemy units)
@@ -168,25 +198,25 @@ class Puzzle15Test {
                         gridState = updateGridState(gridState, soldiers)
                     }
 
-                    // Get a list of enemies next to this elf
-                    val enemiesNextToMe = currentUnit.position.getAdjacentTiles().filter {  }
+                    // Get a list of enemies next to this soldier
+                    val enemiesNextToMe = currentUnit
+                        .position.getAdjacentTiles()
+                        .mapNotNull { point ->
+                            enemyUnits.find { it.position == point }
+                        }
 
                     // ATTACK IF NEXT TO AN ENEMY
-                    if (pointAdjacentToEnemy.contains(currentUnit.position)) {
+                    if (enemiesNextToMe.isNotEmpty()) {
 
-//                        val enemyToAttack = jur.
-//                            .sortedWith(hpAndPointCompare)
-//                            .first()
-//
-//                        val damagedEnemy = enemyToAttack.copy(hp = eta.hp - 3)
+                        val enemyToAttack = enemiesNextToMe
+                            .sortedWith(hpAndPointCompare)
+                            .first()
 
-                        // TODO: UPDATE STATE TO INCLUDE THE DAMAGED ENEMY
-
+                        enemyToAttack.receiveDamage(3)
+                        gridState = updateGridState(gridState, soldiers)
                     }
                 }
             }
-
-            return ""
         }
 
         private fun updateGridState(gridState: Map<Point, Char>, soldiers: List<Soldier>): Map<Point, Char> {
@@ -194,7 +224,7 @@ class Puzzle15Test {
                 // Look for a soldier at this position
                 val soldierAtThisPoint = soldiers.find { it.position == position }
 
-                if (soldierAtThisPoint != null) {
+                if (soldierAtThisPoint != null && !soldierAtThisPoint.isDead()) {
                     position to soldierAtThisPoint.toChar()
                 }
                 else if (char == 'G' || char == 'E') {
@@ -246,11 +276,6 @@ class Puzzle15Test {
                 }
             }.sortedWith(unitCompare)
             return units
-        }
-
-
-        fun manhattanDistance(a: Point, b: Point): Int {
-            return Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
         }
 
         fun parseGrid(puzzleText: String): Map<Point, Char> {
