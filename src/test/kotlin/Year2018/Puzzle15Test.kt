@@ -37,7 +37,6 @@ class Puzzle15Test {
         assertEquals("b", result)
     }
 
-
     @Test
     fun `example a, after one step`() {
         val expected = """
@@ -89,6 +88,64 @@ class Puzzle15Test {
         """.trimIndent()
 
         val actual = puzzle.solveOne(exampleText, 3)
+        assertEquals(expected, actual)
+    }
+
+    val fightExampleText = """
+        #######
+        #.G...#
+        #...EG#
+        #.#.#G#
+        #..G#E#
+        #.....#
+        #######
+    """.trimIndent()
+
+    @Test
+    fun `fight example a, after one step`() {
+        val actual = puzzle.solveOne(fightExampleText, 1)
+        val expected = """
+            #######
+            #..G..#
+            #...EG#
+            #.#G#G#
+            #...#E#
+            #.....#
+            #######
+        """.trimIndent()
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `fight example a, after two steps`() {
+        val actual = puzzle.solveOne(fightExampleText, 2)
+        val expected = """
+            #######
+            #...G.#
+            #..GEG#
+            #.#.#G#
+            #...#E#
+            #.....#
+            #######
+        """.trimIndent()
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `fight example a, after 23 steps`() {
+        val actual = puzzle.solveOne(fightExampleText, 23)
+        val expected = """
+            #######
+            #...G.#
+            #..G.G#
+            #.#.#G#
+            #...#E#
+            #.....#
+            #######
+        """.trimIndent()
+
         assertEquals(expected, actual)
     }
 
