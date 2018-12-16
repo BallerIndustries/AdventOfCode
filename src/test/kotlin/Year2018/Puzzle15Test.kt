@@ -150,6 +150,38 @@ class Puzzle15Test {
     }
 
     @Test
+    fun `fight example a, after 24 steps`() {
+        val actual = puzzle.solveOne(fightExampleText, 24)
+        val expected = """
+            #######
+            #..G..#
+            #...G.#
+            #.#G#G#
+            #...#E#
+            #.....#
+            #######
+        """.trimIndent()
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `fight example a, after 28 steps`() {
+        val actual = puzzle.solveOne(fightExampleText, 28)
+        val expected = """
+            #######
+            #G....#
+            #.G...#
+            #.#.#G#
+            #...#E#
+            #....G#
+            #######
+        """.trimIndent()
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun `example a, goblin 1 should be able to reach elf`() {
         val grid = puzzle.parseGrid(exampleText)
         val canBeReached = puzzle.isReachable(grid, Puzzle15.Point(1, 1), Puzzle15.Point(3, 4))
@@ -158,17 +190,17 @@ class Puzzle15Test {
 
     class Puzzle15 {
         fun solveOne(puzzleText: String, numCycles: Int = 10): String {
-            var gridState = parseGrid(puzzleText)
+            var grid = parseGrid(puzzleText)
+            val soldiers = getSoldiers(grid)
 
             (0 until numCycles).forEach {
-                gridState = runCycle(gridState)
+                grid = runCycle(grid, soldiers)
             }
 
-            return outputGrid(gridState)
+            return outputGrid(grid)
         }
 
-        private fun runCycle(gridState: Map<Point, Char>): Map<Point, Char> {
-            val soldiers = getSoldiers(gridState)
+        private fun runCycle(gridState: Map<Point, Char>, soldiers: List<Soldier>): Map<Point, Char> {
             var mutableGridState = gridState
 
             for (index in 0 until soldiers.size) {
@@ -182,7 +214,7 @@ class Puzzle15Test {
         }
 
         private fun tryAttackEnemy(currentUnit: Soldier, grid: Map<Point, Char>, soldiers: List<Soldier>): Map<Point, Char> {
-            val enemyUnits = soldiers.filter { it.type != currentUnit.type }
+            val enemyUnits = soldiers.filter { it.type != currentUnit.type && !it.isDead() }
 
             val enemiesNextToMe = currentUnit
                 .position.getAdjacentTiles()
@@ -200,7 +232,7 @@ class Puzzle15Test {
         }
 
         private fun tryMoveSoldier(currentUnit: Soldier, grid: Map<Point, Char>, soldiers: List<Soldier>): Map<Point, Char> {
-            val enemyUnits = soldiers.filter { it.type != currentUnit.type }
+            val enemyUnits = soldiers.filter { it.type != currentUnit.type && !it.isDead() }
             val pointsAdjacentToEnemies = enemyUnits.flatMap { enemy -> enemy.position.getAdjacentTiles() }.toSet()
 
             // Already standing next to an enemy. No need to move.
