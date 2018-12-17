@@ -22,22 +22,27 @@ class Puzzle16Test {
         assertEquals("b", result)
     }
 
-
-
     class Puzzle16 {
-
         val allInstructions = listOf(AddR(), AddI(), MulR(), MulI(), BAndR(), BAndI(), BOrR(), BOrI(),
             SetR(), SetI(), GTIR(), GTRI(), GTRR(), EQIR(), EQRI(), EQRR())
 
         fun solveOne(puzzleText: String): Int {
-            val lines = puzzleText.split("\n")
+            val states = parseStates(puzzleText)
+
+            return states.count { (before, command, after) ->
+                behavesLineThreeOrMoreOpCodes(before, command, after)
+            }
+        }
+
+        fun parseStates(text: String): List<Triple<String, String, String>> {
+            val lines = text.split("\n")
             var index = 0
 
             fun nextLine(): String {
                 return lines[index++]
             }
 
-            var count = 0
+            val returnList = mutableListOf<Triple<String, String, String>>()
 
             while (index < lines.size) {
                 val before = nextLine()
@@ -45,12 +50,10 @@ class Puzzle16Test {
                 val after = nextLine()
                 val junkLine = nextLine()
 
-                if (behavesLineThreeOrMoreOpCodes(before, command, after)) {
-                    count++
-                }
+                returnList.add(Triple(before, command, after))
             }
 
-            return count
+            return returnList
         }
 
         private fun behavesLineThreeOrMoreOpCodes(before: String, command: String, after: String): Boolean {
@@ -68,11 +71,15 @@ class Puzzle16Test {
             val beforeState = State.from(beforeInts)
             val afterState = State.from(afterInts)
 
-            val jurCount = allInstructions.count { ins -> ins.execute(beforeState, commandObject) == afterState }
+            val jurs = allInstructions
+                .map { instruction -> instruction to instruction.execute(beforeState, commandObject) }
+                .filter { it.second == afterState }
 
+//            if (jurs.count() == 1) {
+//                println("hto dog!")
+//            }
 
-
-            return jurCount >= 3
+            return jurs.count() >= 3
         }
 
         fun solveTwo(puzzleText: String): String {
