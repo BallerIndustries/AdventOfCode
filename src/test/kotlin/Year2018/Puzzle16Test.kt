@@ -1,9 +1,9 @@
 package Year2018
 
-import junit.framework.Assert
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 import java.lang.RuntimeException
+import kotlin.math.round
 
 class Puzzle16Test {
     val puzzleText = this::class.java.getResource(
@@ -30,11 +30,35 @@ class Puzzle16Test {
             val states = parseStates(puzzleText)
 
             return states.count { (before, command, after) ->
-                behavesLineThreeOrMoreOpCodes(before, command, after)
+                behavesLineThreeOrMoreOpCodes(allInstructions, before, command, after)
             }
         }
 
-        fun parseStates(text: String): List<Triple<String, String, String>> {
+        fun solveTwo(puzzleText: String): String {
+            val states = parseStates(puzzleText)
+            val unidentifiedInstructions = allInstructions.toMutableList()
+            val opCodeToInstruction = mutableMapOf<Int, Instruction>()
+
+            while (unidentifiedInstructions.isNotEmpty()) {
+                for (state in states) {
+                    val (before, command, after) = state
+                    val isSnowy = snowFlakeInstructions(unidentifiedInstructions, before, command, after)
+
+                    if (isSnowy != null) {
+                        unidentifiedInstructions.remove(isSnowy.first)
+                        opCodeToInstruction[isSnowy.second] = isSnowy.first
+                        println("Opcode ${isSnowy.second} is for ${isSnowy.first}")
+                    }
+                }
+            }
+
+            // OKAY! NOW LETS RUN THE COMPUTER PROGRAM!
+
+
+            return ""
+        }
+
+        fun parseStates(text: String): List<Triple<State, Command, State>> {
             val lines = text.split("\n")
             var index = 0
 
@@ -42,7 +66,7 @@ class Puzzle16Test {
                 return lines[index++]
             }
 
-            val returnList = mutableListOf<Triple<String, String, String>>()
+            val returnList = mutableListOf<Triple<State, Command, State>>()
 
             while (index < lines.size) {
                 val before = nextLine()
@@ -50,40 +74,40 @@ class Puzzle16Test {
                 val after = nextLine()
                 val junkLine = nextLine()
 
-                returnList.add(Triple(before, command, after))
+                val beforeInts = before.replace("Before: ", "")
+                    .removeSurrounding("[", "]")
+                    .split(", ")
+                    .map { it.toInt() }
+
+                val afterInts = after.replace("After:  ", "")
+                    .removeSurrounding("[", "]")
+                    .split(", ")
+                    .map { it.toInt() }
+
+                val commandObject = Command.from(command.split(" ").map { it.toInt() })
+                val beforeState = State.from(beforeInts)
+                val afterState = State.from(afterInts)
+
+                returnList.add(Triple(beforeState, commandObject, afterState))
             }
 
             return returnList
         }
 
-        private fun behavesLineThreeOrMoreOpCodes(before: String, command: String, after: String): Boolean {
-            val beforeInts = before.replace("Before: ", "")
-                .removeSurrounding("[", "]")
-                .split(", ")
-                .map { it.toInt() }
+        private fun snowFlakeInstructions(instructions: List<Instruction>, before: State, command: Command, after: State): Pair<Instruction, Int>? {
+            val jurs = instructions
+                .map { instruction -> instruction to instruction.execute(before, command) }
+                .filter { it.second == after }
 
-            val afterInts = after.replace("After:  ", "")
-                .removeSurrounding("[", "]")
-                .split(", ")
-                .map { it.toInt() }
-
-            val commandObject = Command.from(command.split(" ").map { it.toInt() })
-            val beforeState = State.from(beforeInts)
-            val afterState = State.from(afterInts)
-
-            val jurs = allInstructions
-                .map { instruction -> instruction to instruction.execute(beforeState, commandObject) }
-                .filter { it.second == afterState }
-
-//            if (jurs.count() == 1) {
-//                println("hto dog!")
-//            }
-
-            return jurs.count() >= 3
+            return if (jurs.count() == 1) jurs.first().first to command.opcode else null
         }
 
-        fun solveTwo(puzzleText: String): String {
-            return ""
+        private fun behavesLineThreeOrMoreOpCodes(instructions: List<Instruction>, before: State, command: Command, after: State): Boolean {
+            val jurs = instructions
+                .map { instruction -> instruction to instruction.execute(before, command) }
+                .filter { it.second == after }
+
+            return jurs.count() >= 3
         }
 
         abstract class Instruction {
