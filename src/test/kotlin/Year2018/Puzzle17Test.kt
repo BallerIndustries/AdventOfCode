@@ -43,6 +43,12 @@ class Puzzle17Test {
     }
 
     @Test
+    fun `render puzzle part a`() {
+        val result = puzzle.renderInitial(puzzleText)
+        assertEquals("a", result)
+    }
+
+    @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
         assertEquals("a", result)
