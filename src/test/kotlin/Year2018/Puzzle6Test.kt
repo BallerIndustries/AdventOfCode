@@ -49,9 +49,11 @@ class Puzzle6Test {
     }
 }
 
-data class Point(val id: String, val x: Int, val y: Int)
+
 
 class Puzzle6 {
+
+    data class Point(val id: String, val x: Int, val y: Int)
     fun solveOne(puzzleText: String): Int {
         val pointMap = createPointMap(puzzleText)
 

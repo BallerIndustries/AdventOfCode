@@ -5,8 +5,10 @@ import org.junit.Test
 
 class Puzzle12Test {
     val puzzleText = this::class.java.getResource(
-            "/2018/puzzle12.txt").readText()
+            "/2018/puzzle12.txt").readText().replace("\r", "")
     val puzzle = Puzzle12()
+
+
 
     @Test
     fun `puzzle part a`() {
