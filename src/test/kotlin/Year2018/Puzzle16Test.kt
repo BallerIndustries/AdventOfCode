@@ -6,8 +6,9 @@ import java.lang.RuntimeException
 import kotlin.math.round
 
 class Puzzle16Test {
-    val puzzleText = this::class.java.getResource(
-            "/2018/puzzle16.txt").readText()
+    val puzzleText = this::class.java.getResource("/2018/puzzle16.txt").readText()
+    val puzzleTextBee = this::class.java.getResource("/2018/puzzle16-b.txt").readText()
+
     val puzzle = Puzzle16()
 
     @Test
@@ -18,8 +19,8 @@ class Puzzle16Test {
 
     @Test
     fun `puzzle part b`() {
-        val result = puzzle.solveTwo(puzzleText)
-        assertEquals("b", result)
+        val result = puzzle.solveTwo(puzzleText, puzzleTextBee)
+        assertEquals(445, result)
     }
 
     class Puzzle16 {
@@ -34,7 +35,7 @@ class Puzzle16Test {
             }
         }
 
-        fun solveTwo(puzzleText: String): String {
+        fun solveTwo(puzzleText: String, puzzleTextBee: String): Int {
             val states = parseStates(puzzleText)
             val unidentifiedInstructions = allInstructions.toMutableList()
             val opCodeToInstruction = mutableMapOf<Int, Instruction>()
@@ -53,9 +54,18 @@ class Puzzle16Test {
             }
 
             // OKAY! NOW LETS RUN THE COMPUTER PROGRAM!
+            var jurState = State(0, 0,0, 0)
+
+            puzzleTextBee.split("\n").forEach { line ->
+                val (opcode, first, second, third) = line.split(" ").map { it.toInt() }
+                val command = Command(opcode, first, second, third)
+                val instruction = opCodeToInstruction[opcode]!!
+
+                jurState = instruction.execute(jurState, command)
+            }
 
 
-            return ""
+            return jurState.a
         }
 
         fun parseStates(text: String): List<Triple<State, Command, State>> {
