@@ -2,10 +2,9 @@ package Year2018
 
 import junit.framework.Assert.assertEquals
 import org.junit.Test
-import java.lang.RuntimeException
 
 class Puzzle17Test {
-    val puzzleText = this::class.java.getResource("/2018/puzzle17.txt").readText()
+    val puzzleText = this::class.java.getResource("/2018/puzzle17.txt").readText().replace("\r", "")
     val puzzle = Puzzle17()
 
     @Test
