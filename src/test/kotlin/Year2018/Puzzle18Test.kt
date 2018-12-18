@@ -10,29 +10,48 @@ class Puzzle18Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals("a", result)
+        assertEquals(518028, result)
+    }
+
+    @Test
+    fun `part b 603 solve should be same as part a 603 solve`() {
+        val partAResult = puzzle.solveOne(puzzleText, 603)
+        val partBResult = puzzle.solveTwo(puzzleText, 603)
+
+        assertEquals(partAResult, partBResult)
+    }
+
+    @Test
+    fun `part b 1000 solve should be same as part a 1000 solve`() {
+        val partAResult = puzzle.solveOne(puzzleText, 1000)
+        val partBResult = puzzle.solveTwo(puzzleText, 1000)
+
+        assertEquals(partAResult, partBResult)
     }
 
     @Test
     fun `puzzle part b`() {
+
+        // NOT 149872, too low
+        // NOT 213312, too high
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("b", result)
+        assertEquals(213057, result)
     }
 
     class Puzzle18 {
 
 
-        fun solveTwo(puzzleText: String): Int {
+        fun solveTwo(puzzleText: String, theFun: Int = 1000000000): Int {
             var state = parseInitialState(puzzleText)
             val boardStateToCycle = mutableMapOf<String, Int>()
 
-            (0 until 1000).forEach { cycleNum ->
+            (1 .. 700).forEach { cycleNum ->
                 val text = stateText(state)
 
                 if (boardStateToCycle.containsKey(text)) {
                     val firstSeen = boardStateToCycle[text]!!
                     val delta = cycleNum - firstSeen
-                    println("A CYCLE HAS BEEN FOUND! firstSeen = $firstSeen delta = $delta")
+                    println("A CYCLE HAS BEEN FOUND! cycleNumber = $cycleNum firstSeen = $firstSeen delta = $delta")
                 }
                 else {
                     boardStateToCycle[text] = cycleNum
@@ -42,45 +61,29 @@ class Puzzle18Test {
             }
 
             // Now we have a map of cycle -> boardState
-            val firstCylce = boardStateToCycle.values.min()!!
+            val firstCycle = 575
 
-            val normalisedCycleToBoardState = boardStateToCycle.map { (state, cycle) ->
-                cycle - firstCylce to state
+            val normalisedCycleToBoardState = boardStateToCycle.mapNotNull { (state, cycle) ->
+
+                if (cycle in firstCycle..602) cycle - firstCycle to state else null
+
             }.toMap()
 
-            val theFun = 1000000000
+            val index = (theFun - firstCycle + 1) % normalisedCycleToBoardState.count()
 
-            val hopefully = (theFun - firstCylce) % boardStateToCycle.count()
+            val cycleToScore = normalisedCycleToBoardState
+                .map { (key, value) -> key to value.count { it == '|' } * value.count { it == '#' } }
+                .toMap()
 
-            val hugeNumberState = normalisedCycleToBoardState[hopefully]!!
 
-            return hugeNumberState.count { it == '|' } * hugeNumberState.count { it == '#' }
+            println(cycleToScore)
+
+            return cycleToScore[index]!!
         }
 
-        fun solveOne(puzzleText: String): Int {
+        fun solveOne(puzzleText: String, cycles: Int = 10): Int {
             var state = parseInitialState(puzzleText)
-            val set = mutableMapOf<String, Int>()
-
-            val max = 1000000000
-
-            (0 until max ).forEach { cycleNum ->
-                if (cycleNum % 100000 == 0) {
-                    println("${cycleNum.toDouble() / max.toDouble()} %")
-                }
-
-                val text = stateText(state)
-
-                if (set.containsKey(text)) {
-                    val firstSeen = set[text]!!
-                    val delta = cycleNum - firstSeen
-                    println("A CYCLE HAS BEEN FOUND! firstSeen = $firstSeen delta = $delta")
-                }
-                else {
-                    set[text] = cycleNum
-                }
-
-                state = nextState(state)
-            }
+            (1 .. cycles).forEach { state = nextState(state) }
 
             return state.values.count { it == '|' } * state.values.count { it == '#' }
         }
