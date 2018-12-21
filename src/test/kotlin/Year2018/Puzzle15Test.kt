@@ -24,9 +24,9 @@ class Puzzle15Test {
         """.trimIndent()
 
     @Test
-    @Ignore
+//    @Ignore
     fun `puzzle part a`() {
-        val result = puzzle.stateAfter(puzzleText)
+        val result = puzzle.solveOne(puzzleText)
         assertEquals("a", result)
     }
 
@@ -270,6 +270,8 @@ class Puzzle15Test {
 
                 grid = runCycle(grid, soldiers)
                 roundCount++
+
+                println("Round $roundCount done!")
             }
 
             return soldiers.filter { !it.isDead() }.sumBy { it.hp } * roundCount
@@ -301,10 +303,6 @@ class Puzzle15Test {
         }
 
         private fun tryAttackEnemy(currentUnit: Soldier, grid: Map<Point, Char>, soldiers: List<Soldier>): Map<Point, Char> {
-            if (currentUnit.isDead()) {
-                println("I am dead and I am trying to attack. I am a jerk")
-            }
-
             val enemyUnits = soldiers.filter { it.type != currentUnit.type && !it.isDead() }
 
             val enemiesNextToMe = currentUnit
@@ -334,8 +332,7 @@ class Puzzle15Test {
             val reachablePoints = pointsAdjacentToEnemies
                 .filter { point -> isReachable(grid, currentUnit.position, point) }
 
-            val pathsToPoints = reachablePoints
-                .flatMap { getShortestPaths(grid, currentUnit.position, it) }
+            val pathsToPoints = efficientGetPathsToPoints(reachablePoints, grid, currentUnit)
 
             // Ah shit, there are no paths to this point. No moving
             if (pathsToPoints.isEmpty()) {
@@ -357,6 +354,32 @@ class Puzzle15Test {
             return updateGridState(grid, soldiers)
         }
 
+        private fun efficientGetPathsToPoints(reachablePoints: List<Point>, grid: Map<Point, Char>, currentUnit: Soldier): List<List<Point>> {
+            val pointsSortedByManDistance = reachablePoints
+                .sortedBy { manhattanDistance(currentUnit.position, it) }
+
+            if (pointsSortedByManDistance.isEmpty()) return emptyList()
+
+            val shortestPathToFirstPoint = getShortestPaths(grid, currentUnit.position, pointsSortedByManDistance.first())
+            var minPathLength = shortestPathToFirstPoint.first().size
+
+            val allPaths = pointsSortedByManDistance.flatMap { point ->
+                val jurPaths = getShortestPaths(grid, currentUnit.position, point, minPathLength)
+
+                if (jurPaths.firstOrNull()?.size ?: Int.MAX_VALUE < minPathLength) {
+                    minPathLength = jurPaths.first().size
+                }
+
+                jurPaths
+            }
+
+            return allPaths.filter { it.size == minPathLength }
+        }
+
+        fun manhattanDistance(a: Point, b: Point): Int {
+            return Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
+        }
+
         private fun outputGrid(grid: Map<Puzzle15.Point, Char>): String {
             val width = grid.keys.maxBy { it.x }!!.x
             val height = grid.keys.maxBy { it.y }!!.y
@@ -368,12 +391,11 @@ class Puzzle15Test {
                 }.joinToString("")
             }.joinToString("\n")
 
-//            println(dog)
             return dog
         }
 
 
-        fun getShortestPaths(grid: Map<Point, Char>, a: Point, b: Point): List<List<Point>> {
+        fun getShortestPaths(grid: Map<Point, Char>, a: Point, b: Point, maxLength: Int = Int.MAX_VALUE): List<List<Point>> {
             var allPaths = listOf(listOf(a))
 
             while (true) {
