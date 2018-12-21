@@ -29,8 +29,8 @@ class Puzzle12Test {
 
 
 
-//        println(puzzle.solveOne(puzzleText, 153))
-//        println(puzzle.solveOne(puzzleText, 154))
+//        println(puzzle.stateAfter(puzzleText, 153))
+//        println(puzzle.stateAfter(puzzleText, 154))
     }
 
     @Test
@@ -172,7 +172,7 @@ class Puzzle12Test {
 
 //            println(diff)
 //
-//            diff = puzzle.solveOne(puzzleText, 155) - puzzle.solveOne(puzzleText, 154)
+//            diff = puzzle.stateAfter(puzzleText, 155) - puzzle.stateAfter(puzzleText, 154)
 //            println(diff)
         }
     }

@@ -26,7 +26,7 @@ class Puzzle15Test {
     @Test
     @Ignore
     fun `puzzle part a`() {
-        val result = puzzle.solveOne(puzzleText)
+        val result = puzzle.stateAfter(puzzleText)
         assertEquals("a", result)
     }
 
@@ -51,7 +51,7 @@ class Puzzle15Test {
             #########
         """.trimIndent()
 
-        val actual = puzzle.solveOne(exampleText, 1)
+        val actual = puzzle.stateAfter(exampleText, 1)
         assertEquals(expected, actual)
     }
 
@@ -69,7 +69,7 @@ class Puzzle15Test {
             #########
         """.trimIndent()
 
-        val oneToTwo = puzzle.solveOne(exampleText, 2)
+        val oneToTwo = puzzle.stateAfter(exampleText, 2)
         assertEquals(expected, oneToTwo)
     }
 
@@ -87,7 +87,7 @@ class Puzzle15Test {
             #########
         """.trimIndent()
 
-        val actual = puzzle.solveOne(exampleText, 3)
+        val actual = puzzle.stateAfter(exampleText, 3)
         assertEquals(expected, actual)
     }
 
@@ -103,7 +103,7 @@ class Puzzle15Test {
 
     @Test
     fun `fight example a, after one step`() {
-        val actual = puzzle.solveOne(fightExampleText, 1)
+        val actual = puzzle.stateAfter(fightExampleText, 1)
         val expected = """
             #######
             #..G..#
@@ -118,8 +118,8 @@ class Puzzle15Test {
     }
 
     @Test
-    fun `fight example a, after two steps`() {
-        val actual = puzzle.solveOne(fightExampleText, 2)
+    fun `fight example a, after 2 steps`() {
+        val actual = puzzle.stateAfter(fightExampleText, 2)
         val expected = """
             #######
             #...G.#
@@ -135,7 +135,7 @@ class Puzzle15Test {
 
     @Test
     fun `fight example a, after 23 steps`() {
-        val actual = puzzle.solveOne(fightExampleText, 23)
+        val actual = puzzle.stateAfter(fightExampleText, 23)
         val expected = """
             #######
             #...G.#
@@ -150,8 +150,19 @@ class Puzzle15Test {
     }
 
     @Test
-    fun `fight example a, after 24 steps`() {
-        val actual = puzzle.solveOne(fightExampleText, 24)
+    fun `fight exmple a, state 23 to 24, as one step`() {
+        val state23 = """
+            #######
+            #...G.#
+            #..G.G#
+            #.#.#G#
+            #...#E#
+            #.....#
+            #######
+        """.trimIndent()
+
+        val actual = puzzle.stateAfter(state23, 1)
+
         val expected = """
             #######
             #..G..#
@@ -166,8 +177,40 @@ class Puzzle15Test {
     }
 
     @Test
+    fun `fight example a, after 24 steps`() {
+        val actual = puzzle.stateAfter(fightExampleText, 24)
+        val expected = """
+            #######
+            #..G..#
+            #...G.#
+            #.#G#G#
+            #...#E#
+            #.....#
+            #######
+        """.trimIndent()
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `fight example a, after 25 steps`() {
+        val actual = puzzle.stateAfter(fightExampleText, 25)
+        val expected = """
+            #######
+            #.G...#
+            #..G..#
+            #.#.#G#
+            #..G#E#
+            #.....#
+            #######
+        """.trimIndent()
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun `fight example a, after 28 steps`() {
-        val actual = puzzle.solveOne(fightExampleText, 28)
+        val actual = puzzle.stateAfter(fightExampleText, 28)
         val expected = """
             #######
             #G....#
@@ -182,6 +225,28 @@ class Puzzle15Test {
     }
 
     @Test
+    fun `fight example a, after 47 steps`() {
+        val actual = puzzle.stateAfter(fightExampleText, 47)
+        val expected = """
+            #######
+            #G....#
+            #.G...#
+            #.#.#G#
+            #...#.#
+            #....G#
+            #######
+        """.trimIndent()
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `puzzle example a`() {
+        val actual = puzzle.solveOne(fightExampleText)
+        assertEquals(27730, actual)
+    }
+
+    @Test
     fun `example a, goblin 1 should be able to reach elf`() {
         val grid = puzzle.parseGrid(exampleText)
         val canBeReached = puzzle.isReachable(grid, Puzzle15.Point(1, 1), Puzzle15.Point(3, 4))
@@ -189,7 +254,28 @@ class Puzzle15Test {
     }
 
     class Puzzle15 {
-        fun solveOne(puzzleText: String, numCycles: Int = 10): String {
+
+        fun solveOne(puzzleText: String): Int {
+            var grid = parseGrid(puzzleText)
+            val soldiers = getSoldiers(grid)
+            var roundCount = 0
+
+            while (true) {
+                val elfTotalHp = soldiers.filter { it.type == Type.ELF }.sumBy { it.hp }
+                val goblinTotalHp = soldiers.filter { it.type == Type.GOBLIN }.sumBy { it.hp }
+
+                if (elfTotalHp <= 0 || goblinTotalHp <= 0) {
+                    break
+                }
+
+                grid = runCycle(grid, soldiers)
+                roundCount++
+            }
+
+            return soldiers.filter { !it.isDead() }.sumBy { it.hp } * roundCount
+        }
+
+        fun stateAfter(puzzleText: String, numCycles: Int = 10): String {
             var grid = parseGrid(puzzleText)
             val soldiers = getSoldiers(grid)
 
@@ -202,18 +288,23 @@ class Puzzle15Test {
 
         private fun runCycle(gridState: Map<Point, Char>, soldiers: List<Soldier>): Map<Point, Char> {
             var mutableGridState = gridState
+            val sortedSoldiers = soldiers.filter { !it.isDead() }.sortedWith(unitCompare)
 
-            for (index in 0 until soldiers.size) {
-                val currentUnit = soldiers[index]
+            for (index in 0 until sortedSoldiers.size) {
+                val currentUnit = sortedSoldiers[index]
 
-                mutableGridState = tryMoveSoldier(currentUnit, mutableGridState, soldiers)
-                mutableGridState = tryAttackEnemy(currentUnit, mutableGridState, soldiers)
+                mutableGridState = tryMoveSoldier(currentUnit, mutableGridState, sortedSoldiers)
+                mutableGridState = tryAttackEnemy(currentUnit, mutableGridState, sortedSoldiers)
             }
 
             return mutableGridState
         }
 
         private fun tryAttackEnemy(currentUnit: Soldier, grid: Map<Point, Char>, soldiers: List<Soldier>): Map<Point, Char> {
+            if (currentUnit.isDead()) {
+                println("I am dead and I am trying to attack. I am a jerk")
+            }
+
             val enemyUnits = soldiers.filter { it.type != currentUnit.type && !it.isDead() }
 
             val enemiesNextToMe = currentUnit
@@ -451,5 +542,7 @@ class Puzzle15Test {
         fun solveTwo(puzzleText: String): String {
             return ""
         }
+
+
     }
 }

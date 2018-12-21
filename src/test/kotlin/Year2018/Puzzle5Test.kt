@@ -10,7 +10,7 @@
 //
 //    @Test
 //    fun `puzzle part a`() {
-//        val result = puzzle.solveOne(puzzleText)
+//        val result = puzzle.stateAfter(puzzleText)
 //        assertEquals(11108, result.length)
 //    }
 //
@@ -23,7 +23,7 @@
 //}
 //
 //class Puzzle3 {
-//    fun solveOne(puzzleText: String): Int {
+//    fun stateAfter(puzzleText: String): Int {
 //        return 0
 //    }
 //

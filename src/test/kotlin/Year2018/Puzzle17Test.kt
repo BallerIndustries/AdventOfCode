@@ -7,9 +7,7 @@ class Puzzle17Test {
     val puzzleText = this::class.java.getResource("/2018/puzzle17.txt").readText().replace("\r", "")
     val puzzle = Puzzle17()
 
-    @Test
-    fun `render example commands to a canvas`() {
-        val exampleText = """
+    val exampleText = """
             x=495, y=2..7
             y=7, x=495..501
             x=501, y=3..7
@@ -20,6 +18,8 @@ class Puzzle17Test {
             y=13, x=498..504
         """.trimIndent()
 
+    @Test
+    fun `render example commands to a canvas`() {
         val expected = """
             ......+.......
             ............#.
@@ -37,8 +37,31 @@ class Puzzle17Test {
             ....#######...
         """.trimIndent()
 
-        val acutal = puzzle.renderInitial(exampleText)
-        assertEquals(expected, acutal)
+        val actual = puzzle.stateAfterUnitsOfWater(exampleText, 5)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `state after one units of water`() {
+        val expected = """
+            ......+.......
+            ......|.....#.
+            .#..#.|.....#.
+            .#..#.|#......
+            .#..#.|#......
+            .#....|#......
+            .#~||||#......
+            .#######......
+            ..............
+            ..............
+            ....#.....#...
+            ....#.....#...
+            ....#.....#...
+            ....#######...
+        """.trimIndent()
+
+        val state = puzzle.stateAfterUnitsOfWater(exampleText, 1)
+        assertEquals(expected, state)
     }
 
     @Test
@@ -61,9 +84,6 @@ class Puzzle17Test {
 
     class Puzzle17 {
         fun solveOne(puzzleText: String): String {
-
-
-
             return ""
         }
 
@@ -72,6 +92,35 @@ class Puzzle17Test {
         }
 
         fun renderInitial(puzzleText: String): String {
+            val state = createInitialState(puzzleText)
+            return renderState(state)
+        }
+
+        private fun renderState(state: Map<Point, Char>): String {
+            val allPoints = state.keys
+
+            val minX = allPoints.minBy { it.x }!!.x - 1
+            val maxX = allPoints.maxBy { it.x }!!.x + 1
+            val minY = allPoints.minBy { it.y }!!.y
+            val maxY = allPoints.maxBy { it.y }!!.y
+
+            val spaghetti = (minY..maxY).map { y ->
+                (minX..maxX).map { x ->
+
+                    val point = Point(x, y)
+
+                    if (state.containsKey(point)) {
+                        state[point]
+                    } else {
+                        '.'
+                    }
+                }.joinToString("")
+            }.joinToString("\n")
+
+            return spaghetti
+        }
+
+        private fun createInitialState(puzzleText: String): Map<Point, Char> {
             val commands = parseCommands(puzzleText)
             val horseTime = mutableMapOf<Point, Char>()
 
@@ -85,39 +134,18 @@ class Puzzle17Test {
 
             // Add in the spigot or whatever the fuck it is called
             horseTime[Point(500, 0)] = '+'
-
-            // Get minX, minY, maxX, maxY
-            val allPoints = horseTime.keys
-
-            val minX = allPoints.minBy { it.x }!!.x - 1
-            val maxX = allPoints.maxBy { it.x }!!.x + 1
-            val minY = allPoints.minBy { it.y }!!.y
-            val maxY = allPoints.maxBy { it.y }!!.y
-
-            val spaghetti = (minY .. maxY).map { y ->
-                (minX .. maxX).map { x ->
-
-                    val point = Point(x, y)
-
-                    if (horseTime.containsKey(point)) {
-                        horseTime[point]
-                    }
-                    else {
-                        '.'
-                    }
-                }.joinToString("")
-            }.joinToString("\n")
-
-
-
-            return spaghetti
-
-
-
-
+            return horseTime
         }
 
-        data class Point(val x: Int, val y: Int)
+        data class Point(val x: Int, val y: Int) {
+            fun down() = this.copy(y = y + 1)
+            fun left() = this.copy(x = x - 1)
+            fun right() = this.copy(x = x + 1)
+
+            fun isFree(state: Map<Point, Char>): Boolean {
+                return state[this] != '.'
+            }
+        }
 
         private fun parseCommands(puzzleText: String):  List<LineCommand> {
             return puzzleText.split("\n").map { line ->
@@ -138,6 +166,78 @@ class Puzzle17Test {
                     throw RuntimeException("Woah there!!")
                 }
             }
+        }
+
+        fun stateAfterUnitsOfWater(puzzleText: String, units: Int): String {
+            val state = createInitialState(puzzleText)
+            val waterSource = Point(500, 0)
+
+            // Spawn some water
+            var waterPoint = Point(500, 0)
+
+
+            while (true) {
+                val downPoint = waterPoint.down()
+                val leftPoint = waterPoint.left()
+                val rightPoint = waterPoint.right()
+
+
+                // Try go down
+                if (state[downPoint] == '.') {
+                    waterPoint = downPoint
+                }
+                // Can't go down any more look for a left/right point.
+                else if (state[leftPoint] == '.') {
+                    waterPoint = findLeftOrRightPoint(state, waterPoint)
+                }
+
+            }
+
+
+
+
+
+        }
+
+        private fun findLeftOrRightPoint(state: Map<Point, Char>, waterPoint: Point): Point {
+            val directLeftTileIsBlocked = !waterPoint.left().isFree(state)
+            val directRightTileIsBlocked = !waterPoint.right().isFree(state)
+            var currentPoint = waterPoint
+
+            // Scan left for a wall or cliff
+            if (!directLeftTileIsBlocked) {
+                var leftTile = currentPoint.left()
+                var downLeftTile = leftTile.down()
+
+                while (leftTile.isFree(state) && downLeftTile.isFree(state)) {
+                    currentPoint = currentPoint.left()
+                    leftTile = currentPoint.left()
+                    downLeftTile = leftTile.down()
+                }
+
+                return currentPoint
+            }
+            else if (!directRightTileIsBlocked) {
+                var rightTile = currentPoint.right()
+                var downRightTile = rightTile.down()
+
+                while (rightTile.isFree(state) && downRightTile.isFree(state)) {
+                    currentPoint = currentPoint.right()
+                    rightTile = currentPoint.right()
+                    downRightTile = rightTile.down()
+                }
+
+                return currentPoint
+            }
+            else {
+                throw RuntimeException("No where to go")
+            }
+        }
+
+        fun moveWaterUntilDeadEnd(state: Map<Point, Char>, water: Point) {
+
+
+
         }
 
         data class HorizontalLineCommand(val y: Int, val xFrom: Int, val xTo: Int) : LineCommand {
