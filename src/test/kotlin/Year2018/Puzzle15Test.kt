@@ -24,7 +24,7 @@ class Puzzle15Test {
         """.trimIndent()
 
     @Test
-//    @Ignore
+    @Ignore
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
         assertEquals("a", result)
@@ -296,7 +296,10 @@ class Puzzle15Test {
                 val currentUnit = sortedSoldiers[index]
 
                 mutableGridState = tryMoveSoldier(currentUnit, mutableGridState, sortedSoldiers)
+                println("Unit #$index finished move")
+
                 mutableGridState = tryAttackEnemy(currentUnit, mutableGridState, sortedSoldiers)
+                println("Unit #$index finished attack")
             }
 
             return mutableGridState
@@ -360,18 +363,30 @@ class Puzzle15Test {
 
             if (pointsSortedByManDistance.isEmpty()) return emptyList()
 
+            // Output min man distance
+            println("Minimum distance to point is ${manhattanDistance(currentUnit.position, pointsSortedByManDistance.first())}")
+
             val shortestPathToFirstPoint = getShortestPaths(grid, currentUnit.position, pointsSortedByManDistance.first())
             var minPathLength = shortestPathToFirstPoint.first().size
 
-            val allPaths = pointsSortedByManDistance.flatMap { point ->
-                val jurPaths = getShortestPaths(grid, currentUnit.position, point, minPathLength)
+            val allPaths = pointsSortedByManDistance.mapNotNull { point ->
 
-                if (jurPaths.firstOrNull()?.size ?: Int.MAX_VALUE < minPathLength) {
-                    minPathLength = jurPaths.first().size
+                val distToPoint = manhattanDistance(currentUnit.position, point)
+
+                if (distToPoint > minPathLength) {
+                    null
+                }
+                else {
+                    val jurPaths = getShortestPaths(grid, currentUnit.position, point, minPathLength)
+
+                    if (jurPaths.firstOrNull()?.size ?: Int.MAX_VALUE < minPathLength) {
+                        minPathLength = jurPaths.first().size
+                    }
+
+                    jurPaths
                 }
 
-                jurPaths
-            }
+            }.flatten()
 
             return allPaths.filter { it.size == minPathLength }
         }
@@ -398,8 +413,11 @@ class Puzzle15Test {
         fun getShortestPaths(grid: Map<Point, Char>, a: Point, b: Point, maxLength: Int = Int.MAX_VALUE): List<List<Point>> {
             var allPaths = listOf(listOf(a))
 
+
             while (true) {
                 val tailPoints = allPaths.map { it.last() }
+
+                //if (allPaths.any { it.size > maxLength} ) return emptyList()
 
                 if (tailPoints.any { it == b }) {
                     break
