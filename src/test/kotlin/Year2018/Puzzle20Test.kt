@@ -2,6 +2,7 @@ package Year2018
 
 import junit.framework.Assert.assertEquals
 import org.junit.Test
+import org.omg.SendingContext.RunTime
 import java.lang.RuntimeException
 import java.util.*
 
@@ -79,12 +80,29 @@ class Puzzle20Test {
         assertEquals(expected, plan)
     }
 
-
+    @Test
+    fun `puzzle plan can be generated`() {
+        val result = puzzle.generatePlan(puzzleText)
+        //assertEquals("", result)
+    }
 
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(1152, result)
+        // 235 is too low
+        assertEquals(900000, result)
+    }
+
+    @Test
+    fun `some fucking example`() {
+        val result = puzzle.solveOne("""^WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))$""")
+        assertEquals(31, result)
+    }
+
+    @Test
+    fun `another fucking example`() {
+        val result = puzzle.solveOne("""^ESSWWN(E|NNENN(EESS(WNSE|)SSS|WWWSSSSE(SW|NNNE)))$""")
+        assertEquals(23, result)
     }
 
     @Test
@@ -113,7 +131,76 @@ class Puzzle20Test {
 
     class Puzzle19 {
         fun solveOne(puzzleText: String): Int {
-            return 1337
+            val graph = parseRegexIntoGraph(puzzleText)
+            val (startPoint ) = graph.entries.find { it.value.isStart }!!
+
+            val otherPoints = graph.entries
+                .filter { !it.value.isStart }
+                .map { it.key }
+
+
+            val distancesToOtherPoints: List<List<Point>> = otherPoints.map { otherPoint ->
+                measureDistance(graph, startPoint, otherPoint)
+            }
+
+            return distancesToOtherPoints.maxBy { it.size }!!.size
+        }
+
+//        fun isReachable(grid: Map<Puzzle15Test.Puzzle15.Point, Char>, start: Puzzle15Test.Puzzle15.Point, end: Puzzle15Test.Puzzle15.Point): Pair<Boolean, List<Puzzle15Test.Puzzle15.Point>> {
+//            val visited = mutableSetOf(start)
+//            val toProcess = LinkedList<Pair<Puzzle15Test.Puzzle15.Point, MutableList<Puzzle15Test.Puzzle15.Point>>>()
+//            toProcess.add(start to mutableListOf())
+//
+//            while (toProcess.isNotEmpty()) {
+//                val (currentPoint, path) = toProcess.pop()
+//
+//                if (currentPoint == end) {
+//                    return true to path
+//                }
+//
+//                visited.add(currentPoint)
+//
+//                val adjacentTiles = currentPoint
+//                    .getFreeAdjacentTiles(grid)
+//                    .filter { !visited.contains(it) }
+//                    .map { it to (path + it).toMutableList() }
+//
+//                // Add adjacent tiles we have not visited
+//                toProcess.addAll(adjacentTiles)
+//                visited.addAll(adjacentTiles.map { it.first })
+////                stepCount++
+//            }
+//
+//            return false to listOf()
+//        }
+
+
+        private fun measureDistance(graph: Map<Point, NodeData>, startPoint: Point, endPoint: Point): MutableList<Point> {
+            val visited = mutableSetOf(startPoint)
+            val toProcess = LinkedList<Pair<Point, MutableList<Point>>>()
+            toProcess.add(startPoint to mutableListOf())
+
+            while (toProcess.isNotEmpty()) {
+                val (currentPoint, path) = toProcess.pop()
+
+                if (currentPoint == endPoint) {
+                    return path
+                }
+
+                visited.add(currentPoint)
+
+                val nodeData = graph[currentPoint]!!
+
+                val adjacentTiles = nodeData.paths
+                    .filter { !visited.contains(it) }
+                    .map { it to (path + it).toMutableList() }
+
+                // Add adjacent tiles we have not visited
+                toProcess.addAll(adjacentTiles)
+                visited.addAll(adjacentTiles.map { it.first })
+            }
+
+            throw RuntimeException("Coulnd't find a path to that room. Oh no!")
         }
 
         fun solveTwo(puzzleText: String): Int {
@@ -137,9 +224,6 @@ class Puzzle20Test {
                 point.normalise(minX, minY) to nodedata.copy(paths = nodedata.paths.map { it.normalise(minX, minY) }.toMutableSet())
             }
 
-            val displayWidth  = width
-            val displayHeight = height
-
             fun hasUpDownPath(point: Point): Boolean {
                 val pointBelow = point.south()
                 val pointAbove = point.north()
@@ -156,8 +240,8 @@ class Puzzle20Test {
                 return pathsForPointLeft != null && pathsForPointLeft.paths.contains(pointRight)
             }
 
-            return (-1 .. displayHeight + 1).map { y ->
-                (-1 .. displayWidth + 1).map { x ->
+            return (-1 .. height + 1).map { y ->
+                (-1 .. width + 1).map { x ->
                     val point = Point(x, y)
                     val nodeData = normalisedGraph[point]
 
