@@ -59,6 +59,29 @@ class Puzzle20Test {
     }
 
     @Test
+    fun `map for ENNWSWW(NEWS|)SSSEEN(WNSE|)EE(SWEN|)NNN`() {
+        val text = """^ENNWSWW(NEWS|)SSSEEN(WNSE|)EE(SWEN|)NNN$"""
+        val expected = """
+            ###########
+            #.|.#.|.#.#
+            #-###-#-#-#
+            #.|.|.#.#.#
+            #-#####-#-#
+            #.#.#X|.#.#
+            #-#-#####-#
+            #.#.|.|.|.#
+            #-###-###-#
+            #.|.|.#.|.#
+            ###########
+        """.trimIndent()
+
+        val plan: String = puzzle.generatePlan(text)
+        assertEquals(expected, plan)
+    }
+
+
+
+    @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
         assertEquals(1152, result)
