@@ -11,13 +11,27 @@ class Puzzle20Test {
     @Test
     fun `map for ^WNE$`() {
         val text = """^WNE$"""
-
         val expected = """
             #####
             #.|.#
             #-###
             #.|X#
             #####
+        """.trimIndent()
+
+        val plan: String = puzzle.generatePlan(text)
+        assertEquals(expected, plan)
+    }
+
+    @Test
+    fun `map for ^ENWWW$`() {
+        val text = """^ENWWW$"""
+        val expected = """
+            #########
+            #.|.|.|.#
+            #######-#
+            #####X|.#
+            #########
         """.trimIndent()
 
         val plan: String = puzzle.generatePlan(text)
@@ -80,8 +94,8 @@ class Puzzle20Test {
                 point.normalise(minX, minY) to nodedata.copy(paths = nodedata.paths.map { it.normalise(minX, minY) }.toMutableSet())
             }
 
-            val displayWidth  = (width * 2) - 1
-            val displayHeight = (height * 2) - 1
+            val displayWidth  = width
+            val displayHeight = height
 
             fun hasUpDownPath(point: Point): Boolean {
                 val pointBelow = point.south()
@@ -99,8 +113,8 @@ class Puzzle20Test {
                 return pathsForPointLeft != null && pathsForPointLeft.paths.contains(pointRight)
             }
 
-            return (-1 until displayHeight + 1).map { y ->
-                (-1 until displayWidth + 1).map { x ->
+            return (-1 .. displayHeight + 1).map { y ->
+                (-1 .. displayWidth + 1).map { x ->
                     val point = Point(x, y)
                     val nodeData = normalisedGraph[point]
 
