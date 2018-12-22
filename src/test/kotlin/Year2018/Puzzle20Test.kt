@@ -38,7 +38,7 @@ class Puzzle20Test {
 
     enum class Direction { NORTH, EAST, SOUTH, WEST }
 
-    data class PointAndDirection(val point: Point, val direction: Direction)
+    data class NodeData(val paths: MutableSet<Point> = mutableSetOf(), val isStart: Boolean = false)
 
     data class Point(val x: Int, val y: Int) {
         fun twoNorth() = this.copy(y = this.y - 2)
@@ -76,8 +76,8 @@ class Puzzle20Test {
 
             // Now want to normalise all the points
 
-            val normalisedGraph = graph.entries.associate { (point, paths) ->
-                point.normalise(minX, minY) to paths.map { it.normalise(minX, minY) }.toSet()
+            val normalisedGraph = graph.entries.associate { (point, nodedata) ->
+                point.normalise(minX, minY) to nodedata.copy(paths = nodedata.paths.map { it.normalise(minX, minY) }.toMutableSet())
             }
 
             val displayWidth  = (width * 2) - 1
@@ -88,7 +88,7 @@ class Puzzle20Test {
                 val pointAbove = point.north()
                 val pathsForPointBelow = normalisedGraph[pointBelow]
 
-                return pathsForPointBelow != null && pathsForPointBelow.contains(pointAbove)
+                return pathsForPointBelow != null && pathsForPointBelow.paths.contains(pointAbove)
             }
 
             fun hasLeftRightPath(point: Point): Boolean {
@@ -96,28 +96,28 @@ class Puzzle20Test {
                 val pointRight = point.east()
                 val pathsForPointLeft = normalisedGraph[pointLeft]
 
-                return pathsForPointLeft != null && pathsForPointLeft.contains(pointRight)
+                return pathsForPointLeft != null && pathsForPointLeft.paths.contains(pointRight)
             }
 
-            val gridAsText = (-1 until displayHeight + 1).map { y ->
+            return (-1 until displayHeight + 1).map { y ->
                 (-1 until displayWidth + 1).map { x ->
                     val point = Point(x, y)
+                    val nodeData = normalisedGraph[point]
 
                     when {
-                        normalisedGraph.containsKey(point) -> '.'
+                        nodeData != null && nodeData.isStart -> 'X'
+                        nodeData != null -> '.'
                         hasUpDownPath(point) -> '-'
                         hasLeftRightPath(point) -> '|'
                         else -> '#'
                     }
                 }.joinToString("")
             }.joinToString("\n")
-
-            return gridAsText
         }
 
-        private fun parseRegexIntoGraph(text: String): MutableMap<Point, MutableSet<Point>> {
+        private fun parseRegexIntoGraph(text: String): MutableMap<Point, NodeData> {
             var currentPoint = Point(0, 0)
-            val graph = mutableMapOf(currentPoint to mutableSetOf<Point>())
+            val graph = mutableMapOf(currentPoint to NodeData(paths = mutableSetOf(), isStart = true))
 
             text.replace("^", "").replace("$", "").forEach { character ->
                 val nextPoint = when (character) {
@@ -130,18 +130,17 @@ class Puzzle20Test {
 
                 // Add in a node for the next point, if one does not already exist
                 if (!graph.containsKey(nextPoint)) {
-                    graph[nextPoint] = mutableSetOf()
+                    graph[nextPoint] = NodeData()
                 }
 
                 // Add a path from current point to next point
-                graph[currentPoint]!!.add(nextPoint)
-                graph[nextPoint]!!.add(currentPoint)
+                graph[currentPoint]!!.paths.add(nextPoint)
+                graph[nextPoint]!!.paths.add(currentPoint)
 
                 currentPoint = nextPoint
             }
+
             return graph
         }
     }
-
-
 }
