@@ -737,7 +737,5 @@ class Puzzle15Test {
                 currentAttack--
             }
         }
-
-
     }
 }
