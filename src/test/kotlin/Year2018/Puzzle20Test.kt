@@ -3,6 +3,7 @@ package Year2018
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 import java.lang.RuntimeException
+import java.util.*
 
 class Puzzle20Test {
     val puzzleText = this::class.java.getResource("/2018/puzzle20.txt").readText().replace("\r", "")
@@ -31,6 +32,25 @@ class Puzzle20Test {
             #.|.|.|.#
             #######-#
             #####X|.#
+            #########
+        """.trimIndent()
+
+        val plan: String = puzzle.generatePlan(text)
+        assertEquals(expected, plan)
+    }
+
+    @Test
+    fun `map for (NEEE|SSE(EE|N))`() {
+        val text = """^ENWWW(NEEE|SSE(EE|N))$"""
+        val expected = """
+            #########
+            #.|.|.|.#
+            #-#######
+            #.|.|.|.#
+            #-#####-#
+            #.#.#X|.#
+            #-#-#####
+            #.|.|.|.#
             #########
         """.trimIndent()
 
@@ -132,14 +152,21 @@ class Puzzle20Test {
         private fun parseRegexIntoGraph(text: String): MutableMap<Point, NodeData> {
             var currentPoint = Point(0, 0)
             val graph = mutableMapOf(currentPoint to NodeData(paths = mutableSetOf(), isStart = true))
+            val stack = Stack<Point>()
 
             text.replace("^", "").replace("$", "").forEach { character ->
-                val nextPoint = when (character) {
+                val nextPoint: Point = when (character) {
                     'N' -> currentPoint.twoNorth()
                     'E' -> currentPoint.twoEast()
                     'S' -> currentPoint.twoSouth()
                     'W' -> currentPoint.twoWest()
-                    else -> throw RuntimeException("Woah")
+                    '(' -> {
+                        stack.push(currentPoint)
+                        currentPoint
+                    }
+                    '|' -> stack.peek()
+                    ')' -> stack.pop()
+                    else -> throw RuntimeException("Woah unexpected character! character = $character")
                 }
 
                 // Add in a node for the next point, if one does not already exist
