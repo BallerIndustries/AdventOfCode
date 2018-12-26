@@ -28,7 +28,7 @@ class Puzzle24Test {
     fun `puzzle part a`() {
         // 15885 too low
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(0, result)
+        assertEquals(15919, result)
     }
 
     @Test
@@ -54,15 +54,24 @@ class Puzzle24Test {
         }
 
         fun isAlive() = units > 0
+
         fun isDead() = !isAlive()
+
         fun getAttackedBy(attacker: Group) {
+            if (this.isDead()) {
+                println("HEy wtf! I am getting attacking, but I am dead!")
+            }
+
+            if (attacker.isDead()) {
+                println("Hey wtf! I am getting attacked by a group that is dead!")
+            }
+
+
             val damageDealt = damageReceivedFrom(attacker)
 
             // Okay now figure out how many units die.
-            val unitsKilled: Int = (damageDealt / this.hp)
+            val unitsKilled = Math.min(damageDealt / this.hp, this.units)
             this.units -= unitsKilled
-
-            println("${attacker.team} group ${attacker.id} attacks defending group ${this.id}, killing $unitsKilled units")
         }
     }
 
@@ -102,7 +111,7 @@ class Puzzle24Test {
                 outputStats(groups)
                 runARound(groups)
 
-                println("")
+                //println("")
 
                 // One team is totally dead
                 if (immuneSystem.all { it.isDead() } || infection.all { it.isDead() }) {
@@ -117,12 +126,12 @@ class Puzzle24Test {
         }
 
         private fun outputStats(groups: List<Group>) {
-            println("Immune System:")
-            println(groups.filter { it.team == Team.IMMUNE_SYSTEM }.map { "Group ${it.id} contains ${it.units} units" }.joinToString("\n"))
-
-            println("Infection:")
-            println(groups.filter { it.team == Team.INFECTION}.map { "Group ${it.id} contains ${it.units} units" }.joinToString("\n"))
-            println()
+//            println("Immune System:")
+//            println(groups.filter { it.team == Team.IMMUNE_SYSTEM }.map { "Group ${it.id} contains ${it.units} units" }.joinToString("\n"))
+//
+//            println("Infection:")
+//            println(groups.filter { it.team == Team.INFECTION}.map { "Group ${it.id} contains ${it.units} units" }.joinToString("\n"))
+//            println()
         }
 
         private fun runARound(groups: List<Group>) {
@@ -154,6 +163,10 @@ class Puzzle24Test {
                     .filter { it.isAlive() }
                     .sortedWith(generateToAttackOrder(attackingGroup).reversed())
                     .firstOrNull()
+
+                if (targetedEnemy?.damageReceivedFrom(attackingGroup) == 0) {
+                    continue
+                }
 
                 attackerToTarget.add(Pair(attackingGroup, targetedEnemy))
 
