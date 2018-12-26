@@ -6,8 +6,8 @@ import java.lang.RuntimeException
 import kotlin.math.round
 
 class Puzzle16Test {
-    val puzzleText = this::class.java.getResource("/2018/puzzle16.txt").readText()
-    val puzzleTextBee = this::class.java.getResource("/2018/puzzle16-b.txt").readText()
+    val puzzleText = this::class.java.getResource("/2018/puzzle16.txt").readText().replace("\r", "")
+    val puzzleTextBee = this::class.java.getResource("/2018/puzzle16-b.txt").readText().replace("\r", "")
 
     val puzzle = Puzzle16()
 

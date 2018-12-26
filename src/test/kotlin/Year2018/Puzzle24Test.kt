@@ -27,7 +27,7 @@ class Puzzle24Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(420, result)
+        assertEquals(0, result)
     }
 
     @Test
@@ -129,11 +129,16 @@ class Puzzle24Test {
             val attackerToTarget = mutableListOf<Pair<Group, Group?>>()
 
             for (attackingGroup in sortedGroups) {
+                if (attackingGroup.isDead()) {
+                    continue
+                }
+
 
                 // All enemies
                 val targetedEnemy = groups.filter { it != attackingGroup }
                     .filter { !targetedGroups.contains(it) }
                     .filter { it.team != attackingGroup.team }
+                    .filter { it.isAlive() }
                     .sortedWith(generateToAttackOrder(attackingGroup))
                     .firstOrNull()
 

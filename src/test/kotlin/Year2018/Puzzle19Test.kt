@@ -73,7 +73,7 @@ class Puzzle19Test {
                 // Execute the instruction
                 state = instruction.execute(state, command)
 
-                println("ip=${instructionPointerValue + 2} ${beforeState.toList()} $instructionText ${state.toList()}")
+//                println("ip=${instructionPointerValue + 2} ${beforeState.toList()} $instructionText ${state.toList()}")
 
                 // Read in the instruction pointer value
                 instructionPointerValue = state.getValue(instructionRegister)
