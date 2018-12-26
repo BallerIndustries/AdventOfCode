@@ -26,6 +26,7 @@ class Puzzle24Test {
 
     @Test
     fun `puzzle part a`() {
+        // 15885 too low
         val result = puzzle.solveOne(puzzleText)
         assertEquals(0, result)
     }
@@ -40,7 +41,7 @@ class Puzzle24Test {
 
     enum class Team { IMMUNE_SYSTEM, INFECTION }
 
-    data class Group(val team: Team, var units: Int, val hp: Int, val damageType: DamageType, val damage: Int,
+    data class Group(val id: Int, val team: Team, var units: Int, val hp: Int, val damageType: DamageType, val damage: Int,
                      val initiative: Int, val weaknesses: Set<DamageType>, val immunities: Set<DamageType>) {
         fun effectivePower() = units * damage
 
@@ -60,6 +61,8 @@ class Puzzle24Test {
             // Okay now figure out how many units die.
             val unitsKilled: Int = (damageDealt / this.hp)
             this.units -= unitsKilled
+
+            println("${attacker.team} group ${attacker.id} attacks defending group ${this.id}, killing $unitsKilled units")
         }
     }
 
@@ -96,7 +99,10 @@ class Puzzle24Test {
             val infection = groups.filter { it.team == Team.INFECTION }
 
             while (true) {
+                outputStats(groups)
                 runARound(groups)
+
+                println("")
 
                 // One team is totally dead
                 if (immuneSystem.all { it.isDead() } || infection.all { it.isDead() }) {
@@ -110,17 +116,25 @@ class Puzzle24Test {
             return Math.max(immuneSystemUnits, infectionUnits)
         }
 
+        private fun outputStats(groups: List<Group>) {
+            println("Immune System:")
+            println(groups.filter { it.team == Team.IMMUNE_SYSTEM }.map { "Group ${it.id} contains ${it.units} units" }.joinToString("\n"))
+
+            println("Infection:")
+            println(groups.filter { it.team == Team.INFECTION}.map { "Group ${it.id} contains ${it.units} units" }.joinToString("\n"))
+            println()
+        }
+
         private fun runARound(groups: List<Group>) {
             val attackerToTarget = acquireTargets(groups)
-
             attackTargets(attackerToTarget)
         }
 
         private fun attackTargets(attackerToTarget: List<Pair<Group, Group?>>) {
             attackerToTarget
-                    .sortedBy { (attacker, _) -> attacker.initiative }
-                    .filter { it.first.isAlive() }
-                    .forEach { (attacker, target) -> target?.getAttackedBy(attacker) }
+                .filter { it.first.isAlive() }
+                .sortedByDescending{ (attacker, _) -> attacker.initiative }
+                .forEach { (attacker, target) -> target?.getAttackedBy(attacker) }
         }
 
         private fun acquireTargets(groups: List<Group>): List<Pair<Group, Group?>> {
@@ -133,13 +147,12 @@ class Puzzle24Test {
                     continue
                 }
 
-
                 // All enemies
                 val targetedEnemy = groups.filter { it != attackingGroup }
                     .filter { !targetedGroups.contains(it) }
                     .filter { it.team != attackingGroup.team }
                     .filter { it.isAlive() }
-                    .sortedWith(generateToAttackOrder(attackingGroup))
+                    .sortedWith(generateToAttackOrder(attackingGroup).reversed())
                     .firstOrNull()
 
                 attackerToTarget.add(Pair(attackingGroup, targetedEnemy))
@@ -192,10 +205,13 @@ class Puzzle24Test {
                 }
             }
 
-            val groups = jur.subList(1, jur.size).mapNotNull { line ->
+            var groupId = 1
+
+            return jur.subList(1, jur.size).mapNotNull { line ->
 
                 if (line.contains("Infection:")) {
                     team = Team.INFECTION
+                    groupId = 1
                     null
                 } else {
 
@@ -211,11 +227,9 @@ class Puzzle24Test {
 
                     val (weaknesses, immunities) = getWeaknessesAndImmunities(line)
 
-                    Group(team, units, hp, damageType, damage, initiative, weaknesses, immunities)
+                    Group(groupId++, team, units, hp, damageType, damage, initiative, weaknesses, immunities)
                 }
             }
-
-            return groups
         }
 
         fun solveTwo(puzzleText: String): Int {
