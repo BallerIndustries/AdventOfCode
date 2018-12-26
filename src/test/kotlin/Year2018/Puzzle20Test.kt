@@ -1,6 +1,7 @@
 package Year2018
 
 import junit.framework.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 import org.omg.SendingContext.RunTime
 import java.lang.RuntimeException
@@ -26,6 +27,13 @@ class Puzzle20Test {
     }
 
     @Test
+    fun `furthest room for ^WNE$ should be 3`() {
+        val text = """^WNE$"""
+        val distance = puzzle.solveOne(text)
+        assertEquals(3, distance)
+    }
+
+    @Test
     fun `map for ^ENWWW$`() {
         val text = """^ENWWW$"""
         val expected = """
@@ -41,7 +49,7 @@ class Puzzle20Test {
     }
 
     @Test
-    fun `map for (NEEE|SSE(EE|N))`() {
+    fun `map for ENWWW(NEEE|SSE(EE|N))`() {
         val text = """^ENWWW(NEEE|SSE(EE|N))$"""
         val expected = """
             #########
@@ -57,6 +65,13 @@ class Puzzle20Test {
 
         val plan: String = puzzle.generatePlan(text)
         assertEquals(expected, plan)
+    }
+
+    @Test
+    fun `furthest room for ^ENWWW(NEEE|SSE(EE|N))$ should be 10`() {
+        val text = """^ENWWW(NEEE|SSE(EE|N))$"""
+        val distance = puzzle.solveOne(text)
+        assertEquals(10, distance)
     }
 
     @Test
@@ -87,25 +102,29 @@ class Puzzle20Test {
     }
 
     @Test
+    @Ignore
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
         // 235 is too low
+        // 3814 is too low
+        // 3814 is too low
         assertEquals(900000, result)
     }
 
     @Test
-    fun `some fucking example`() {
+    fun `example where 31 doors away`() {
         val result = puzzle.solveOne("""^WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))$""")
         assertEquals(31, result)
     }
 
     @Test
-    fun `another fucking example`() {
+    fun `example where 23 doors away`() {
         val result = puzzle.solveOne("""^ESSWWN(E|NNENN(EESS(WNSE|)SSS|WWWSSSSE(SW|NNNE)))$""")
         assertEquals(23, result)
     }
 
     @Test
+    @Ignore
     fun `puzzle part b`() {
        val result = puzzle.solveTwo(puzzleText)
         assertEquals(213057, result)
@@ -139,46 +158,38 @@ class Puzzle20Test {
                 .map { it.key }
 
 
+            cleanUpFuckedData(graph)
+
             val distancesToOtherPoints: List<List<Point>> = otherPoints.map { otherPoint ->
                 measureDistance(graph, startPoint, otherPoint)
             }
 
+            println(stringifyPlan(graph))
             return distancesToOtherPoints.maxBy { it.size }!!.size
         }
 
-//        fun isReachable(grid: Map<Puzzle15Test.Puzzle15.Point, Char>, start: Puzzle15Test.Puzzle15.Point, end: Puzzle15Test.Puzzle15.Point): Pair<Boolean, List<Puzzle15Test.Puzzle15.Point>> {
-//            val visited = mutableSetOf(start)
-//            val toProcess = LinkedList<Pair<Puzzle15Test.Puzzle15.Point, MutableList<Puzzle15Test.Puzzle15.Point>>>()
-//            toProcess.add(start to mutableListOf())
-//
-//            while (toProcess.isNotEmpty()) {
-//                val (currentPoint, path) = toProcess.pop()
-//
-//                if (currentPoint == end) {
-//                    return true to path
-//                }
-//
-//                visited.add(currentPoint)
-//
-//                val adjacentTiles = currentPoint
-//                    .getFreeAdjacentTiles(grid)
-//                    .filter { !visited.contains(it) }
-//                    .map { it to (path + it).toMutableList() }
-//
-//                // Add adjacent tiles we have not visited
-//                toProcess.addAll(adjacentTiles)
-//                visited.addAll(adjacentTiles.map { it.first })
-////                stepCount++
-//            }
-//
-//            return false to listOf()
-//        }
+        fun cleanUpFuckedData(graph: Map<Point, NodeData>) {
+            fun manDist(p1: Point, p2: Point): Int {
+                return Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y)
+            }
+
+            // Get all points where ham = bacon
+            graph.entries.forEach { (point, nodeData) ->
+                nodeData.paths.removeAll { dest -> manDist(point, dest) > 4 }
+
+                val fuckedPoints = nodeData.paths.count { dest -> manDist(point, dest) > 4 }
+                if (fuckedPoints > 0) println("fuckedPoints = $fuckedPoints")
+            }
+        }
 
 
         private fun measureDistance(graph: Map<Point, NodeData>, startPoint: Point, endPoint: Point): MutableList<Point> {
             val visited = mutableSetOf(startPoint)
             val toProcess = LinkedList<Pair<Point, MutableList<Point>>>()
             toProcess.add(startPoint to mutableListOf())
+
+
+
 
             while (toProcess.isNotEmpty()) {
                 val (currentPoint, path) = toProcess.pop()
@@ -209,7 +220,10 @@ class Puzzle20Test {
 
         fun generatePlan(text: String): String {
             val graph = parseRegexIntoGraph(text)
+            return stringifyPlan(graph)
+        }
 
+        private fun stringifyPlan(graph: MutableMap<Point, NodeData>): String {
             val minX = graph.keys.minBy { it.x }!!.x
             val maxX = graph.keys.maxBy { it.x }!!.x
             val minY = graph.keys.minBy { it.y }!!.y
@@ -240,8 +254,8 @@ class Puzzle20Test {
                 return pathsForPointLeft != null && pathsForPointLeft.paths.contains(pointRight)
             }
 
-            return (-1 .. height + 1).map { y ->
-                (-1 .. width + 1).map { x ->
+            return (-1..height + 1).map { y ->
+                (-1..width + 1).map { x ->
                     val point = Point(x, y)
                     val nodeData = normalisedGraph[point]
 
