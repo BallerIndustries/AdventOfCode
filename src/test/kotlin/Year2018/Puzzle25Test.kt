@@ -3,6 +3,7 @@ package Year2018
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 import java.lang.RuntimeException
+import java.util.*
 
 class Puzzle25Test {
     val puzzleText = this::class.java.getResource("/2018/puzzle25.txt").readText().replace("\r", "")
@@ -12,13 +13,90 @@ class Puzzle25Test {
     fun `puzzle part a`() {
         // 15885 too low
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(15919, result)
+
+        // 150 too low
+        // 151 too low
+        assertEquals(386, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(213057, result)
+    }
+
+    @Test
+    fun `example 1`() {
+        val text = """
+0,0,0,0
+3,0,0,0
+0,3,0,0
+0,0,3,0
+0,0,0,3
+0,0,0,6
+9,0,0,0
+12,0,0,0
+        """.trimIndent()
+
+        val dog = puzzle.solveOne(text)
+        assertEquals(2, dog)
+    }
+
+    @Test
+    fun `example 2`() {
+        val text = """
+-1,2,2,0
+0,0,2,-2
+0,0,0,-2
+-1,2,0,0
+-2,-2,-2,2
+3,0,2,-1
+-1,3,2,2
+-1,0,-1,0
+0,2,1,-2
+3,0,0,0
+        """.trimIndent()
+
+        val dog = puzzle.solveOne(text)
+        assertEquals(4, dog)
+    }
+
+    @Test
+    fun `example 3`() {
+        val text = """
+1,-1,0,1
+2,0,-1,0
+3,2,-1,0
+0,0,3,1
+0,0,-1,-1
+2,3,-2,0
+-2,2,0,0
+2,-2,0,-1
+1,-1,0,-1
+3,2,0,2
+        """.trimIndent()
+
+        val dog = puzzle.solveOne(text)
+        assertEquals(3, dog)
+    }
+
+    @Test
+    fun `example 4`() {
+        val text = """
+1,-1,-1,-2
+-2,-2,0,1
+0,2,1,3
+-2,3,-2,1
+0,2,3,-2
+-1,-1,1,-2
+0,-2,-1,0
+-2,2,3,-1
+1,2,2,0
+-1,-2,0,-2
+        """.trimIndent()
+
+        val dog = puzzle.solveOne(text)
+        assertEquals(8, dog)
     }
 
     data class Point(val x: Int, val y: Int, val z: Int, val t: Int, var neighbours: MutableList<Point> = mutableListOf())
@@ -32,27 +110,28 @@ class Puzzle25Test {
 
         fun solveOne(puzzleText: String): Int {
             val points = puzzleText.split("\n").map { line -> line.split(",").map { it.toInt() }.let { Point(it[0], it[1], it[2], it[3]) } }
-            val constellations = mutableListOf(mutableListOf<Point>())
+            val horse = points.map { point -> getConstellation(point, points) }.distinct()
+            return horse.size
+        }
 
-            for (index in 0 until points.size) {
+        fun getConstellation(point: Point, allPoints: List<Point>): Set<Point> {
+            val otherPoints = allPoints.filter { it != point }
 
-                val currentPoint = points[index]
-                val pointsAhead: List<Point> = points.subList(index + 1, points.size)
-                        .filter { manhattanDistance(currentPoint, it) <= 3 }
+            val toProcess = LinkedList<Point>()
+            toProcess.add(point)
+            val constellation = mutableSetOf(point)
 
-                // Add all the neighbours
-                currentPoint.neighbours.addAll(pointsAhead)
+            while (toProcess.isNotEmpty()) {
+                val currentPoint = toProcess.removeFirst()
+                val neighborsToCurrentPoint = otherPoints.filter { !constellation.contains(it) && manhattanDistance(it, currentPoint) <= 3 }
+
+                constellation.addAll(neighborsToCurrentPoint)
+                toProcess.addAll(neighborsToCurrentPoint)
             }
 
-
-
-
-
-
-
-
-            return 239847
+            return constellation
         }
+
 
         fun solveTwo(puzzleText: String): Int {
             return 290834
