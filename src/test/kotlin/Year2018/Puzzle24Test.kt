@@ -24,12 +24,39 @@ class Puzzle24Test {
 
     enum class Team { IMMUNE_SYSTEM, INFECTION }
 
-    data class Group(val team: Team, val units: Int, val hp: Int, val damageType: DamageType, val damage: Int, val initiative: Int, val weaknesses: Set<DamageType>, val immunities: Set<DamageType>)
+    data class Group(val team: Team, val units: Int, val hp: Int, val damageType: DamageType, val damage: Int, val initiative: Int, val weaknesses: Set<DamageType>, val immunities: Set<DamageType>) {
+        fun effectivePower() = units * damage
+
+        fun damageReceivedFrom(attackingGroup: Group): Int {
+            return when {
+                this.immunities.contains(attackingGroup.damageType) -> 0
+                this.weaknesses.contains(attackingGroup.damageType) -> attackingGroup.units * attackingGroup.damage * 2
+                else -> attackingGroup.units * attackingGroup.damage
+            }
+        }
+    }
 
     class Puzzle24 {
+
+        private val groupCompare = Comparator<Group> { a, b ->
+            if (a.effectivePower() != b.effectivePower()) {
+                a.effectivePower().compareTo(b.effectivePower())
+            }
+            else {
+                a.initiative.compareTo(b.initiative)
+            }
+        }
+
         fun solveOne(puzzleText: String): Int {
             val groups = parsePuzzleText(puzzleText)
-            println(groups)
+            val sorted = groups.sortedWith(groupCompare)
+
+
+
+
+
+
+
             return -1
         }
 
