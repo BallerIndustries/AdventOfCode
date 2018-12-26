@@ -66,7 +66,6 @@ class Puzzle24Test {
                 println("Hey wtf! I am getting attacked by a group that is dead!")
             }
 
-
             val damageDealt = damageReceivedFrom(attacker)
 
             // Okay now figure out how many units die.
@@ -110,8 +109,6 @@ class Puzzle24Test {
             while (true) {
                 outputStats(groups)
                 runARound(groups)
-
-                //println("")
 
                 // One team is totally dead
                 if (immuneSystem.all { it.isDead() } || infection.all { it.isDead() }) {
@@ -245,8 +242,43 @@ class Puzzle24Test {
             }
         }
 
+        private fun boostImmuneSystemAttack(groups: List<Group>, damageDelta: Int): List<Group> {
+            return groups.map { group ->
+                if (group.team == Team.IMMUNE_SYSTEM) group.copy(damage = group.damage + damageDelta) else group
+            }
+        }
+
         fun solveTwo(puzzleText: String): Int {
-            return 1337
+            val groups = parsePuzzleText(puzzleText)
+            val boostAmount = 94
+            val boostedGroups = boostImmuneSystemAttack(groups, boostAmount)
+
+            val immuneSystem = boostedGroups.filter { it.team == Team.IMMUNE_SYSTEM }
+            val infection = boostedGroups.filter { it.team == Team.INFECTION }
+
+            while (true) {
+                outputStats(boostedGroups)
+                runARound(boostedGroups)
+
+                // One team is totally dead
+                if (immuneSystem.all { it.isDead() } || infection.all { it.isDead() }) {
+                    break
+                }
+            }
+
+            val immuneSystemLost = immuneSystem.all { it.isDead() }
+
+            if (immuneSystemLost) {
+                println("Immune system lost with a boost of $boostAmount")
+            }
+            else {
+                println("Immune system won with a boost of $boostAmount. units remaining = ${immuneSystem.sumBy { it.units }}")
+
+            }
+
+
+
+            return 909230920
         }
     }
 }
