@@ -3,7 +3,6 @@ package Year2018
 import junit.framework.Assert.assertEquals
 import org.junit.Ignore
 import org.junit.Test
-import org.omg.SendingContext.RunTime
 import java.lang.RuntimeException
 import java.util.*
 
@@ -123,14 +122,50 @@ class Puzzle20Test {
         assertEquals(23, result)
     }
 
+
+    @Test
+    fun `map for cheese`() {
+        val text = """^NN(EE|WW)$"""
+        val expected = """
+            ###########
+            #.|.|.|.|.#
+            #####-#####
+            #####.#####
+            #####-#####
+            #####X#####
+            ###########
+        """.trimIndent()
+
+        val plan: String = puzzle.generatePlan(text)
+        assertEquals(expected, plan)
+    }
+
+
+    @Test
+    fun `map for spaghetti`() {
+        val text = """^EEE(NNN|)EEE$"""
+        val expected = """
+            ###############
+            #######.|.|.|.#
+            #######-#######
+            #######.#######
+            #######-#######
+            #######.#######
+            #######-#######
+            #X|.|.|.|.|.|.#
+            ###############
+        """.trimIndent()
+
+        val plan: String = puzzle.generatePlan(text)
+        assertEquals(expected, plan)
+    }
+
     @Test
     @Ignore
     fun `puzzle part b`() {
        val result = puzzle.solveTwo(puzzleText)
         assertEquals(213057, result)
     }
-
-    enum class Direction { NORTH, EAST, SOUTH, WEST }
 
     data class NodeData(val paths: MutableSet<Point> = mutableSetOf(), val isStart: Boolean = false)
 
@@ -149,6 +184,60 @@ class Puzzle20Test {
     }
 
     class Puzzle19 {
+
+        private fun parseRegexIntoGraph(text: String): MutableMap<Point, NodeData> {
+            var currentPoint = Point(0, 0)
+            val graph = mutableMapOf(currentPoint to NodeData(paths = mutableSetOf(), isStart = true))
+            val stack = Stack<Point>()
+            val unfinishedTails = mutableListOf<Pair<Point, String>>()
+
+            text.replace("^", "").replace("$", "").forEachIndexed { index, character ->
+                val nextPoint: Point = when (character) {
+                    'N' -> currentPoint.twoNorth()
+                    'E' -> currentPoint.twoEast()
+                    'S' -> currentPoint.twoSouth()
+                    'W' -> currentPoint.twoWest()
+                    '(' -> {
+                        stack.push(currentPoint)
+                        currentPoint
+                    }
+                    '|' -> {
+                        stack.peek()
+                    }
+                    ')' -> {
+                        stack.pop()
+                    }
+                    else -> throw RuntimeException("Woah unexpected character! character = $character")
+                }
+
+                // Add in a node for the next point, if one does not already exist
+                if (!graph.containsKey(nextPoint)) {
+                    graph[nextPoint] = NodeData()
+                }
+
+                fun addPath(graph: MutableMap<Point, NodeData>, currentPoint: Point, nextPoint: Point) {
+                    val distance = manhattanDistance(currentPoint, nextPoint)
+
+                    if (distance > 2) {
+                        println("Woah woah! distance between the points is greater than 2! distance = $distance character = $character index = $index")
+                    }
+
+
+                    graph[currentPoint]!!.paths.add(nextPoint)
+                    graph[nextPoint]!!.paths.add(currentPoint)
+                }
+
+
+                // Add a path from current point to next point
+                addPath(graph, currentPoint, nextPoint)
+
+                currentPoint = nextPoint
+            }
+
+            return graph
+        }
+
+
         fun solveOne(puzzleText: String): Int {
             val graph = parseRegexIntoGraph(puzzleText)
             val (startPoint ) = graph.entries.find { it.value.isStart }!!
@@ -168,16 +257,18 @@ class Puzzle20Test {
             return distancesToOtherPoints.maxBy { it.size }!!.size
         }
 
+        fun manhattanDistance(p1: Point, p2: Point): Int {
+            return Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y)
+        }
+
+
         fun cleanUpFuckedData(graph: Map<Point, NodeData>) {
-            fun manDist(p1: Point, p2: Point): Int {
-                return Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y)
-            }
 
             // Get all points where ham = bacon
             graph.entries.forEach { (point, nodeData) ->
-                nodeData.paths.removeAll { dest -> manDist(point, dest) > 4 }
+                nodeData.paths.removeAll { dest -> manhattanDistance(point, dest) > 4 }
 
-                val fuckedPoints = nodeData.paths.count { dest -> manDist(point, dest) > 4 }
+                val fuckedPoints = nodeData.paths.count { dest -> manhattanDistance(point, dest) > 4 }
                 if (fuckedPoints > 0) println("fuckedPoints = $fuckedPoints")
             }
         }
@@ -270,39 +361,6 @@ class Puzzle20Test {
             }.joinToString("\n")
         }
 
-        private fun parseRegexIntoGraph(text: String): MutableMap<Point, NodeData> {
-            var currentPoint = Point(0, 0)
-            val graph = mutableMapOf(currentPoint to NodeData(paths = mutableSetOf(), isStart = true))
-            val stack = Stack<Point>()
 
-            text.replace("^", "").replace("$", "").forEach { character ->
-                val nextPoint: Point = when (character) {
-                    'N' -> currentPoint.twoNorth()
-                    'E' -> currentPoint.twoEast()
-                    'S' -> currentPoint.twoSouth()
-                    'W' -> currentPoint.twoWest()
-                    '(' -> {
-                        stack.push(currentPoint)
-                        currentPoint
-                    }
-                    '|' -> stack.peek()
-                    ')' -> stack.pop()
-                    else -> throw RuntimeException("Woah unexpected character! character = $character")
-                }
-
-                // Add in a node for the next point, if one does not already exist
-                if (!graph.containsKey(nextPoint)) {
-                    graph[nextPoint] = NodeData()
-                }
-
-                // Add a path from current point to next point
-                graph[currentPoint]!!.paths.add(nextPoint)
-                graph[nextPoint]!!.paths.add(currentPoint)
-
-                currentPoint = nextPoint
-            }
-
-            return graph
-        }
     }
 }
