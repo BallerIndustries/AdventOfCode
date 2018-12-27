@@ -140,6 +140,23 @@ class Puzzle20Test {
         assertEquals(expected, plan)
     }
 
+    @Test
+    fun `map for cheese horse`() {
+        val text = """^NN(EE|WW)SS$"""
+        val expected = """
+            ###########
+            #.|.|.|.|.#
+            #-###-###-#
+            #.###.###.#
+            #-###-###-#
+            #.###X###.#
+            ###########
+        """.trimIndent()
+
+        val plan: String = puzzle.generatePlan(text)
+        assertEquals(expected, plan)
+    }
+
 
     @Test
     fun `map for spaghetti`() {
