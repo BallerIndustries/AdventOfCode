@@ -203,10 +203,10 @@ class Puzzle20Test {
     class Puzzle19 {
 
         private fun parseRegexIntoGraph(text: String): MutableMap<Point, NodeData> {
-            var currentPoint = Point(0, 0)
+            //var currentPoint = Point(0, 0)
             val graph = mutableMapOf(currentPoint to NodeData(paths = mutableSetOf(), isStart = true))
             val stack = Stack<Point>()
-            val unfinishedTails = mutableListOf<Pair<Point, String>>()
+            val currentPoints = mutableListOf<Point>()
 
             text.replace("^", "").replace("$", "").forEachIndexed { index, character ->
                 val nextPoint: Point = when (character) {
