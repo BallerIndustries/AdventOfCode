@@ -48,6 +48,7 @@ class Puzzle22Test {
     fun `puzzle part a`() {
         // 5562 too low
         // 6413 too high
+        // Not 5570
         val result = puzzle.solveOne(puzzleText)
         assertEquals(420, result)
     }
