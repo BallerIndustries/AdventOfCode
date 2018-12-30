@@ -203,20 +203,19 @@ class Puzzle20Test {
     class Puzzle19 {
 
         private fun parseRegexIntoGraph(text: String): MutableMap<Point, NodeData> {
-            //var currentPoint = Point(0, 0)
-            val graph = mutableMapOf(currentPoint to NodeData(paths = mutableSetOf(), isStart = true))
-            val stack = Stack<Point>()
-            val currentPoints = mutableListOf<Point>()
+            var currentPoints = listOf(Point(0, 0))
+            val graph = mutableMapOf(currentPoints.first() to NodeData(paths = mutableSetOf(), isStart = true))
+            val stack = Stack<List<Point>>()
 
             text.replace("^", "").replace("$", "").forEachIndexed { index, character ->
-                val nextPoint: Point = when (character) {
-                    'N' -> currentPoint.twoNorth()
-                    'E' -> currentPoint.twoEast()
-                    'S' -> currentPoint.twoSouth()
-                    'W' -> currentPoint.twoWest()
+                val nextPoints: List<Point> = when (character) {
+                    'N' -> currentPoints.map { it.twoNorth() }
+                    'E' -> currentPoints.map { it.twoEast() }
+                    'S' -> currentPoints.map { it.twoSouth() }
+                    'W' -> currentPoints.map { it.twoWest() }
                     '(' -> {
-                        stack.push(currentPoint)
-                        currentPoint
+                        stack.add(currentPoints)
+                        currentPoints
                     }
                     '|' -> {
                         stack.peek()
@@ -228,8 +227,10 @@ class Puzzle20Test {
                 }
 
                 // Add in a node for the next point, if one does not already exist
-                if (!graph.containsKey(nextPoint)) {
-                    graph[nextPoint] = NodeData()
+                nextPoints.forEach { nextPoint ->
+                    if (!graph.containsKey(nextPoint)) {
+                        graph[nextPoint] = NodeData()
+                    }
                 }
 
                 fun addPath(graph: MutableMap<Point, NodeData>, currentPoint: Point, nextPoint: Point) {
@@ -245,10 +246,18 @@ class Puzzle20Test {
                 }
 
 
-                // Add a path from current point to next point
-                addPath(graph, currentPoint, nextPoint)
+                if (currentPoints.size != nextPoints.size) throw RuntimeException("Woah woah!")
 
-                currentPoint = nextPoint
+                currentPoints.forEachIndexed { index, currentPoint ->
+
+                    // Add a path from current point to next point
+                    val nextPoint = nextPoints[index]
+                    addPath(graph, currentPoint, nextPoint)
+                }
+
+
+
+                currentPoints = nextPoints
             }
 
             return graph
