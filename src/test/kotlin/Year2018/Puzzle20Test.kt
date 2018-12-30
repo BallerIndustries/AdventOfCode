@@ -26,6 +26,13 @@ class Puzzle20Test {
     }
 
     @Test
+    fun `furthest room for ^WNE$ should be 3`() {
+        val text = """^WNE$"""
+        val distance = puzzle.solveOne(text)
+        assertEquals(3, distance)
+    }
+
+    @Test
     fun `map for ^ENWWW$`() {
         val text = """^ENWWW$"""
         val expected = """
@@ -60,6 +67,13 @@ class Puzzle20Test {
     }
 
     @Test
+    fun `furthest room for ^ENWWW(NEEE|SSE(EE|N))$ should be 10`() {
+        val text = """^ENWWW(NEEE|SSE(EE|N))$"""
+        val distance = puzzle.solveOne(text)
+        assertEquals(10, distance)
+    }
+
+    @Test
     fun `map for ENNWSWW(NEWS|)SSSEEN(WNSE|)EE(SWEN|)NNN`() {
         val text = """^ENNWSWW(NEWS|)SSSEEN(WNSE|)EE(SWEN|)NNN$"""
         val expected = """
@@ -81,7 +95,36 @@ class Puzzle20Test {
     }
 
     @Test
-    fun `map for NN(EE|WW)`() {
+    fun `puzzle plan can be generated`() {
+        val result = puzzle.generatePlan(puzzleText)
+        //assertEquals("", result)
+    }
+
+    @Test
+    @Ignore
+    fun `puzzle part a`() {
+        val result = puzzle.solveOne(puzzleText)
+        // 235 is too low
+        // 3814 is too low
+        // 3814 is too low
+        assertEquals(900000, result)
+    }
+
+    @Test
+    fun `example where 31 doors away`() {
+        val result = puzzle.solveOne("""^WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))$""")
+        assertEquals(31, result)
+    }
+
+    @Test
+    fun `example where 23 doors away`() {
+        val result = puzzle.solveOne("""^ESSWWN(E|NNENN(EESS(WNSE|)SSS|WWWSSSSE(SW|NNNE)))$""")
+        assertEquals(23, result)
+    }
+
+
+    @Test
+    fun `map for cheese`() {
         val text = """^NN(EE|WW)$"""
         val expected = """
             ###########
@@ -97,26 +140,9 @@ class Puzzle20Test {
         assertEquals(expected, plan)
     }
 
-    @Test
-    fun `map for NN(EE|WW)SS`() {
-        val text = """^NN(EE|WW)SS$"""
-        val expected = """
-            ###########
-            #.|.|.|.|.#
-            #-###-###-#
-            #.###.###.#
-            #-###-###-#
-            #.###X###.#
-            ###########
-        """.trimIndent()
-
-        val plan: String = puzzle.generatePlan(text)
-        assertEquals(expected, plan)
-    }
-
 
     @Test
-    fun `map for EEE(NNN|)EEE`() {
+    fun `map for spaghetti`() {
         val text = """^EEE(NNN|)EEE$"""
         val expected = """
             ###############
@@ -126,29 +152,6 @@ class Puzzle20Test {
             #######-#######
             #######.#######
             #######-#######
-            #X|.|.|.|.|.|.#
-            ###############
-        """.trimIndent()
-
-        val plan: String = puzzle.generatePlan(text)
-        assertEquals(expected, plan)
-    }
-
-    @Test
-    fun `map for EEE(NNN|)EEENN`() {
-        val text = """^EEE(NNN|)EEENN$"""
-        val expected = """
-            ###############
-            #############.#
-            #############-#
-            #############.#
-            #############-#
-            #######.|.|.|.#
-            #######-#######
-            #######.#####.#
-            #######-#####-#
-            #######.#####.#
-            #######-#####-#
             #X|.|.|.|.|.|.#
             ###############
         """.trimIndent()
@@ -183,66 +186,10 @@ class Puzzle20Test {
     }
 
     @Test
-    fun `puzzle plan can be generated`() {
-        val result = puzzle.generatePlan(puzzleText)
-        //assertEquals("", result)
-    }
-
-    @Test
-    fun `furthest room for ^WNE$3`() {
-        val text = """^WNE$"""
-        val distance = puzzle.solveOne(text)
-        assertEquals(3, distance)
-    }
-
-    @Test
-    fun `furthest room for ^ENWWW(NEEE|SSE(EE|N))$`() {
-        val text = """^ENWWW(NEEE|SSE(EE|N))$"""
-        val distance = puzzle.solveOne(text)
-        assertEquals(10, distance)
-    }
-
-    @Test
-    fun `fursthest room for WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))`() {
-        val result = puzzle.solveOne("""^WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))$""")
-        assertEquals(31, result)
-    }
-
-    @Test
-    fun `furthest room for ESSWWN(E|NNENN(EESS(WNSE|)SSS|WWWSSSSE(SW|NNNE)))`() {
-        val result = puzzle.solveOne("""^ESSWWN(E|NNENN(EESS(WNSE|)SSS|WWWSSSSE(SW|NNNE)))$""")
-        assertEquals(23, result)
-    }
-
-    @Test
-    fun `furthest room for EE(NNN|)EEE`() {
-        val text = """^EEE(NNN|)EEE$"""
-        val furthestRoom = puzzle.solveOne(text)
-        assertEquals(9, furthestRoom)
-    }
-
-    @Test
-    fun `furthest room for EEE(NNN|)EEENN`() {
-        val text = """^EEE(NNN|)EEENN$"""
-        val furthestRoom = puzzle.solveOne(text)
-        assertEquals(11, furthestRoom)
-    }
-
-    @Test
-    @Ignore
-    fun `puzzle part a`() {
-        val result = puzzle.solveOne(puzzleText)
-        // 235 is too low
-        // 3814 is too low
-        // 3814 is too low
-        assertEquals(900000, result)
-    }
-
-    @Test
     @Ignore
     fun `puzzle part b`() {
-       val result = puzzle.solveTwo(puzzleText)
-        assertEquals(213057, result)
+        val result = puzzle.solveTwo(puzzleText)
+        assertEquals(8407, result)
     }
 
     data class NodeData(val paths: MutableSet<Point> = mutableSetOf(), val isStart: Boolean = false)
@@ -262,11 +209,11 @@ class Puzzle20Test {
     }
 
     class Puzzle19 {
+
         private fun parseRegexIntoGraph(text: String): MutableMap<Point, NodeData> {
-            var currentPoints = mutableSetOf(Point(0, 0))
-            val graph = mutableMapOf(currentPoints.first() to NodeData(paths = mutableSetOf(), isStart = true))
-            val stack = Stack<MutableSet<Point>>()
-            val tailStack = Stack<MutableSet<Point>>()
+            var currentPoint = Point(0, 0)
+            val graph = mutableMapOf(currentPoint to NodeData(paths = mutableSetOf(), isStart = true))
+            val stack = Stack<Point>()
 
             val cleanedText = text.replace("^", "").replace("$", "")
 
@@ -274,62 +221,55 @@ class Puzzle20Test {
                 val character = cleanedText[index]
 
                 if (character == '(') {
-                    tailStack.add(mutableSetOf())
-                    stack.add(currentPoints)
+                    stack.push(currentPoint)
                     continue
                 }
                 else if (character == '|') {
-                    tailStack.peek().addAll(currentPoints)
-                    currentPoints = stack.peek()
+                    currentPoint = stack.peek()
                     continue
                 }
                 else if (character == ')') {
-                    tailStack.peek().addAll(currentPoints)
-                    //println("tailStack.peek().size = ${tailStack.peek().size}")
-                    currentPoints = tailStack.pop()
+                    stack.pop()
                     continue
                 }
 
-                val nextPoints: List<Point> = when (character) {
-                    'N' -> currentPoints.map { it.twoNorth() }
-                    'E' -> currentPoints.map { it.twoEast() }
-                    'S' -> currentPoints.map { it.twoSouth() }
-                    'W' -> currentPoints.map { it.twoWest() }
+                val nextPoint: Point = when (character) {
+                    'N' -> currentPoint.twoNorth()
+                    'E' -> currentPoint.twoEast()
+                    'S' -> currentPoint.twoSouth()
+                    'W' -> currentPoint.twoWest()
                     else -> throw RuntimeException("Woah unexpected character! character = $character")
                 }
 
                 // Add in a node for the next point, if one does not already exist
-                nextPoints.forEach { nextPoint ->
-                    if (!graph.containsKey(nextPoint)) {
-                        graph[nextPoint] = NodeData()
+                if (!graph.containsKey(nextPoint)) {
+                    graph[nextPoint] = NodeData()
+                }
+
+                fun addPath(graph: MutableMap<Point, NodeData>, currentPoint: Point, nextPoint: Point) {
+                    val distance = manhattanDistance(currentPoint, nextPoint)
+
+                    if (distance > 2) {
+                        println("Woah woah! distance between the points is greater than 2! distance = $distance character = $character index = $index")
                     }
+
+
+                    graph[currentPoint]!!.paths.add(nextPoint)
+                    graph[nextPoint]!!.paths.add(currentPoint)
                 }
 
-                currentPoints.forEachIndexed { jIndex, currentPoint ->
-                    // Add a path from current point to next point
-                    val nextPoint = nextPoints[jIndex]
-                    addPath(graph, currentPoint, nextPoint, character, index)
-                }
 
-                currentPoints = nextPoints.toMutableSet()
+                // Add a path from current point to next point
+                addPath(graph, currentPoint, nextPoint)
 
-                // Print out the graph
-                println(cleanedText.substring(0, index + 1))
-                println(stringifyPlan(graph))
+                currentPoint = nextPoint
             }
+
+//            cleanedText.forEachIndexed { index, character ->
+//
+//            }
 
             return graph
-        }
-
-        private fun addPath(graph: MutableMap<Point, NodeData>, currentPoint: Point, nextPoint: Point, character: Char, index: Int) {
-            val distance = manhattanDistance(currentPoint, nextPoint)
-
-            if (distance > 2) {
-                throw RuntimeException("Woah woah! distance between the points is greater than 2! distance = $distance character = $character index = $index")
-            }
-
-            graph[currentPoint]!!.paths.add(nextPoint)
-            graph[nextPoint]!!.paths.add(currentPoint)
         }
 
 
@@ -338,8 +278,8 @@ class Puzzle20Test {
             val (startPoint ) = graph.entries.find { it.value.isStart }!!
 
             val otherPoints = graph.entries
-                .filter { !it.value.isStart }
-                .map { it.key }
+                    .filter { !it.value.isStart }
+                    .map { it.key }
 
             val distancesToOtherPoints: List<List<Point>> = otherPoints.map { otherPoint ->
                 measureDistance(graph, startPoint, otherPoint)
@@ -370,19 +310,30 @@ class Puzzle20Test {
                 val nodeData = graph[currentPoint]!!
 
                 val adjacentTiles = nodeData.paths
-                    .filter { !visited.contains(it) }
-                    .map { it to (path + it).toMutableList() }
+                        .filter { !visited.contains(it) }
+                        .map { it to (path + it).toMutableList() }
 
                 // Add adjacent tiles we have not visited
                 toProcess.addAll(adjacentTiles)
                 visited.addAll(adjacentTiles.map { it.first })
             }
 
-            throw RuntimeException("Couldn't find a path to that room. Oh no!")
+            throw RuntimeException("Coulnd't find a path to that room. Oh no!")
         }
 
         fun solveTwo(puzzleText: String): Int {
-            return 1337
+            val graph = parseRegexIntoGraph(puzzleText)
+            val (startPoint ) = graph.entries.find { it.value.isStart }!!
+
+            val otherPoints = graph.entries
+                    .filter { !it.value.isStart }
+                    .map { it.key }
+
+            val distancesToOtherPoints: List<List<Point>> = otherPoints.map { otherPoint ->
+                measureDistance(graph, startPoint, otherPoint)
+            }
+
+            return distancesToOtherPoints.count { it.size >= 1000 }
         }
 
         fun generatePlan(text: String): String {
