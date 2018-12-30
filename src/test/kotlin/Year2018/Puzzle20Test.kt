@@ -204,19 +204,20 @@ class Puzzle20Test {
     class Puzzle19 {
 
         private fun parseRegexIntoGraph(text: String): MutableMap<Point, NodeData> {
-            var currentPoints = mutableListOf(Point(0, 0))
+            var currentPoints = mutableSetOf(Point(0, 0))
             val graph = mutableMapOf(currentPoints.first() to NodeData(paths = mutableSetOf(), isStart = true))
-            val stack = Stack<MutableList<Point>>()
-            val tailStack = Stack<MutableList<Point>>()
+            val stack = Stack<MutableSet<Point>>()
+            val tailStack = Stack<MutableSet<Point>>()
 
             val cleanedText = text.replace("^", "").replace("$", "")
 
             for (index in 0 until cleanedText.length) {
                 val character = cleanedText[index]
-                val previousCharacter = if (index > 0) cleanedText[index - 1] else null
+
+                println("${index}/${cleanedText.length}")
 
                 if (character == '(') {
-                    tailStack.add(mutableListOf())
+                    tailStack.add(mutableSetOf())
                     stack.add(currentPoints)
                     continue
                 }
@@ -252,7 +253,7 @@ class Puzzle20Test {
                     addPath(graph, currentPoint, nextPoint, character, index)
                 }
 
-                currentPoints = nextPoints.toMutableList()
+                currentPoints = nextPoints.toMutableSet()
             }
 
             return graph
