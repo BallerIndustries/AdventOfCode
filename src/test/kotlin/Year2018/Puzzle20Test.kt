@@ -95,9 +95,10 @@ class Puzzle20Test {
     }
 
     @Test
+    @Ignore
     fun `puzzle plan can be generated`() {
         val result = puzzle.generatePlan(puzzleText)
-        //assertEquals("", result)
+        assertEquals("", result)
     }
 
     @Test
@@ -124,7 +125,7 @@ class Puzzle20Test {
 
 
     @Test
-    fun `map for cheese`() {
+    fun `map for for regex with one divergence`() {
         val text = """^NN(EE|WW)$"""
         val expected = """
             ###########
@@ -141,7 +142,7 @@ class Puzzle20Test {
     }
 
     @Test
-    fun `map for cheese horse`() {
+    fun `map for NN(EE|WW)SS`() {
         val text = """^NN(EE|WW)SS$"""
         val expected = """
             ###########
@@ -174,7 +175,7 @@ class Puzzle20Test {
         """.trimIndent()
 
         val plan: String = puzzle.generatePlan(text)
-        assertEquals(expected, plan)
+         assertEquals(expected, plan)
     }
 
     @Test
@@ -203,26 +204,38 @@ class Puzzle20Test {
     class Puzzle19 {
 
         private fun parseRegexIntoGraph(text: String): MutableMap<Point, NodeData> {
-            var currentPoints = listOf(Point(0, 0))
+            var currentPoints = mutableListOf(Point(0, 0))
             val graph = mutableMapOf(currentPoints.first() to NodeData(paths = mutableSetOf(), isStart = true))
-            val stack = Stack<List<Point>>()
+            val stack = Stack<MutableList<Point>>()
+            val tailStack = Stack<MutableList<Point>>()
 
-            text.replace("^", "").replace("$", "").forEachIndexed { index, character ->
+            val cleanedText = text.replace("^", "").replace("$", "")
+
+            for (index in 0 until cleanedText.length) {
+                val character = cleanedText[index]
+                val previousCharacter = if (index > 0) cleanedText[index - 1] else null
+
+                if (character == '(') {
+                    tailStack.add(mutableListOf())
+                    stack.add(currentPoints)
+                    continue
+                }
+                else if (character == '|') {
+                    tailStack.peek().addAll(currentPoints)
+                    currentPoints = stack.peek()
+                    continue
+                }
+                else if (character == ')') {
+                    tailStack.peek().addAll(currentPoints)
+                    currentPoints = tailStack.pop()
+                    continue
+                }
+
                 val nextPoints: List<Point> = when (character) {
                     'N' -> currentPoints.map { it.twoNorth() }
                     'E' -> currentPoints.map { it.twoEast() }
                     'S' -> currentPoints.map { it.twoSouth() }
                     'W' -> currentPoints.map { it.twoWest() }
-                    '(' -> {
-                        stack.add(currentPoints)
-                        currentPoints
-                    }
-                    '|' -> {
-                        stack.peek()
-                    }
-                    ')' -> {
-                        stack.pop()
-                    }
                     else -> throw RuntimeException("Woah unexpected character! character = $character")
                 }
 
@@ -233,34 +246,27 @@ class Puzzle20Test {
                     }
                 }
 
-                fun addPath(graph: MutableMap<Point, NodeData>, currentPoint: Point, nextPoint: Point) {
-                    val distance = manhattanDistance(currentPoint, nextPoint)
-
-                    if (distance > 2) {
-                        println("Woah woah! distance between the points is greater than 2! distance = $distance character = $character index = $index")
-                    }
-
-
-                    graph[currentPoint]!!.paths.add(nextPoint)
-                    graph[nextPoint]!!.paths.add(currentPoint)
-                }
-
-
-                if (currentPoints.size != nextPoints.size) throw RuntimeException("Woah woah!")
-
-                currentPoints.forEachIndexed { index, currentPoint ->
-
+                currentPoints.forEachIndexed { jIndex, currentPoint ->
                     // Add a path from current point to next point
-                    val nextPoint = nextPoints[index]
-                    addPath(graph, currentPoint, nextPoint)
+                    val nextPoint = nextPoints[jIndex]
+                    addPath(graph, currentPoint, nextPoint, character, index)
                 }
 
-
-
-                currentPoints = nextPoints
+                currentPoints = nextPoints.toMutableList()
             }
 
             return graph
+        }
+
+        private fun addPath(graph: MutableMap<Point, NodeData>, currentPoint: Point, nextPoint: Point, character: Char, index: Int) {
+            val distance = manhattanDistance(currentPoint, nextPoint)
+
+            if (distance > 2) {
+                throw RuntimeException("Woah woah! distance between the points is greater than 2! distance = $distance character = $character index = $index")
+            }
+
+            graph[currentPoint]!!.paths.add(nextPoint)
+            graph[nextPoint]!!.paths.add(currentPoint)
         }
 
 
@@ -271,9 +277,6 @@ class Puzzle20Test {
             val otherPoints = graph.entries
                 .filter { !it.value.isStart }
                 .map { it.key }
-
-
-            cleanUpFuckedData(graph)
 
             val distancesToOtherPoints: List<List<Point>> = otherPoints.map { otherPoint ->
                 measureDistance(graph, startPoint, otherPoint)
@@ -287,26 +290,10 @@ class Puzzle20Test {
             return Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y)
         }
 
-
-        fun cleanUpFuckedData(graph: Map<Point, NodeData>) {
-
-            // Get all points where ham = bacon
-            graph.entries.forEach { (point, nodeData) ->
-                nodeData.paths.removeAll { dest -> manhattanDistance(point, dest) > 4 }
-
-                val fuckedPoints = nodeData.paths.count { dest -> manhattanDistance(point, dest) > 4 }
-                if (fuckedPoints > 0) println("fuckedPoints = $fuckedPoints")
-            }
-        }
-
-
         private fun measureDistance(graph: Map<Point, NodeData>, startPoint: Point, endPoint: Point): MutableList<Point> {
             val visited = mutableSetOf(startPoint)
             val toProcess = LinkedList<Pair<Point, MutableList<Point>>>()
             toProcess.add(startPoint to mutableListOf())
-
-
-
 
             while (toProcess.isNotEmpty()) {
                 val (currentPoint, path) = toProcess.pop()
@@ -386,7 +373,5 @@ class Puzzle20Test {
                 }.joinToString("")
             }.joinToString("\n")
         }
-
-
     }
 }
