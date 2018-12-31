@@ -40,7 +40,6 @@ class Puzzle22Test {
         """.trimIndent()
 
         val spagh = puzzle.outputMap(exampleText)
-
         assertEquals(dog, spagh)
     }
 
