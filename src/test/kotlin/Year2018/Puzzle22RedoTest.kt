@@ -149,17 +149,17 @@ class Puzzle22RedoTest {
         private fun calculateQuickestPath(grid: Map<Point, Type>, target: Point): Int {
             val visited = mutableSetOf<PlayerState>()
             val initialState = PlayerStateWithTime(TORCH, Point(0, 0), 0)
-
             val toProcess = mutableListOf(initialState)
+
+            val answers = mutableListOf<Int>()
 
             while (toProcess.isNotEmpty()) {
                 val currentState: PlayerStateWithTime = toProcess.first()
                 toProcess.removeAt(0)
 
-                //println("processing point ${currentState.position}")
-
                 if (currentState.position == target && currentState.currentTool == Tool.TORCH) {
-                    return currentState.timeTaken
+                    println(currentState.timeTaken)
+                    answers.add(currentState.timeTaken)
                 }
 
                 visited.add(currentState.toPlayerState())
@@ -177,7 +177,9 @@ class Puzzle22RedoTest {
                 toProcess.addAll(validNextStates)
             }
 
-            throw RuntimeException("Unable to find a path. What a crying shame")
+            if (answers.isEmpty()) throw RuntimeException("Unable to find a path. What a crying shame")
+
+            return answers.min()!!
 
         }
     }
