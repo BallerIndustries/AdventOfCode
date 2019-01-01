@@ -34,6 +34,8 @@ class Puzzle22RedoTest {
 
     @Test
     fun `puzzle part b`() {
+        // 1411 too high
+
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(213057, result)
     }
@@ -149,7 +151,7 @@ class Puzzle22RedoTest {
         private fun calculateQuickestPath(grid: Map<Point, Type>, target: Point): Int {
             val visited = mutableSetOf<PlayerState>()
             val initialState = PlayerStateWithTime(TORCH, Point(0, 0), 0)
-            val toProcess = mutableListOf(initialState)
+            var toProcess = mutableListOf(initialState)
 
             val answers = mutableListOf<Int>()
 
@@ -167,11 +169,12 @@ class Puzzle22RedoTest {
                 val nextStatesNotValidated = nextStates(grid, currentState)
                 val validNextStates = nextStatesNotValidated.filter { nextPlayerState ->
 
+                    val notAlreadyInToProcess = !toProcess.map { it.toPlayerState() }.contains(nextPlayerState.toPlayerState())
                     val notVisited = !visited.contains(nextPlayerState.toPlayerState())
                     val nextStateTile = grid[nextPlayerState.position]
                     val equippedToolAllowedForTile = nextStateTile?.validTools?.contains(nextPlayerState.currentTool) ?: false
 
-                    notVisited && equippedToolAllowedForTile
+                    notAlreadyInToProcess && notVisited && equippedToolAllowedForTile
                 }
 
                 toProcess.addAll(validNextStates)
