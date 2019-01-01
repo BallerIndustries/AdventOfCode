@@ -140,26 +140,6 @@ class Puzzle20Test {
         assertEquals(expected, plan)
     }
 
-
-    @Test
-    fun `map for spaghetti`() {
-        val text = """^EEE(NNN|)EEE$"""
-        val expected = """
-            ###############
-            #######.|.|.|.#
-            #######-#######
-            #######.#######
-            #######-#######
-            #######.#######
-            #######-#######
-            #X|.|.|.|.|.|.#
-            ###############
-        """.trimIndent()
-
-        val plan: String = puzzle.generatePlan(text)
-        assertEquals(expected, plan)
-    }
-
     @Test
     fun `map for WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))`() {
         val text = """^WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))$"""

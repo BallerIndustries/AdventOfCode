@@ -1,5 +1,6 @@
 package Year2018
 
+import Year2018.Puzzle22RedoTest.Tool.*
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 
@@ -32,13 +33,19 @@ class Puzzle22RedoTest {
 
     data class Point(val x: Int, val y: Int)
 
-    enum class Type(val value: Int) { ROCKY(0), WET(1), NARROW(2) }
+    enum class Tool { NONE, TORCH, CLIMBING_GEAR }
+
+    enum class Type(val value: Int, val tools: List<Tool>) {
+        ROCKY(0, listOf(CLIMBING_GEAR, TORCH)),
+        WET(1, listOf(CLIMBING_GEAR, NONE)),
+        NARROW(2, listOf(NONE, TORCH))
+    }
 
     class Puzzle22 {
 
         private val geologicIndexCache = mutableMapOf<Point, Int>()
 
-        fun geologicIndex(point: Point, target: Point, depth: Int): Int {
+        private fun geologicIndex(point: Point, target: Point, depth: Int): Int {
             val (x, y ) = point
 
             return when {
@@ -47,8 +54,8 @@ class Puzzle22RedoTest {
                 y == 0 -> x * 16807
                 x == 0 -> y * 48271
                 else -> {
-                    val left = Point(x - 1, y)
-                    val north = Point(x, y - 1)
+                    val left = point.copy(x = point.x - 1)
+                    val north = point.copy(y = point.y - 1)
                     erosionLevel(left, target, depth) * erosionLevel(north, target, depth)
                 }
             }
