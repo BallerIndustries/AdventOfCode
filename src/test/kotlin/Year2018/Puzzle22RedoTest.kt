@@ -3,6 +3,7 @@ package Year2018
 import Year2018.Puzzle22RedoTest.Tool.*
 import junit.framework.Assert.assertEquals
 import org.junit.Test
+import java.lang.RuntimeException
 
 class Puzzle22RedoTest {
     val puzzleText = this::class.java.getResource("/2018/puzzle22.txt").readText().replace("\r", "")
@@ -14,9 +15,15 @@ class Puzzle22RedoTest {
         """.trimIndent()
 
     @Test
-    fun `example 1`() {
+    fun `example part a`() {
         val result = puzzle.solveOne(exampleText)
         assertEquals(114, result)
+    }
+
+    @Test
+    fun `example part b`() {
+        val result = puzzle.solveTwo(exampleText)
+        assertEquals(45, result)
     }
 
     @Test
@@ -31,22 +38,37 @@ class Puzzle22RedoTest {
         assertEquals(213057, result)
     }
 
-    data class Point(val x: Int, val y: Int)
+    data class PlayerState(val currentTool: Tool, val position: Point)
+
+    data class PlayerStateWithTime(val currentTool: Tool, val position: Point, val timeTaken: Int) {
+        fun up() = this.copy(position = this.position.up(), timeTaken = this.timeTaken + 1)
+        fun down() = this.copy(position = this.position.down(), timeTaken = this.timeTaken + 1)
+        fun right() = this.copy(position = this.position.right(), timeTaken = this.timeTaken + 1)
+        fun left() = this.copy(position = this.position.left(), timeTaken = this.timeTaken + 1)
+
+        fun toPlayerState() = PlayerState(currentTool, position)
+    }
+
+    data class Point(val x: Int, val y: Int) {
+        fun up() = this.copy(y = this.y - 1)
+        fun down() = this.copy(y = this.y + 1)
+        fun right() = this.copy(x = this.x + 1)
+        fun left() = this.copy(x = this.x - 1)
+    }
 
     enum class Tool { NONE, TORCH, CLIMBING_GEAR }
 
-    enum class Type(val value: Int, val tools: List<Tool>) {
+    enum class Type(val value: Int, val validTools: List<Tool>) {
         ROCKY(0, listOf(CLIMBING_GEAR, TORCH)),
         WET(1, listOf(CLIMBING_GEAR, NONE)),
         NARROW(2, listOf(NONE, TORCH))
     }
 
     class Puzzle22 {
-
         private val geologicIndexCache = mutableMapOf<Point, Int>()
 
         private fun geologicIndex(point: Point, target: Point, depth: Int): Int {
-            val (x, y ) = point
+            val (x, y) = point
 
             return when {
                 x == 0 && y == 0 -> 0
@@ -76,10 +98,7 @@ class Puzzle22RedoTest {
         }
 
         fun solveOne(puzzleText: String): Int {
-            val (firstLine, secondLine) = puzzleText.split("\n")
-
-            val depth = firstLine.replace("depth: ", "").toInt()
-            val target = secondLine.replace("target: ", "").split(",").map { it.toInt() }.let { Point(it[0], it[1]) }
+            val (depth, target) = parseDepthAndTarget(puzzleText)
 
             return (0 .. target.y).sumBy { y ->
                 (0 .. target.x).sumBy { x ->
@@ -89,8 +108,77 @@ class Puzzle22RedoTest {
             }
         }
 
+        private fun parseDepthAndTarget(puzzleText: String): Pair<Int, Point> {
+            val (firstLine, secondLine) = puzzleText.split("\n")
+
+            val depth = firstLine.replace("depth: ", "").toInt()
+            val target = secondLine.replace("target: ", "").split(",").map { it.toInt() }.let { Point(it[0], it[1]) }
+            return Pair(depth, target)
+        }
+
         fun solveTwo(puzzleText: String): Int {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            val (depth, target) = parseDepthAndTarget(puzzleText)
+
+            val grid = (0 .. target.y + 10).flatMap { y ->
+                (0 .. target.x + 10).map{ x ->
+                    val point = Point(x, y)
+                    val type = type(point, target, depth)
+
+                    point to type
+                }
+            }.toMap()
+
+            val minutes = calculateQuickestPath(grid, target)
+            return minutes
+        }
+
+        private fun nextStates(grid: Map<Point, Type>, state: PlayerStateWithTime): List<PlayerStateWithTime> {
+            // State where you equip
+            val tile: Type = grid[state.position]!!
+
+            val equippableTools = tile.validTools.filter { it != state.currentTool }
+            if (equippableTools.size != 1) throw RuntimeException("Did not expect this to happen")
+
+            // State where you change tools
+            val toolChangeState = state.copy(currentTool = equippableTools.first(), timeTaken = state.timeTaken + 7)
+
+            // States where you move up, right, down and left
+            return listOf(toolChangeState, state.up(), state.right(), state.down(), state.left())
+        }
+
+        private fun calculateQuickestPath(grid: Map<Point, Type>, target: Point): Int {
+            val visited = mutableSetOf<PlayerState>()
+            val initialState = PlayerStateWithTime(TORCH, Point(0, 0), 0)
+
+            val toProcess = mutableListOf(initialState)
+
+            while (toProcess.isNotEmpty()) {
+                val currentState: PlayerStateWithTime = toProcess.first()
+                toProcess.removeAt(0)
+
+                //println("processing point ${currentState.position}")
+
+                if (currentState.position == target && currentState.currentTool == Tool.TORCH) {
+                    return currentState.timeTaken
+                }
+
+                visited.add(currentState.toPlayerState())
+
+                val nextStatesNotValidated = nextStates(grid, currentState)
+                val validNextStates = nextStatesNotValidated.filter { nextPlayerState ->
+
+                    val notVisited = !visited.contains(nextPlayerState.toPlayerState())
+                    val nextStateTile = grid[nextPlayerState.position]
+                    val equippedToolAllowedForTile = nextStateTile?.validTools?.contains(nextPlayerState.currentTool) ?: false
+
+                    notVisited && equippedToolAllowedForTile
+                }
+
+                toProcess.addAll(validNextStates)
+            }
+
+            throw RuntimeException("Unable to find a path. What a crying shame")
+
         }
     }
 }

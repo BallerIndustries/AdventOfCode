@@ -122,15 +122,10 @@ class Puzzle22Test {
                 .split("\n")
                 .let { Pair(it[0].toInt(), Point.from(it[1])) }
 
-            println("depth = $depth target = $target")
-
-            //val (width + 1, height) = target
             val width = target.x + 1
             val height = target.y + 1
 
-
             val regionTypes = generateMap(target, depth, width, height)
-
             return regionTypes.values.sumBy { it.riskLevel }
         }
 
