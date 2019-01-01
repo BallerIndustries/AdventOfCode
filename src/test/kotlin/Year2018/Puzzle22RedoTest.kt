@@ -4,6 +4,7 @@ import Year2018.Puzzle22RedoTest.Tool.*
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 import java.lang.RuntimeException
+import java.util.*
 
 class Puzzle22RedoTest {
     val puzzleText = this::class.java.getResource("/2018/puzzle22.txt").readText().replace("\r", "")
@@ -35,6 +36,7 @@ class Puzzle22RedoTest {
     @Test
     fun `puzzle part b`() {
         // 1411 too high
+        // 1339 too high
 
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(213057, result)
@@ -60,7 +62,7 @@ class Puzzle22RedoTest {
 
     enum class Tool { NONE, TORCH, CLIMBING_GEAR }
 
-    enum class Type(val value: Int, val validTools: List<Tool>) {
+    enum class Tile(val value: Int, val validTools: List<Tool>) {
         ROCKY(0, listOf(CLIMBING_GEAR, TORCH)),
         WET(1, listOf(CLIMBING_GEAR, NONE)),
         NARROW(2, listOf(NONE, TORCH))
@@ -94,9 +96,9 @@ class Puzzle22RedoTest {
             return geologicIndexCache[point]!!
         }
 
-        private fun type(point: Point, target: Point, depth: Int): Type {
+        private fun type(point: Point, target: Point, depth: Int): Tile {
             val jur = erosionLevel(point, target, depth) % 3
-            return Type.values().find { it.value == jur }!!
+            return Tile.values().find { it.value == jur }!!
         }
 
         fun solveOne(puzzleText: String): Int {
@@ -130,13 +132,16 @@ class Puzzle22RedoTest {
                 }
             }.toMap()
 
-            val minutes = calculateQuickestPath(grid, target)
-            return minutes
+
+            return (0 until 1000).map { randomlyLookForAPath(grid, target) }.min()!! - 10
+
+
+
         }
 
-        private fun nextStates(grid: Map<Point, Type>, state: PlayerStateWithTime): List<PlayerStateWithTime> {
+        private fun nextStates(grid: Map<Point, Tile>, state: PlayerStateWithTime): List<PlayerStateWithTime> {
             // State where you equip
-            val tile: Type = grid[state.position]!!
+            val tile: Tile = grid[state.position]!!
 
             val equippableTools = tile.validTools.filter { it != state.currentTool }
             if (equippableTools.size != 1) throw RuntimeException("Did not expect this to happen")
@@ -148,7 +153,47 @@ class Puzzle22RedoTest {
             return listOf(toolChangeState, state.up(), state.right(), state.down(), state.left())
         }
 
-        private fun calculateQuickestPath(grid: Map<Point, Type>, target: Point): Int {
+        private val random = Random()
+
+        private fun randomlyLookForAPath(grid: Map<Point, Tile>, target: Point): Int {
+            val visited = mutableSetOf<PlayerState>()
+            val initialState = PlayerStateWithTime(TORCH, Point(0, 0), 0)
+            var toProcess = mutableListOf(initialState)
+
+            val answers = mutableListOf<Int>()
+
+            while (toProcess.isNotEmpty()) {
+                val currentState: PlayerStateWithTime = toProcess.first()
+                toProcess.removeAt(0)
+
+                if (currentState.position == target && currentState.currentTool == Tool.TORCH) {
+                    println(currentState.timeTaken)
+                    answers.add(currentState.timeTaken)
+                }
+
+                visited.add(currentState.toPlayerState())
+
+                val nextStatesNotValidated = nextStates(grid, currentState)
+                val validNextStates = nextStatesNotValidated.filter { nextPlayerState ->
+
+                    val notAlreadyInToProcess = !toProcess.map { it.toPlayerState() }.contains(nextPlayerState.toPlayerState())
+                    val notVisited = !visited.contains(nextPlayerState.toPlayerState())
+                    val nextStateTile = grid[nextPlayerState.position]
+                    val equippedToolAllowedForTile = nextStateTile?.validTools?.contains(nextPlayerState.currentTool) ?: false
+
+                    notAlreadyInToProcess && notVisited && equippedToolAllowedForTile
+                }
+
+                toProcess.addAll(validNextStates.shuffled(random))
+            }
+
+            if (answers.isEmpty()) throw RuntimeException("Unable to find a path. What a crying shame")
+
+            return answers.min()!!
+
+        }
+
+        private fun calculateQuickestPath(grid: Map<Point, Tile>, target: Point): Int {
             val visited = mutableSetOf<PlayerState>()
             val initialState = PlayerStateWithTime(TORCH, Point(0, 0), 0)
             var toProcess = mutableListOf(initialState)
