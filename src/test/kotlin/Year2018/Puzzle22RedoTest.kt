@@ -4,7 +4,6 @@ import Year2018.Puzzle22RedoTest.Tool.*
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 import java.lang.RuntimeException
-import java.util.*
 
 class Puzzle22RedoTest {
     val puzzleText = this::class.java.getResource("/2018/puzzle22.txt").readText().replace("\r", "")
@@ -42,7 +41,7 @@ class Puzzle22RedoTest {
         // 1105 not right
         // maybe? 1089
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(213057, result)
+        assertEquals(1089, result)
     }
 
     data class PlayerState(val currentTool: Tool, val position: Point) {
@@ -69,7 +68,6 @@ class Puzzle22RedoTest {
 
     class Puzzle22 {
         private val geologicIndexCache = mutableMapOf<Point, Int>()
-        private val random = Random()
 
         private fun geologicIndex(point: Point, target: Point, depth: Int): Int {
             val (x, y) = point
@@ -128,34 +126,29 @@ class Puzzle22RedoTest {
             return scoreThePath(shortestPath)
         }
 
-        fun scoreThePath(path: List<PlayerState>): Int {
+        private fun scoreThePath(path: List<PlayerState>): Int {
             return (1 until path.size).sumBy { index ->
                 val previous = path[index - 1]
                 val current = path[index]
                 val distance = manhattanDistance(previous, current)
 
-                if (distance == 0) {
-                    7
-                }
-                else if (distance == 1){
-                    1
-                }
-                else {
-                    throw RuntimeException("Weird")
+                when (distance) {
+                    0 -> 7
+                    1 -> 1
+                    else -> throw RuntimeException("distance between neighbours should only be 1 or 7")
                 }
             }
         }
 
         private fun createGrid(target: Point, depth: Int): Map<Point, Tile> {
-            val grid = (0..target.y + 100).flatMap { y ->
-                (0..target.x + 100).map { x ->
+            return (0..target.y + 66).flatMap { y ->
+                (0..target.x + 66).map { x ->
                     val point = Point(x, y)
                     val type = type(point, target, depth)
 
                     point to type
                 }
             }.toMap()
-            return grid
         }
 
         private fun calculateQuickestPath(grid: Map<Point, Tile>, goal: PlayerState): List<PlayerState> {
