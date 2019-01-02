@@ -39,19 +39,17 @@ class Puzzle22RedoTest {
         // 1339 too high
         // 1376 too high
         // 1265 too high
+        // 1105 not right
+        // maybe? 1089
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(213057, result)
     }
 
-    data class PlayerState(val currentTool: Tool, val position: Point)
-
-    data class PlayerStateWithTime(val currentTool: Tool, val position: Point, val timeTaken: Int, val history: List<Int> = listOf()) {
-        fun up() = this.copy(position = this.position.up(), timeTaken = this.timeTaken + 1)
-        fun down() = this.copy(position = this.position.down(), timeTaken = this.timeTaken + 1)
-        fun right() = this.copy(position = this.position.right(), timeTaken = this.timeTaken + 1)
-        fun left() = this.copy(position = this.position.left(), timeTaken = this.timeTaken + 1)
-
-        fun toPlayerState() = PlayerState(currentTool, position)
+    data class PlayerState(val currentTool: Tool, val position: Point) {
+        fun up() = this.copy(position = this.position.up())
+        fun down() = this.copy(position = this.position.down())
+        fun right() = this.copy(position = this.position.right())
+        fun left() = this.copy(position = this.position.left())
     }
 
     data class Point(val x: Int, val y: Int) {
@@ -125,12 +123,32 @@ class Puzzle22RedoTest {
         fun solveTwo(puzzleText: String): Int {
             val (depth, target) = parseDepthAndTarget(puzzleText)
             val grid = createGrid(target, depth)
-            return calculateQuickestPath(grid, target)
+
+            val shortestPath = calculateQuickestPath(grid, PlayerState(TORCH, target))
+            return scoreThePath(shortestPath)
+        }
+
+        fun scoreThePath(path: List<PlayerState>): Int {
+            return (1 until path.size).sumBy { index ->
+                val previous = path[index - 1]
+                val current = path[index]
+                val distance = manhattanDistance(previous, current)
+
+                if (distance == 0) {
+                    7
+                }
+                else if (distance == 1){
+                    1
+                }
+                else {
+                    throw RuntimeException("Weird")
+                }
+            }
         }
 
         private fun createGrid(target: Point, depth: Int): Map<Point, Tile> {
-            val grid = (0..target.y + 10).flatMap { y ->
-                (0..target.x + 10).map { x ->
+            val grid = (0..target.y + 100).flatMap { y ->
+                (0..target.x + 100).map { x ->
                     val point = Point(x, y)
                     val type = type(point, target, depth)
 
@@ -140,7 +158,106 @@ class Puzzle22RedoTest {
             return grid
         }
 
-        private fun nextStates(grid: Map<Point, Tile>, state: PlayerStateWithTime): List<PlayerStateWithTime> {
+        private fun calculateQuickestPath(grid: Map<Point, Tile>, goal: PlayerState): List<PlayerState> {
+            val start = PlayerState(TORCH, Point(0, 0))
+
+            // The set of nodes already evaluated
+            val closedSet = mutableSetOf<PlayerState>()
+
+            // The set of currently discovered nodes that are not evaluated yet.
+            // Initially, only the start node is known.
+            val openSet = mutableSetOf(start)
+
+            // For each node, which node it can most efficiently be reached from.
+            // If a node can be reached from many nodes, cameFrom will eventually contain the
+            // most efficient previous step.
+            val cameFrom = mutableMapOf<PlayerState, PlayerState>()
+
+            // For each node, the cost of getting from the start node to that node.
+            val gScore = mutableMapOf<PlayerState, Int>()
+            gScore[start] = 0
+
+            val fScore = mutableMapOf<PlayerState, Int>()
+            fScore[start] = heuristicCostEstimate(start, goal)
+
+            fun getGScore(state: PlayerState): Int {
+                return gScore[state] ?: (Int.MAX_VALUE / 2)
+            }
+
+            while (openSet.isNotEmpty()) {
+                // The node in the open set having the lowest fScore value
+                val current = openSet.minBy{ fScore[it]!! }!! //fScore.minBy { it.value }!!.key
+
+                if (current == goal) {
+                    return reconstructPath(cameFrom, current)
+                }
+
+                openSet.remove(current)
+                closedSet.add(current)
+
+                // get the neighbours of the current node
+                val nextStatesNotValidated = nextStates(grid, current)
+                val validNextStates = nextStatesNotValidated.filter { nextPlayerState ->
+
+                    val nextStateTile = grid[nextPlayerState.position]
+                    val equippedToolAllowedForTile = nextStateTile?.validTools?.contains(nextPlayerState.currentTool) ?: false
+
+                    equippedToolAllowedForTile
+                }
+
+                for (neighbour in validNextStates) {
+                    // Ignore the neighbor which is already evaluated.
+                    if (neighbour in closedSet) {
+                        continue
+                    }
+
+                    val tentativeGScore = getGScore(current) + distanceBetween(current, neighbour)
+
+                    if (!openSet.contains(neighbour)) {
+                        openSet.add(neighbour)
+                    }
+                    else if (tentativeGScore >= getGScore(neighbour)) {
+                        continue
+                    }
+
+                    // This path is the best until now. Record it!
+                    cameFrom[neighbour] = current
+                    gScore[neighbour] = tentativeGScore
+                    fScore[neighbour] = gScore[neighbour]!! + heuristicCostEstimate(neighbour, goal)
+                }
+            }
+
+            throw RuntimeException("Could not find a path")
+        }
+
+        private fun distanceBetween(current: PlayerState, neighbour: PlayerState): Int {
+            val distance = heuristicCostEstimate(current, neighbour)
+            if (distance != 7 && distance != 1) throw RuntimeException("Move should take 1 or 7 minutes! distance = $distance")
+
+            return distance
+        }
+
+        private fun reconstructPath(cameFrom: MutableMap<PlayerState, PlayerState>, sCurrent: PlayerState): List<PlayerState> {
+            var current = sCurrent
+            val totalPath = mutableListOf(current)
+
+            while (cameFrom.containsKey(current)) {
+                current = cameFrom[current]!!
+                totalPath.add(current)
+            }
+
+            return totalPath.reversed()
+        }
+
+        private fun heuristicCostEstimate(start: PlayerState, goal: PlayerState): Int {
+            val toolChangeTime = if (start.currentTool == goal.currentTool) 0 else 7
+            return manhattanDistance(start, goal) + toolChangeTime
+        }
+
+        private fun manhattanDistance(start: PlayerState, goal: PlayerState) =
+                Math.abs(start.position.x - goal.position.x) + Math.abs(start.position.y - goal.position.y)
+
+        private fun nextStates(grid: Map<Point, Tile>, state: PlayerState): List<PlayerState> {
             // State where you equip
             val tile: Tile = grid[state.position]!!
 
@@ -148,48 +265,11 @@ class Puzzle22RedoTest {
             if (equippableTools.size != 1) throw RuntimeException("Did not expect this to happen")
 
             // State where you change tools
-            val toolChangeState = state.copy(currentTool = equippableTools.first(), timeTaken = state.timeTaken + 7)
+            val toolChangeState = state.copy(currentTool = equippableTools.first())
 
-            // States where you move up, right, down and left
-            return listOf(toolChangeState, state.up(), state.right(), state.down(), state.left()).map { it.copy(history = it.history + it.timeTaken) }
-        }
-
-        private fun calculateQuickestPath(grid: Map<Point, Tile>, target: Point): Int {
-            val initialState = PlayerStateWithTime(TORCH, Point(0, 0), 0)
-            val visited = mutableSetOf<PlayerState>()
-            val toProcess = mutableListOf(initialState)
-
-            val answers = mutableListOf<Int>()
-
-            while (toProcess.isNotEmpty()) {
-                val currentState: PlayerStateWithTime = toProcess.first()
-                toProcess.removeAt(0)
-
-                if (currentState.position == target && currentState.currentTool == Tool.TORCH) {
-                    answers.add(currentState.timeTaken)
-                    //return currentState.timeTaken
-                }
-
-                visited.add(currentState.toPlayerState())
-
-                val nextStatesNotValidated = nextStates(grid, currentState)
-                val validNextStates = nextStatesNotValidated.filter { nextPlayerState ->
-
-                    val notAlreadyInToProcess = !toProcess.map { it.toPlayerState() }.contains(nextPlayerState.toPlayerState())
-                    val notVisited = !visited.contains(nextPlayerState.toPlayerState())
-                    val nextStateTile = grid[nextPlayerState.position]
-                    val equippedToolAllowedForTile = nextStateTile?.validTools?.contains(nextPlayerState.currentTool) ?: false
-
-                    notAlreadyInToProcess && notVisited && equippedToolAllowedForTile
-                }.sortedBy { it.timeTaken }
-
-                toProcess.addAll(validNextStates)
-            }
-
-            if (answers.isEmpty()) throw RuntimeException("Unable to find a path. What a crying shame")
-
-            return answers.min()!!
-
+            // Return a list of states, filter for ones that are on the grid
+            return listOf(toolChangeState, state.up(), state.right(), state.down(), state.left())
+                    .filter { nextState -> grid.containsKey(nextState.position) }
         }
     }
 }
