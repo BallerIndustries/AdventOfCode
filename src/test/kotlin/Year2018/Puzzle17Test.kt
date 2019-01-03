@@ -2,6 +2,7 @@ package Year2018
 
 import junit.framework.Assert.assertEquals
 import org.junit.Test
+import kotlin.math.max
 
 class Puzzle17Test {
     val puzzleText = this::class.java.getResource("/2018/puzzle17.txt").readText().replace("\r", "")
@@ -83,7 +84,8 @@ class Puzzle17Test {
                 val water = newWaterSquares[index]
                 //val belowIsFloorOrWater = isFloorOrWater(water.down(), state, newWaterSquares)
 
-                // Cannot move if any water below is on the maxY
+                // Cannot move left/right if any water below is on the maxY
+                val streamBelowIsOnMaxY: Boolean = streamBelowIsOnMaxY(water, state, newWaterSquares)
 
 
                 // Is the point below free?
@@ -91,11 +93,11 @@ class Puzzle17Test {
                     newWaterSquares[index] = water.down()
                     moveCount++
                 }
-                else if (isFree(water.left(), state, newWaterSquares) && !isOnMaxY(water, state)) {
+                else if (isFree(water.left(), state, newWaterSquares) && !isOnMaxY(water, state) && !streamBelowIsOnMaxY) {
                     newWaterSquares[index] = water.left()
                     moveCount++
                 }
-                else if (isFree(water.right(), state, newWaterSquares) && !isOnMaxY(water, state)) {
+                else if (isFree(water.right(), state, newWaterSquares) && !isOnMaxY(water, state) && !streamBelowIsOnMaxY) {
                     newWaterSquares[index] = water.right()
                     moveCount++
                 }
@@ -107,6 +109,21 @@ class Puzzle17Test {
             else {
                 return true to newWaterSquares
             }
+        }
+
+        private fun streamBelowIsOnMaxY(water: Point, state: Map<Point, Char>, newWaterSquares: MutableList<Point>): Boolean {
+            val maxY = state.keys.maxBy { it.y }!!.y
+            var below = water.down()
+
+            while (newWaterSquares.contains(below)) {
+                if (below.y == maxY) {
+                    return true
+                }
+
+                below = below.down()
+            }
+
+            return false
         }
 
         private fun isOnMaxY(point: Point, state: Map<Point, Char>): Boolean {
