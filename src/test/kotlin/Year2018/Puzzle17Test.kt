@@ -26,11 +26,11 @@ class Puzzle17Test {
         assertEquals("a", result)
     }
 
-    @Test
-    fun `puzzle example a`() {
-        val result = puzzle.solveOne(exampleText)
-        assertEquals("a", result)
-    }
+//    @Test
+//    fun `puzzle example a`() {
+//        val result = puzzle.solveOne(exampleText)
+//        assertEquals("a", result)
+//    }
 
     @Test
     fun `puzzle example a speedy`() {
@@ -38,10 +38,16 @@ class Puzzle17Test {
         assertEquals("a", result)
     }
 
+//    @Test
+//    fun `puzzle part a`() {
+//        val result = puzzle.solveOne(puzzleText)
+//        assertEquals("a", result)
+//    }
+
     @Test
-    fun `puzzle part a`() {
-        val result = puzzle.solveOne(puzzleText)
-        assertEquals("a", result)
+    fun `puzzle part a speedy`() {
+        val result = puzzle.solveOneSpeedy(puzzleText)
+        assertEquals(57, result)
     }
 
     @Test
@@ -51,10 +57,12 @@ class Puzzle17Test {
     }
 
     class Puzzle17 {
+        val visited = mutableSetOf<Point>()
+
         fun solveOneSpeedy(puzzleText: String): Int {
             val state = createInitialState(puzzleText)
             val waterSource = Point(500, 0)
-            val waterMolecules = mutableListOf<Point>()
+            val waterMolecules = mutableSetOf<Point>()
 
             while (true) {
                 // Create a water molecule
@@ -66,7 +74,6 @@ class Puzzle17Test {
                     if (waterMolecules.count() == 15) {
                         println("Hooray")
                     }
-
 
                     if (direction == WaterDirection.DOWN) {
                         molecule = goDownUntilColliding(molecule, state, waterMolecules)
@@ -93,16 +100,20 @@ class Puzzle17Test {
                     }
                 }
 
-
-//                molecule = goLeftOrRight(molecule, state, waterMolecules)
-//
                 waterMolecules.add(molecule)
-                println(renderState(state, waterMolecules))
+                //println(waterMolecules.size)
+
+                println(visited.size)
+
+                if (waterMolecules.count() % 2000 == 0) {
+                    println(renderState(state, waterMolecules))
+                }
             }
         }
 
-        private fun moveHorizontally(direction: WaterDirection, molecule: Point, state: Map<Point, Char>, waterMolecules: MutableList<Point>): Pair<Point, WaterDirection> {
+        private fun moveHorizontally(direction: WaterDirection, molecule: Point, state: Map<Point, Char>, waterMolecules: Set<Point>): Pair<Point, WaterDirection> {
             var mutableMolecule = molecule
+            visited.add(mutableMolecule)
 
             if (direction == WaterDirection.LEFT) {
 
@@ -114,6 +125,7 @@ class Puzzle17Test {
                     }
 
                     mutableMolecule = mutableMolecule.left()
+                    visited.add(mutableMolecule)
                 }
 
                 return mutableMolecule to WaterDirection.STUCK
@@ -129,6 +141,7 @@ class Puzzle17Test {
                     }
 
                     mutableMolecule = mutableMolecule.right()
+                    visited.add(mutableMolecule)
                 }
 
                 return mutableMolecule to WaterDirection.STUCK
@@ -140,11 +153,13 @@ class Puzzle17Test {
 
         enum class WaterDirection { STUCK, DOWN, LEFT, RIGHT }
 
-        private fun goDownUntilColliding(molecule: Point, state: Map<Point, Char>, waterMolecules: MutableList<Point>): Point {
+        private fun goDownUntilColliding(molecule: Point, state: Map<Point, Char>, waterMolecules: Set<Point>): Point {
             var molecule1 = molecule
+            visited.add(molecule1)
 
             while (isFree(molecule1.down(), state, waterMolecules)) {
                 molecule1 = molecule1.down()
+                visited.add(molecule1)
             }
 
             return molecule1
@@ -168,109 +183,109 @@ class Puzzle17Test {
 //            return mutableMolecule
 //        }
 
-        fun solveOne(puzzleText: String): Int {
-            val state = createInitialState(puzzleText)
-            val waterSource = Point(500, 0)
-            var waterSquares = mutableListOf<Point>()
+//        fun solveOne(puzzleText: String): Int {
+//            val state = createInitialState(puzzleText)
+//            val waterSource = Point(500, 0)
+//            var waterSquares = mutableListOf<Point>()
+//
+//            val outputFile = File("/Users/anguruso/Desktop/jur.txt")
+//
+//            if (outputFile.exists()) {
+//                outputFile.delete()
+//            }
+//
+//            while (true) {
+//                // Move all the other waters
+//                val tmp = moveTheWaterAlong(state, waterSquares)
+//                val noWaterMoleculesMoved = tmp.first
+//
+//                if (!noWaterMoleculesMoved) {
+//                    break
+//                }
+//
+//                waterSquares = tmp.second.toMutableList()
+//
+//                // Generate a square at one point below the water source
+//                waterSquares.add(waterSource.down())
+//
+//                //outputFile.appendText(waterSquares.count().toString())
+//                println(waterSquares.size)
+//
+//                if (waterSquares.count() % 300 == 0) {
+//                    outputFile.appendText(renderState(state, waterSquares))
+//                    outputFile.appendText("\n\n\n")
+//                }
+//            }
+//
+//            return 1337
+//        }
 
-            val outputFile = File("/Users/anguruso/Desktop/jur.txt")
+//        // returns a boolean representing whether all water has moved, and a list of the new water state.
+//        private fun moveTheWaterAlong(state: Map<Point, Char>, waterSquares: Set<Point>): Pair<Boolean, List<Point>> {
+//            if (waterSquares.isEmpty()) {
+//                return true to emptyList()
+//            }
+//
+//            val newWaterSquares = waterSquares.map { it }.toMutableList()
+//            var moveCount = 0
+//
+//            for (index in 0 until newWaterSquares.size) {
+//                val water = newWaterSquares[index]
+//
+//                // Cannot move left/right if any water below is on the maxY
+//                //val streamBelowIsOnMaxY: Boolean = streamBelowIsOnMaxY(water, state, newWaterSquares)
+//                val streamBelowIsOnMaxY = false
+//
+//
+//                // Is the point below free?
+//                if (isFree(water.down(), state, newWaterSquares)) {
+//                    newWaterSquares[index] = water.down()
+//                    moveCount++
+//                }
+//                else if (isFree(water.left(), state, newWaterSquares) && !isOnMaxY(water, state) && !streamBelowIsOnMaxY) {
+//                    newWaterSquares[index] = water.left()
+//                    moveCount++
+//                }
+//                else if (isFree(water.right(), state, newWaterSquares) && !isOnMaxY(water, state) && !streamBelowIsOnMaxY) {
+//                    newWaterSquares[index] = water.right()
+//                    moveCount++
+////                }
+////            }
+//
+//            if (moveCount == 0) {
+//                return false to emptyList()
+//            }
+//            else {
+//                return true to newWaterSquares
+//            }
+//        }
 
-            if (outputFile.exists()) {
-                outputFile.delete()
-            }
+//        private fun streamBelowIsOnMaxY(water: Point, state: Map<Point, Char>, newWaterSquares: MutableList<Point>): Boolean {
+//            val maxY = state.keys.maxBy { it.y }!!.y
+//            var below = water.down()
+//
+//            while (newWaterSquares.contains(below)) {
+//                if (below.y == maxY) {
+//                    return true
+//                }
+//
+//                below = below.down()
+//            }
+//
+//            return false
+//        }
+//
+//        private fun isOnMaxY(point: Point, state: Map<Point, Char>): Boolean {
+//            val maxY = state.keys.maxBy { it.y }!!.y
+//            return point.y == maxY
+//        }
+//
+//        private fun isWithinMaxY(point: Point, state: Map<Point, Char>): Boolean {
+//            val maxY = state.keys.maxBy { it.y }!!.y
+//            return point.y <= maxY
+//        }
 
-            while (true) {
-                // Move all the other waters
-                val tmp = moveTheWaterAlong(state, waterSquares)
-                val noWaterMoleculesMoved = tmp.first
-
-                if (!noWaterMoleculesMoved) {
-                    break
-                }
-
-                waterSquares = tmp.second.toMutableList()
-
-                // Generate a square at one point below the water source
-                waterSquares.add(waterSource.down())
-
-                //outputFile.appendText(waterSquares.count().toString())
-                println(waterSquares.size)
-
-                if (waterSquares.count() % 300 == 0) {
-                    outputFile.appendText(renderState(state, waterSquares))
-                    outputFile.appendText("\n\n\n")
-                }
-            }
-
-            return 1337
-        }
-
-        // returns a boolean representing whether all water has moved, and a list of the new water state.
-        private fun moveTheWaterAlong(state: Map<Point, Char>, waterSquares: List<Point>): Pair<Boolean, List<Point>> {
-            if (waterSquares.isEmpty()) {
-                return true to emptyList()
-            }
-
-            val newWaterSquares = waterSquares.map { it }.toMutableList()
-            var moveCount = 0
-
-            for (index in 0 until newWaterSquares.size) {
-                val water = newWaterSquares[index]
-
-                // Cannot move left/right if any water below is on the maxY
-                //val streamBelowIsOnMaxY: Boolean = streamBelowIsOnMaxY(water, state, newWaterSquares)
-                val streamBelowIsOnMaxY = false
-
-
-                // Is the point below free?
-                if (isFree(water.down(), state, newWaterSquares)) {
-                    newWaterSquares[index] = water.down()
-                    moveCount++
-                }
-                else if (isFree(water.left(), state, newWaterSquares) && !isOnMaxY(water, state) && !streamBelowIsOnMaxY) {
-                    newWaterSquares[index] = water.left()
-                    moveCount++
-                }
-                else if (isFree(water.right(), state, newWaterSquares) && !isOnMaxY(water, state) && !streamBelowIsOnMaxY) {
-                    newWaterSquares[index] = water.right()
-                    moveCount++
-                }
-            }
-
-            if (moveCount == 0) {
-                return false to emptyList()
-            }
-            else {
-                return true to newWaterSquares
-            }
-        }
-
-        private fun streamBelowIsOnMaxY(water: Point, state: Map<Point, Char>, newWaterSquares: MutableList<Point>): Boolean {
-            val maxY = state.keys.maxBy { it.y }!!.y
-            var below = water.down()
-
-            while (newWaterSquares.contains(below)) {
-                if (below.y == maxY) {
-                    return true
-                }
-
-                below = below.down()
-            }
-
-            return false
-        }
-
-        private fun isOnMaxY(point: Point, state: Map<Point, Char>): Boolean {
-            val maxY = state.keys.maxBy { it.y }!!.y
-            return point.y == maxY
-        }
-
-        private fun isWithinMaxY(point: Point, state: Map<Point, Char>): Boolean {
-            val maxY = state.keys.maxBy { it.y }!!.y
-            return point.y <= maxY
-        }
-
-        private fun isFree(point: Point, state: Map<Point, Char>, waterSquares: List<Point>): Boolean {
+        private fun isFree(point: Point, state: Map<Point, Char>, waterSquares: Set<Point>): Boolean {
             val maxY = state.keys.maxBy { it.y }!!.y
             val pointHasNoClay = state[point] != '#'
             val pointHasNoWater = !waterSquares.contains(point)
@@ -289,7 +304,7 @@ class Puzzle17Test {
             return renderState(state)
         }
 
-        private fun renderState(state: Map<Point, Char>, waterSquares: List<Point> = listOf()): String {
+        private fun renderState(state: Map<Point, Char>, waterSquares: Set<Point> = setOf()): String {
             val allPoints = state.keys
             val waterSet = waterSquares.toSet()
 
