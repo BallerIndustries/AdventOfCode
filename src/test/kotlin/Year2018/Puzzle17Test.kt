@@ -62,9 +62,11 @@ class Puzzle17Test {
                 // Generate a square at one point below the water source
                 waterSquares += waterSource.down()
                 println(renderState(state, waterSquares))
+                println()
+                println()
             }
 
-            println(renderState(state, waterSquares))
+            //println(renderState(state, waterSquares))
             return 1337
         }
 
@@ -79,15 +81,22 @@ class Puzzle17Test {
 
             for (index in 0 until newWaterSquares.size) {
                 val water = newWaterSquares[index]
+                //val belowIsFloorOrWater = isFloorOrWater(water.down(), state, newWaterSquares)
+
+                // Cannot move if any water below is on the maxY
+
 
                 // Is the point below free?
-                //if (water.down().isFree(state)) {
                 if (isFree(water.down(), state, newWaterSquares)) {
                     newWaterSquares[index] = water.down()
                     moveCount++
                 }
-                else if (isFree(water.left(), state, newWaterSquares)) {
+                else if (isFree(water.left(), state, newWaterSquares) && !isOnMaxY(water, state)) {
                     newWaterSquares[index] = water.left()
+                    moveCount++
+                }
+                else if (isFree(water.right(), state, newWaterSquares) && !isOnMaxY(water, state)) {
+                    newWaterSquares[index] = water.right()
                     moveCount++
                 }
             }
@@ -100,12 +109,30 @@ class Puzzle17Test {
             }
         }
 
+        private fun isOnMaxY(point: Point, state: Map<Point, Char>): Boolean {
+            val maxY = state.keys.maxBy { it.y }!!.y
+            return point.y == maxY
+        }
+
+        private fun isWithinMaxY(point: Point, state: Map<Point, Char>): Boolean {
+            val maxY = state.keys.maxBy { it.y }!!.y
+            return point.y <= maxY
+        }
+
+//        private fun isFloorOrWater(point: Point, state: Map<Point, Char>, waterSquares: List<Point>): Boolean {
+//            val isFloor = state[point] == '#'
+//            val isWater = waterSquares.contains(point)
+//
+//            return isFloor || isWater
+//        }
+
         private fun isFree(point: Point, state: Map<Point, Char>, waterSquares: List<Point>): Boolean {
+            val maxY = state.keys.maxBy { it.y }!!.y
             val pointHasNoClay = point.isFree(state)
             val pointHasNoWater = !waterSquares.contains(point)
+            val pointIsBelowMaxY = point.y <= maxY
 
-
-            return pointHasNoClay && pointHasNoWater
+            return pointHasNoClay && pointHasNoWater && pointIsBelowMaxY
         }
 
 
