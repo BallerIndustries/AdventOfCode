@@ -19,52 +19,6 @@ class Puzzle17Test {
         """.trimIndent()
 
     @Test
-    fun `render example commands to a canvas`() {
-        val expected = """
-            ......+.......
-            ............#.
-            .#..#.......#.
-            .#..#..#......
-            .#..#..#......
-            .#.....#......
-            .#.....#......
-            .#######......
-            ..............
-            ..............
-            ....#.....#...
-            ....#.....#...
-            ....#.....#...
-            ....#######...
-        """.trimIndent()
-
-        val actual = puzzle.stateAfterUnitsOfWater(exampleText, 5)
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun `state after one units of water`() {
-        val expected = """
-            ......+.......
-            ......|.....#.
-            .#..#.|.....#.
-            .#..#.|#......
-            .#..#.|#......
-            .#....|#......
-            .#~||||#......
-            .#######......
-            ..............
-            ..............
-            ....#.....#...
-            ....#.....#...
-            ....#.....#...
-            ....#######...
-        """.trimIndent()
-
-        val state = puzzle.stateAfterUnitsOfWater(exampleText, 1)
-        assertEquals(expected, state)
-    }
-
-    @Test
     fun `render puzzle part a`() {
         val result = puzzle.renderInitial(puzzleText)
         assertEquals("a", result)
@@ -83,8 +37,51 @@ class Puzzle17Test {
     }
 
     class Puzzle17 {
-        fun solveOne(puzzleText: String): String {
-            return ""
+        fun solveOne(puzzleText: String): Int {
+            val state = createInitialState(puzzleText)
+            val waterSource = Point(500, 0)
+            var waterSquares = listOf<Point>()
+
+            while (true) {
+                // Move all the other waters
+                val tmp = moveTheWaterAlong(state, waterSquares)
+                val allWaterMoved = tmp.first
+
+                if (!allWaterMoved) {
+                    break
+                }
+
+                waterSquares = tmp.second
+
+                // Generate a square at one point below the water source
+                waterSquares += waterSource.down()
+                //println(waterSquares)
+
+
+            }
+
+            println(renderState(state, waterSquares))
+
+            return 1337
+        }
+
+        // returns a boolean representing whether all water has moved, and a list of the new water state.
+        private fun moveTheWaterAlong(state: Map<Point, Char>, waterSquares: List<Point>): Pair<Boolean, List<Point>> {
+            val newWaterSquares = waterSquares.map { it }.toMutableList()
+
+            for (index in 0 until newWaterSquares.size) {
+                val water = newWaterSquares[index]
+
+                // Is the point below free?
+                if (water.down().isFree(state)) {
+                    newWaterSquares[index] = water.down()
+                }
+                else {
+                    return false to listOf()
+                }
+            }
+
+            return true to newWaterSquares
         }
 
         fun solveTwo(puzzleText: String): String {
@@ -96,8 +93,9 @@ class Puzzle17Test {
             return renderState(state)
         }
 
-        private fun renderState(state: Map<Point, Char>): String {
+        private fun renderState(state: Map<Point, Char>, waterSquares: List<Point> = listOf()): String {
             val allPoints = state.keys
+            val waterSet = waterSquares.toSet()
 
             val minX = allPoints.minBy { it.x }!!.x - 1
             val maxX = allPoints.maxBy { it.x }!!.x + 1
@@ -111,7 +109,11 @@ class Puzzle17Test {
 
                     if (state.containsKey(point)) {
                         state[point]
-                    } else {
+                    }
+                    else if (waterSet.contains(point)) {
+                        '|'
+                    }
+                    else {
                         '.'
                     }
                 }.joinToString("")
@@ -143,7 +145,7 @@ class Puzzle17Test {
             fun right() = this.copy(x = x + 1)
 
             fun isFree(state: Map<Point, Char>): Boolean {
-                return state[this] != '.'
+                return state[this] != '#'
             }
         }
 
@@ -168,77 +170,6 @@ class Puzzle17Test {
             }
         }
 
-        fun stateAfterUnitsOfWater(puzzleText: String, units: Int): String {
-            val state = createInitialState(puzzleText)
-            val waterSource = Point(500, 0)
-
-            // Spawn some water
-            var waterPoint = Point(500, 0)
-
-
-            while (true) {
-                val downPoint = waterPoint.down()
-                val leftPoint = waterPoint.left()
-                val rightPoint = waterPoint.right()
-
-
-                // Try go down
-                if (state[downPoint] == '.') {
-                    waterPoint = downPoint
-                }
-                // Can't go down any more look for a left/right point.
-                else if (state[leftPoint] == '.') {
-                    waterPoint = findLeftOrRightPoint(state, waterPoint)
-                }
-
-            }
-
-
-
-
-
-        }
-
-        private fun findLeftOrRightPoint(state: Map<Point, Char>, waterPoint: Point): Point {
-            val directLeftTileIsBlocked = !waterPoint.left().isFree(state)
-            val directRightTileIsBlocked = !waterPoint.right().isFree(state)
-            var currentPoint = waterPoint
-
-            // Scan left for a wall or cliff
-            if (!directLeftTileIsBlocked) {
-                var leftTile = currentPoint.left()
-                var downLeftTile = leftTile.down()
-
-                while (leftTile.isFree(state) && downLeftTile.isFree(state)) {
-                    currentPoint = currentPoint.left()
-                    leftTile = currentPoint.left()
-                    downLeftTile = leftTile.down()
-                }
-
-                return currentPoint
-            }
-            else if (!directRightTileIsBlocked) {
-                var rightTile = currentPoint.right()
-                var downRightTile = rightTile.down()
-
-                while (rightTile.isFree(state) && downRightTile.isFree(state)) {
-                    currentPoint = currentPoint.right()
-                    rightTile = currentPoint.right()
-                    downRightTile = rightTile.down()
-                }
-
-                return currentPoint
-            }
-            else {
-                throw RuntimeException("No where to go")
-            }
-        }
-
-        fun moveWaterUntilDeadEnd(state: Map<Point, Char>, water: Point) {
-
-
-
-        }
 
         data class HorizontalLineCommand(val y: Int, val xFrom: Int, val xTo: Int) : LineCommand {
             override fun getPoints(): List<Point> {
