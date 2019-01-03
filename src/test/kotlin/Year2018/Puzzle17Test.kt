@@ -2,6 +2,7 @@ package Year2018
 
 import junit.framework.Assert.assertEquals
 import org.junit.Test
+import java.io.File
 import kotlin.math.max
 
 class Puzzle17Test {
@@ -32,6 +33,12 @@ class Puzzle17Test {
     }
 
     @Test
+    fun `puzzle example a speedy`() {
+        val result = puzzle.solveOneSpeedy(exampleText)
+        assertEquals("a", result)
+    }
+
+    @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
         assertEquals("a", result)
@@ -44,10 +51,40 @@ class Puzzle17Test {
     }
 
     class Puzzle17 {
+        fun solveOneSpeedy(puzzleText: String): Int {
+            val state = createInitialState(puzzleText)
+            val waterSource = Point(500, 0)
+            val waterMolecules = mutableListOf<Point>()
+
+            while (true) {
+                // Create a water molecule
+                var molecule = waterSource.down()
+
+                // Move the jerk down until it hits a something
+                while (isFree(molecule.down(), state, waterMolecules)) {
+                    molecule = molecule.down()
+                }
+
+                while (isFree(molecule.left(), state, waterMolecules)) {
+                    molecule = molecule.left()
+                }
+
+
+                waterMolecules.add(molecule)
+                println(renderState(state, waterMolecules))
+            }
+        }
+
         fun solveOne(puzzleText: String): Int {
             val state = createInitialState(puzzleText)
             val waterSource = Point(500, 0)
-            var waterSquares = listOf<Point>()
+            var waterSquares = mutableListOf<Point>()
+
+            val outputFile = File("/Users/anguruso/Desktop/jur.txt")
+
+            if (outputFile.exists()) {
+                outputFile.delete()
+            }
 
             while (true) {
                 // Move all the other waters
@@ -58,16 +95,20 @@ class Puzzle17Test {
                     break
                 }
 
-                waterSquares = tmp.second
+                waterSquares = tmp.second.toMutableList()
 
                 // Generate a square at one point below the water source
-                waterSquares += waterSource.down()
-                println(renderState(state, waterSquares))
-                println()
-                println()
+                waterSquares.add(waterSource.down())
+
+                //outputFile.appendText(waterSquares.count().toString())
+                println(waterSquares.size)
+
+                if (waterSquares.count() % 300 == 0) {
+                    outputFile.appendText(renderState(state, waterSquares))
+                    outputFile.appendText("\n\n\n")
+                }
             }
 
-            //println(renderState(state, waterSquares))
             return 1337
         }
 
@@ -82,10 +123,10 @@ class Puzzle17Test {
 
             for (index in 0 until newWaterSquares.size) {
                 val water = newWaterSquares[index]
-                //val belowIsFloorOrWater = isFloorOrWater(water.down(), state, newWaterSquares)
 
                 // Cannot move left/right if any water below is on the maxY
-                val streamBelowIsOnMaxY: Boolean = streamBelowIsOnMaxY(water, state, newWaterSquares)
+                //val streamBelowIsOnMaxY: Boolean = streamBelowIsOnMaxY(water, state, newWaterSquares)
+                val streamBelowIsOnMaxY = false
 
 
                 // Is the point below free?
@@ -216,6 +257,10 @@ class Puzzle17Test {
             fun isFree(state: Map<Point, Char>): Boolean {
                 return state[this] != '#'
             }
+
+//            fun canMoveDown(state: Map<Point, Char>): Boolean {
+//                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+//            }
         }
 
         private fun parseCommands(puzzleText: String):  List<LineCommand> {
