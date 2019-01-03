@@ -25,6 +25,12 @@ class Puzzle17Test {
     }
 
     @Test
+    fun `puzzle example a`() {
+        val result = puzzle.solveOne(exampleText)
+        assertEquals("a", result)
+    }
+
+    @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
         assertEquals("a", result)
@@ -45,9 +51,9 @@ class Puzzle17Test {
             while (true) {
                 // Move all the other waters
                 val tmp = moveTheWaterAlong(state, waterSquares)
-                val allWaterMoved = tmp.first
+                val noWaterMoleculesMoved = tmp.first
 
-                if (!allWaterMoved) {
+                if (!noWaterMoleculesMoved) {
                     break
                 }
 
@@ -55,34 +61,53 @@ class Puzzle17Test {
 
                 // Generate a square at one point below the water source
                 waterSquares += waterSource.down()
-                //println(waterSquares)
-
-
+                println(renderState(state, waterSquares))
             }
 
             println(renderState(state, waterSquares))
-
             return 1337
         }
 
         // returns a boolean representing whether all water has moved, and a list of the new water state.
         private fun moveTheWaterAlong(state: Map<Point, Char>, waterSquares: List<Point>): Pair<Boolean, List<Point>> {
+            if (waterSquares.isEmpty()) {
+                return true to emptyList()
+            }
+
             val newWaterSquares = waterSquares.map { it }.toMutableList()
+            var moveCount = 0
 
             for (index in 0 until newWaterSquares.size) {
                 val water = newWaterSquares[index]
 
                 // Is the point below free?
-                if (water.down().isFree(state)) {
+                //if (water.down().isFree(state)) {
+                if (isFree(water.down(), state, newWaterSquares)) {
                     newWaterSquares[index] = water.down()
+                    moveCount++
                 }
-                else {
-                    return false to listOf()
+                else if (isFree(water.left(), state, newWaterSquares)) {
+                    newWaterSquares[index] = water.left()
+                    moveCount++
                 }
             }
 
-            return true to newWaterSquares
+            if (moveCount == 0) {
+                return false to emptyList()
+            }
+            else {
+                return true to newWaterSquares
+            }
         }
+
+        private fun isFree(point: Point, state: Map<Point, Char>, waterSquares: List<Point>): Boolean {
+            val pointHasNoClay = point.isFree(state)
+            val pointHasNoWater = !waterSquares.contains(point)
+
+
+            return pointHasNoClay && pointHasNoWater
+        }
+
 
         fun solveTwo(puzzleText: String): String {
             return ""
