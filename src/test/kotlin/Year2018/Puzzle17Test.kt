@@ -2,8 +2,6 @@ package Year2018
 
 import junit.framework.Assert.assertEquals
 import org.junit.Test
-import java.io.File
-import kotlin.math.max
 
 class Puzzle17Test {
     val puzzleText = this::class.java.getResource("/2018/puzzle17.txt").readText().replace("\r", "")
@@ -26,28 +24,21 @@ class Puzzle17Test {
         assertEquals("a", result)
     }
 
-//    @Test
-//    fun `puzzle example a`() {
-//        val result = puzzle.solveOne(exampleText)
-//        assertEquals("a", result)
-//    }
-
     @Test
     fun `puzzle example a speedy`() {
         val result = puzzle.solveOneSpeedy(exampleText)
-        assertEquals("a", result)
+        assertEquals(57, result)
     }
 
-//    @Test
-//    fun `puzzle part a`() {
-//        val result = puzzle.solveOne(puzzleText)
-//        assertEquals("a", result)
-//    }
+    @Test
+    fun `puzzle example a`() {
+        val result = puzzle.solveOneFillzors(exampleText)
+        assertEquals(57, result)
+    }
 
     @Test
     fun `puzzle part a speedy`() {
         //36739 TOO LOW
-
         val result = puzzle.solveOneSpeedy(puzzleText)
         assertEquals(57, result)
     }
@@ -55,13 +46,74 @@ class Puzzle17Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("b", result)
+        assertEquals(9000, result)
     }
+
+    enum class Collision { WALL, GAP }
 
     class Puzzle17 {
         val visited = mutableSetOf<Point>()
 
-        // commit test
+        fun solveOneFillzors(puzzleText: String): Int {
+            val state = createInitialState(puzzleText)
+            val stateWithWater = state.toMutableMap()
+            val otherStreamsToDealWith = mutableListOf<Point>()
+
+            var currentPoint = Point(500, 0)
+
+
+            // While we are still within the map
+            while (state[currentPoint] != null) {
+
+                val pointJustAboveGround= shootDownUntilYouHitGround(state, currentPoint)
+                val (leftPoint, leftCollision) = chargeLeftUntilWallOrGap(state, pointJustAboveGround)
+                val (rightPoint, rightCollision) = chargeRightUntilWallOrGap(state, pointJustAboveGround)
+
+
+                // We are in a bucket
+                if (leftCollision == Collision.WALL && rightCollision == Collision.WALL) {
+                    //handleBucket()
+                }
+                else if (leftCollision == Collision.GAP && rightCollision == Collision.GAP) {
+                    setHorizontalLine(stateWithWater, leftPoint, rightPoint, '|')
+                    otherStreamsToDealWith.add(rightPoint)
+                    currentPoint = leftPoint
+                }
+                else if (leftCollision == Collision.GAP && rightCollision == Collision.WALL) {
+                    setHorizontalLine(stateWithWater, leftPoint, pointJustAboveGround, '|')
+                    currentPoint = leftPoint
+                }
+                else if (leftCollision == Collision.WALL && rightCollision == Collision.GAP) {
+                    setHorizontalLine(stateWithWater, rightPoint, pointJustAboveGround, '|')
+                    currentPoint = rightPoint
+                }
+            }
+
+            return 7
+        }
+
+        fun setHorizontalLine(stateWithWater: MutableMap<Point, Char>, a: Point, b: Point, c: Char) {
+            val y = a.y
+            (a.x .. b.x).forEach { x -> stateWithWater[Point(x, y)] = c }
+        }
+
+        private fun chargeRightUntilWallOrGap(state: Map<Point, Char>, pointJustAboveGround: Point): Pair<Point, Collision> {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        private fun chargeLeftUntilWallOrGap(state: Map<Point, Char>, pointJustAboveGround: Point): Pair<Point, Collision> {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        private fun shootDownUntilYouHitGround(state: Map<Point, Char>, point: Point): Point {
+            var currentPosition = point
+
+            while (state[currentPosition.down()] != '#') {
+                currentPosition = currentPosition.down()
+            }
+
+            return currentPosition
+        }
 
         fun solveOneSpeedy(puzzleText: String): Int {
             val state = createInitialState(puzzleText)
