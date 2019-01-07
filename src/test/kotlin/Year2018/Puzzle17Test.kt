@@ -46,6 +46,8 @@ class Puzzle17Test {
 
     @Test
     fun `puzzle part a speedy`() {
+        //36739 TOO LOW
+
         val result = puzzle.solveOneSpeedy(puzzleText)
         assertEquals(57, result)
     }
