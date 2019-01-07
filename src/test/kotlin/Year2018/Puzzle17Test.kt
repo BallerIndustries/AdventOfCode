@@ -61,6 +61,8 @@ class Puzzle17Test {
     class Puzzle17 {
         val visited = mutableSetOf<Point>()
 
+        // commit test
+
         fun solveOneSpeedy(puzzleText: String): Int {
             val state = createInitialState(puzzleText)
             val waterSource = Point(500, 0)
