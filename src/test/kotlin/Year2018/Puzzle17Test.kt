@@ -57,39 +57,102 @@ class Puzzle17Test {
         fun solveOneFillzors(puzzleText: String): Int {
             val state = createInitialState(puzzleText)
             val stateWithWater = state.toMutableMap()
-            val otherStreamsToDealWith = mutableListOf<Point>()
 
+            // TODO: Lets actually deal with these please
+            val otherStreamsToDealWith = mutableListOf<Point>()
             var currentPoint = Point(500, 0)
 
+            val maxY = state.keys.maxBy { it.y }!!.y
 
             // While we are still within the map
-            while (state[currentPoint] != null) {
+            while (true) {
+                println("currentPoint = $currentPoint")
+                println(maxY)
 
-                val pointJustAboveGround= shootDownUntilYouHitGround(state, currentPoint)
-                val (leftPoint, leftCollision) = chargeLeftUntilWallOrGap(state, pointJustAboveGround)
-                val (rightPoint, rightCollision) = chargeRightUntilWallOrGap(state, pointJustAboveGround)
-
+                currentPoint = shootDownUntilYouHitGround(state, currentPoint) ?: break
+                var (leftPoint, leftCollision) = chargeLeftUntilWallOrGap(state, currentPoint)
+                var (rightPoint, rightCollision) = chargeRightUntilWallOrGap(state, currentPoint)
 
                 // We are in a bucket
                 if (leftCollision == Collision.WALL && rightCollision == Collision.WALL) {
-                    //handleBucket()
+                    currentPoint = handleBucket(currentPoint, leftPoint, rightPoint, stateWithWater)
+
+                    println(renderState(stateWithWater))
+
+                    // Recalc the jerks
+                    val (_leftPoint, _leftCollision) = chargeLeftUntilWallOrGap(stateWithWater, currentPoint)
+                    val (_rightPoint, _rightCollision) = chargeRightUntilWallOrGap(stateWithWater, currentPoint)
+
+                    leftPoint = _leftPoint
+                    leftCollision = _leftCollision
+                    rightPoint = _rightPoint
+                    rightCollision = _rightCollision
                 }
-                else if (leftCollision == Collision.GAP && rightCollision == Collision.GAP) {
+
+                // We should be able to charge left/right and drop off
+                if (leftCollision == Collision.GAP && rightCollision == Collision.GAP) {
                     setHorizontalLine(stateWithWater, leftPoint, rightPoint, '|')
                     otherStreamsToDealWith.add(rightPoint)
                     currentPoint = leftPoint
                 }
                 else if (leftCollision == Collision.GAP && rightCollision == Collision.WALL) {
-                    setHorizontalLine(stateWithWater, leftPoint, pointJustAboveGround, '|')
+                    setHorizontalLine(stateWithWater, leftPoint, rightPoint, '|')
                     currentPoint = leftPoint
                 }
                 else if (leftCollision == Collision.WALL && rightCollision == Collision.GAP) {
-                    setHorizontalLine(stateWithWater, rightPoint, pointJustAboveGround, '|')
+                    setHorizontalLine(stateWithWater, leftPoint, rightPoint, '|')
                     currentPoint = rightPoint
                 }
+
+                println(renderState(stateWithWater))
             }
 
-            return 7
+            return stateWithWater.values.count { it == '~' || it == '|' }
+        }
+
+        private fun handleBucket(startingPoint: Point, firstLeftPoint: Point, firstRightPoint: Point, stateWithWater: MutableMap<Point, Char>): Point {
+            setHorizontalLine(stateWithWater, firstLeftPoint, firstRightPoint, '~')
+            println(renderState(stateWithWater))
+            var currentPoint = startingPoint.up()
+
+            var (leftPoint, leftCollision) = chargeLeftUntilWallOrGap(stateWithWater, currentPoint)
+            var (rightPoint, rightCollision) = chargeRightUntilWallOrGap(stateWithWater, currentPoint)
+
+            while (leftCollision == Collision.WALL && rightCollision == Collision.WALL) {
+                // Mark this as still water
+                setHorizontalLine(stateWithWater, leftPoint, rightPoint, '~')
+                println(renderState(stateWithWater))
+
+                // Move up
+                currentPoint = currentPoint.up()
+
+                // Recalc the jerks
+                val (_leftPoint, _leftCollision) = chargeLeftUntilWallOrGap(stateWithWater, currentPoint)
+                val (_rightPoint, _rightCollision) = chargeRightUntilWallOrGap(stateWithWater, currentPoint)
+
+                leftPoint = _leftPoint
+                leftCollision = _leftCollision
+                rightPoint = _rightPoint
+                rightCollision = _rightCollision
+            }
+
+            return currentPoint
+        }
+
+        private fun chargeLeftUntilWallOrGap(state: Map<Point, Char>, pointJustAboveGround: Point): Pair<Point, Collision> {
+            var currentPoint = pointJustAboveGround
+
+            while (state[currentPoint.left()] != '#' && (state[currentPoint.down()] == '#' || state[currentPoint.down()] == '~' )) {
+                currentPoint = currentPoint.left()
+            }
+
+            val collision = when {
+                state[currentPoint.down()] == null -> Collision.GAP
+                state[currentPoint.left()] == '#' -> Collision.WALL
+                else -> throw RuntimeException("Hmm unexpected.. pointJustAboveGround = $pointJustAboveGround")
+            }
+
+            return currentPoint to collision
         }
 
         fun setHorizontalLine(stateWithWater: MutableMap<Point, Char>, a: Point, b: Point, c: Char) {
@@ -98,21 +161,33 @@ class Puzzle17Test {
         }
 
         private fun chargeRightUntilWallOrGap(state: Map<Point, Char>, pointJustAboveGround: Point): Pair<Point, Collision> {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            var currentPoint = pointJustAboveGround
+
+            while (state[currentPoint.right()] != '#' && (state[currentPoint.down()] == '#' || state[currentPoint.down()] == '~' )) {
+                currentPoint = currentPoint.right()
+            }
+
+            val collision = when {
+                state[currentPoint.down()] == null -> Collision.GAP
+                state[currentPoint.right()] == '#' -> Collision.WALL
+                else -> throw RuntimeException("Hmm unexpected..")
+            }
+
+            return currentPoint to collision
         }
 
-        private fun chargeLeftUntilWallOrGap(state: Map<Point, Char>, pointJustAboveGround: Point): Pair<Point, Collision> {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
 
-        private fun shootDownUntilYouHitGround(state: Map<Point, Char>, point: Point): Point {
+
+        private fun shootDownUntilYouHitGround(state: Map<Point, Char>, point: Point): Point? {
+            val maxY = state.keys.maxBy { it.y }!!.y
+
             var currentPosition = point
 
-            while (state[currentPosition.down()] != '#') {
+            while (state[currentPosition.down()] != '#' && currentPosition.y < maxY) {
                 currentPosition = currentPosition.down()
             }
 
-            return currentPosition
+            return if (currentPosition.y >= maxY) null else currentPosition
         }
 
         fun solveOneSpeedy(puzzleText: String): Int {
@@ -410,10 +485,7 @@ class Puzzle17Test {
             fun down() = this.copy(y = y + 1)
             fun left() = this.copy(x = x - 1)
             fun right() = this.copy(x = x + 1)
-
-//            fun isFree(state: Map<Point, Char>): Boolean {
-//                return state[this] != '#'
-//            }
+            fun up() = this.copy(y = y - 1)
         }
 
         private fun parseCommands(puzzleText: String):  List<LineCommand> {
