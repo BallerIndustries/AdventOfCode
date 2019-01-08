@@ -31,8 +31,8 @@ class Puzzle17Test {
     }
 
     @Test
-    fun `puzzle part b`() {
-        val result = puzzle.solveTwo(puzzleText)
+    fun `puzzle part a`() {
+        val result = puzzle.solveOneFillzors(puzzleText)
         assertEquals(9000, result)
     }
 
@@ -64,7 +64,7 @@ class Puzzle17Test {
                 if (leftCollision == Collision.WALL && rightCollision == Collision.WALL) {
                     currentPoint = handleBucket(currentPoint, leftPoint, rightPoint, stateWithWater)
 
-                    println(renderState(stateWithWater))
+                    //println(renderState(stateWithWater))
 
                     // Recalc the jerks
                     val (_leftPoint, _leftCollision) = chargeLeftUntilWallOrGap(stateWithWater, currentPoint)
@@ -100,7 +100,7 @@ class Puzzle17Test {
 
         private fun handleBucket(startingPoint: Point, firstLeftPoint: Point, firstRightPoint: Point, stateWithWater: MutableMap<Point, Char>): Point {
             setHorizontalLine(stateWithWater, firstLeftPoint, firstRightPoint, '~')
-            println(renderState(stateWithWater))
+            //println(renderState(stateWithWater))
             var currentPoint = startingPoint.up()
 
             var (leftPoint, leftCollision) = chargeLeftUntilWallOrGap(stateWithWater, currentPoint)
@@ -109,7 +109,7 @@ class Puzzle17Test {
             while (leftCollision == Collision.WALL && rightCollision == Collision.WALL) {
                 // Mark this as still water
                 setHorizontalLine(stateWithWater, leftPoint, rightPoint, '~')
-                println(renderState(stateWithWater))
+                //println(renderState(stateWithWater))
 
                 // Move up
                 currentPoint = currentPoint.up()
