@@ -25,21 +25,8 @@ class Puzzle17Test {
     }
 
     @Test
-    fun `puzzle example a speedy`() {
-        val result = puzzle.solveOneSpeedy(exampleText)
-        assertEquals(57, result)
-    }
-
-    @Test
     fun `puzzle example a`() {
         val result = puzzle.solveOneFillzors(exampleText)
-        assertEquals(57, result)
-    }
-
-    @Test
-    fun `puzzle part a speedy`() {
-        //36739 TOO LOW
-        val result = puzzle.solveOneSpeedy(puzzleText)
         assertEquals(57, result)
     }
 
@@ -52,7 +39,7 @@ class Puzzle17Test {
     enum class Collision { WALL, GAP }
 
     class Puzzle17 {
-        val visited = mutableSetOf<Point>()
+        private val movingWaterPoints = mutableSetOf<Point>()
 
         fun solveOneFillzors(puzzleText: String): Int {
             val state = createInitialState(puzzleText)
@@ -103,9 +90,10 @@ class Puzzle17Test {
                     setHorizontalLine(stateWithWater, leftPoint, rightPoint, '|')
                     currentPoint = rightPoint
                 }
-
-                println(renderState(stateWithWater))
             }
+
+            movingWaterPoints.forEach { point -> if (!stateWithWater.containsKey(point)) stateWithWater[point] = '|' }
+            println(renderState(stateWithWater))
 
             return stateWithWater.values.count { it == '~' || it == '|' }
         }
@@ -176,125 +164,125 @@ class Puzzle17Test {
             return currentPoint to collision
         }
 
-
-
         private fun shootDownUntilYouHitGround(state: Map<Point, Char>, point: Point): Point? {
             val maxY = state.keys.maxBy { it.y }!!.y
 
             var currentPosition = point
+            movingWaterPoints.add(currentPosition)
 
             while (state[currentPosition.down()] != '#' && currentPosition.y < maxY) {
                 currentPosition = currentPosition.down()
+                movingWaterPoints.add(currentPosition)
             }
 
             return if (currentPosition.y >= maxY) null else currentPosition
         }
 
-        fun solveOneSpeedy(puzzleText: String): Int {
-            val state = createInitialState(puzzleText)
-            val waterSource = Point(500, 0)
-            val waterMolecules = mutableSetOf<Point>()
+//        fun solveOneSpeedy(puzzleText: String): Int {
+//            val state = createInitialState(puzzleText)
+//            val waterSource = Point(500, 0)
+//            val waterMolecules = mutableSetOf<Point>()
+//
+//            while (true) {
+//                // Create a water molecule
+//                var molecule = waterSource.down()
+//                var direction = WaterDirection.DOWN
+//
+//                // Move the jerk down until it hits a something
+//                while (true) {
+//                    if (waterMolecules.count() == 15) {
+//                        println("Hooray")
+//                    }
+//
+//                    if (direction == WaterDirection.DOWN) {
+//                        molecule = goDownUntilColliding(molecule, state, waterMolecules)
+//                    }
+//
+//                    // Okay we are done falling, should we go left or right?
+//                    if (isFree(molecule.left(), state, waterMolecules)) {
+//                        direction = WaterDirection.LEFT
+//                    }
+//                    else if (isFree(molecule.right(), state, waterMolecules)) {
+//                        direction = WaterDirection.RIGHT
+//                    }
+//                    else {
+//                        break
+//                    }
+//
+//                    val tmp: Pair<Point, WaterDirection> = moveHorizontally(direction, molecule, state, waterMolecules)
+//
+//                    molecule = tmp.first
+//                    direction = tmp.second
+//
+//                    if (direction == WaterDirection.STUCK) {
+//                        break
+//                    }
+//                }
+//
+//                waterMolecules.add(molecule)
+//                //println(waterMolecules.size)
+//
+//                println(movingWaterPoints.size)
+//
+//                if (waterMolecules.count() % 2000 == 0) {
+//                    println(renderState(state, waterMolecules))
+//                }
+//            }
+//        }
 
-            while (true) {
-                // Create a water molecule
-                var molecule = waterSource.down()
-                var direction = WaterDirection.DOWN
-
-                // Move the jerk down until it hits a something
-                while (true) {
-                    if (waterMolecules.count() == 15) {
-                        println("Hooray")
-                    }
-
-                    if (direction == WaterDirection.DOWN) {
-                        molecule = goDownUntilColliding(molecule, state, waterMolecules)
-                    }
-
-                    // Okay we are done falling, should we go left or right?
-                    if (isFree(molecule.left(), state, waterMolecules)) {
-                        direction = WaterDirection.LEFT
-                    }
-                    else if (isFree(molecule.right(), state, waterMolecules)) {
-                        direction = WaterDirection.RIGHT
-                    }
-                    else {
-                        break
-                    }
-
-                    val tmp: Pair<Point, WaterDirection> = moveHorizontally(direction, molecule, state, waterMolecules)
-
-                    molecule = tmp.first
-                    direction = tmp.second
-
-                    if (direction == WaterDirection.STUCK) {
-                        break
-                    }
-                }
-
-                waterMolecules.add(molecule)
-                //println(waterMolecules.size)
-
-                println(visited.size)
-
-                if (waterMolecules.count() % 2000 == 0) {
-                    println(renderState(state, waterMolecules))
-                }
-            }
-        }
-
-        private fun moveHorizontally(direction: WaterDirection, molecule: Point, state: Map<Point, Char>, waterMolecules: Set<Point>): Pair<Point, WaterDirection> {
-            var mutableMolecule = molecule
-            visited.add(mutableMolecule)
-
-            if (direction == WaterDirection.LEFT) {
-
-                while (isFree(mutableMolecule.left(), state, waterMolecules)) {
-
-                    // Wait a minute! We should be fallllinnnnggg!!
-                    if (isFree(mutableMolecule.down(), state, waterMolecules)) {
-                        return mutableMolecule to WaterDirection.DOWN
-                    }
-
-                    mutableMolecule = mutableMolecule.left()
-                    visited.add(mutableMolecule)
-                }
-
-                return mutableMolecule to WaterDirection.STUCK
-            }
-            else if (direction == WaterDirection.RIGHT) {
-
-
-                while (isFree(mutableMolecule.right(), state, waterMolecules)) {
-
-                    // Wait a minute! We should be fallllinnnnggg!!
-                    if (isFree(mutableMolecule.down(), state, waterMolecules)) {
-                        return mutableMolecule to WaterDirection.DOWN
-                    }
-
-                    mutableMolecule = mutableMolecule.right()
-                    visited.add(mutableMolecule)
-                }
-
-                return mutableMolecule to WaterDirection.STUCK
-            }
-            else {
-                throw RuntimeException("Oh no")
-            }
-        }
-
-        enum class WaterDirection { STUCK, DOWN, LEFT, RIGHT }
-
-        private fun goDownUntilColliding(molecule: Point, state: Map<Point, Char>, waterMolecules: Set<Point>): Point {
-            var molecule1 = molecule
-            visited.add(molecule1)
-
-            while (isFree(molecule1.down(), state, waterMolecules)) {
-                molecule1 = molecule1.down()
-                visited.add(molecule1)
-            }
-
-            return molecule1
-        }
+//        private fun moveHorizontally(direction: WaterDirection, molecule: Point, state: Map<Point, Char>, waterMolecules: Set<Point>): Pair<Point, WaterDirection> {
+//            var mutableMolecule = molecule
+//            movingWaterPoints.add(mutableMolecule)
+//
+//            if (direction == WaterDirection.LEFT) {
+//
+//                while (isFree(mutableMolecule.left(), state, waterMolecules)) {
+//
+//                    // Wait a minute! We should be fallllinnnnggg!!
+//                    if (isFree(mutableMolecule.down(), state, waterMolecules)) {
+//                        return mutableMolecule to WaterDirection.DOWN
+//                    }
+//
+//                    mutableMolecule = mutableMolecule.left()
+//                    movingWaterPoints.add(mutableMolecule)
+//                }
+//
+//                return mutableMolecule to WaterDirection.STUCK
+//            }
+//            else if (direction == WaterDirection.RIGHT) {
+//
+//
+//                while (isFree(mutableMolecule.right(), state, waterMolecules)) {
+//
+//                    // Wait a minute! We should be fallllinnnnggg!!
+//                    if (isFree(mutableMolecule.down(), state, waterMolecules)) {
+//                        return mutableMolecule to WaterDirection.DOWN
+//                    }
+//
+//                    mutableMolecule = mutableMolecule.right()
+//                    movingWaterPoints.add(mutableMolecule)
+//                }
+//
+//                return mutableMolecule to WaterDirection.STUCK
+//            }
+//            else {
+//                throw RuntimeException("Oh no")
+//            }
+//        }
+//
+//        enum class WaterDirection { STUCK, DOWN, LEFT, RIGHT }
+//
+//        private fun goDownUntilColliding(molecule: Point, state: Map<Point, Char>, waterMolecules: Set<Point>): Point {
+//            var molecule1 = molecule
+//            movingWaterPoints.add(molecule1)
+//
+//            while (isFree(molecule1.down(), state, waterMolecules)) {
+//                molecule1 = molecule1.down()
+//                movingWaterPoints.add(molecule1)
+//            }
+//
+//            return molecule1
+//        }
 
 //        fun goLeftOrRight(molecule: Point, state: Map<Point, Char>, waterMolecules: List<Point>): Point {
 //            var mutableMolecule = molecule
@@ -416,14 +404,14 @@ class Puzzle17Test {
 //            return point.y <= maxY
 //        }
 
-        private fun isFree(point: Point, state: Map<Point, Char>, waterSquares: Set<Point>): Boolean {
-            val maxY = state.keys.maxBy { it.y }!!.y
-            val pointHasNoClay = state[point] != '#'
-            val pointHasNoWater = !waterSquares.contains(point)
-            val pointIsBelowMaxY = point.y <= maxY
-
-            return pointHasNoClay && pointHasNoWater && pointIsBelowMaxY
-        }
+//        private fun isFree(point: Point, state: Map<Point, Char>, waterSquares: Set<Point>): Boolean {
+//            val maxY = state.keys.maxBy { it.y }!!.y
+//            val pointHasNoClay = state[point] != '#'
+//            val pointHasNoWater = !waterSquares.contains(point)
+//            val pointIsBelowMaxY = point.y <= maxY
+//
+//            return pointHasNoClay && pointHasNoWater && pointIsBelowMaxY
+//        }
 
 
         fun solveTwo(puzzleText: String): String {
@@ -508,7 +496,6 @@ class Puzzle17Test {
                 }
             }
         }
-
 
         data class HorizontalLineCommand(val y: Int, val xFrom: Int, val xTo: Int) : LineCommand {
             override fun getPoints(): List<Point> {
