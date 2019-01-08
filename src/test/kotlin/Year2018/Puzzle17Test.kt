@@ -26,20 +26,20 @@ class Puzzle17Test {
 
     @Test
     fun `puzzle example a`() {
-        val (result, _) = puzzle.solveOneFillzors(exampleText)
+        val (result, _) = puzzle.solve(exampleText)
         assertEquals(57, result)
     }
 
     @Test
     fun `puzzle part a`() {
         // 36789 too high
-        val (result, _) = puzzle.solveOneFillzors(puzzleText)
+        val (result, _) = puzzle.solve(puzzleText)
         assertEquals(36787, result)
     }
 
     @Test
     fun `puzzle part b`() {
-        val (_, result) = puzzle.solveOneFillzors(puzzleText)
+        val (_, result) = puzzle.solve(puzzleText)
         assertEquals(29662, result)
     }
 
@@ -48,7 +48,7 @@ class Puzzle17Test {
     class Puzzle17 {
         private val movingWaterPoints = mutableSetOf<Point>()
 
-        fun solveOneFillzors(puzzleText: String): Pair<Int, Int> {
+        fun solve(puzzleText: String): Pair<Int, Int> {
             val state = createInitialState(puzzleText)
             val stateWithWater = state.toMutableMap()
 
@@ -106,15 +106,14 @@ class Puzzle17Test {
 
             movingWaterPoints.forEach { point -> if (!stateWithWater.containsKey(point)) stateWithWater[point] = '|' }
 
-            val waterCount = stateWithWater.entries.filter { it.key.y >= minY && it.key.y <= maxY }.count { it.value == '~' || it.value == '|' }
-            val retainedWaterCount = stateWithWater.entries.filter { it.key.y >= minY && it.key.y <= maxY }.count { it.value == '~' }
+            val waterCount = stateWithWater.entries.filter { it.key.y in minY..maxY }.count { it.value == '~' || it.value == '|' }
+            val retainedWaterCount = stateWithWater.entries.filter { it.key.y in minY..maxY }.count { it.value == '~' }
 
             return waterCount to retainedWaterCount
         }
 
         private fun handleBucket(startingPoint: Point, firstLeftPoint: Point, firstRightPoint: Point, stateWithWater: MutableMap<Point, Char>): Point {
             setHorizontalLine(stateWithWater, firstLeftPoint, firstRightPoint, '~')
-            //println(renderState(stateWithWater))
             var currentPoint = startingPoint.up()
 
             var (leftPoint, leftCollision) = chargeLeftUntilWallOrGap(stateWithWater, currentPoint)
@@ -123,7 +122,6 @@ class Puzzle17Test {
             while (leftCollision == Collision.WALL && rightCollision == Collision.WALL) {
                 // Mark this as still water
                 setHorizontalLine(stateWithWater, leftPoint, rightPoint, '~')
-                //println(renderState(stateWithWater))
 
                 // Move up
                 currentPoint = currentPoint.up()
@@ -211,14 +209,10 @@ class Puzzle17Test {
 
                     val point = Point(x, y)
 
-                    if (state.containsKey(point)) {
-                        state[point]
-                    }
-                    else if (waterSet.contains(point)) {
-                        '|'
-                    }
-                    else {
-                        '.'
+                    when {
+                        state.containsKey(point) -> state[point]
+                        waterSet.contains(point) -> '|'
+                        else -> '.'
                     }
                 }.joinToString("")
             }.joinToString("\n")
