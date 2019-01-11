@@ -50,7 +50,23 @@ class Puzzle19Test {
                 .toMap()
 
             var state = initialState
-            var beforeState = state
+
+//            R3 = 1
+//
+//            do {
+//                if (R1 * R3 == R5) {
+//                    R0 += R1
+//                    R2 = 1
+//                }
+//                else {
+//                    R2 = 0
+//                }
+//
+//                R3 += 1
+//            } while (R3 <= R5)
+
+
+
 
             while (true) {
                 // The instruction pointer contains 0, and so the first instruction is executed (seti 5 0 1).
@@ -60,20 +76,28 @@ class Puzzle19Test {
                 // (which has no effect, as the instruction did not modify register 0),
                 // and then adds one to the instruction pointer.
 
+                if (instructionPointerValue == 2 && state[1] != 0) {
+                    if (state[5] % state[1] == 0) {
+                        state[0] += state[1]
+                    }
+
+                    state[2] = 0
+                    state[3] = state[5]
+                    instructionPointerValue = 12
+                    continue
+                }
+
+
+
                 val instructionText = instructionNumberToInstruction[instructionPointerValue + 2] ?: break
                 val command = Command.from(instructionText)
                 val instruction = Instruction.from(instructionText)
-
-                // Save the previoue state
-                beforeState = state
 
                 // Write instructionPointer to instructionPointer register
                 state = state.setValue(instructionRegister, instructionPointerValue)
 
                 // Execute the instruction
                 state = instruction.execute(state, command)
-
-//                println("ip=${instructionPointerValue + 2} ${beforeState.toList()} $instructionText ${state.toList()}")
 
                 // Read in the instruction pointer value
                 instructionPointerValue = state.getValue(instructionRegister)
@@ -291,7 +315,13 @@ class Puzzle19Test {
             }
         }
 
-        fun toList() = listOf(a, b, c, d, e, f)
+        operator fun get(registerNumber: Int): Int {
+            return getValue(registerNumber)
+        }
+
+        operator fun set(registerNumber: Int, value: Int) {
+            setValue(registerNumber, value)
+        }
 
         fun getValue(registerNumber: Int): Int {
             return when(registerNumber) {

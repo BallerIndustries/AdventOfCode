@@ -22,10 +22,7 @@ class Puzzle8SlickTest {
     class Puzzle8 {
         private var numbers = listOf<Int>()
         private var index = 0
-
-        private fun nextInt(): Int {
-            return numbers[index++]
-        }
+        private fun nextInt() = numbers[index++]
 
         fun solveOne(puzzleText: String): Int {
             numbers = puzzleText.split(" ").map { it.toInt() }
