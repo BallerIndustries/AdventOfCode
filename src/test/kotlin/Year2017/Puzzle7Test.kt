@@ -1,13 +1,40 @@
 package Year2017
 
-import junit.framework.Assert.*
+import junit.framework.Assert.assertEquals
 import org.junit.Test
-import java.lang.RuntimeException
 
 class Puzzle7Test {
     val puzzle = Puzzle7()
     val puzzleText = this::class.java.getResource(
             "/2017/puzzle7.txt").readText().replace("\r", "")
+
+    val exampleText = """
+            pbga (66)
+            xhth (57)
+            ebii (61)
+            havc (66)
+            ktlj (57)
+            fwft (72) -> ktlj, cntj, xhth
+            qoyq (66)
+            padx (45) -> pbga, havc, qoyq
+            tknk (41) -> ugml, padx, fwft
+            jptl (61)
+            ugml (68) -> gyxo, ebii, jptl
+            gyxo (61)
+            cntj (57)
+        """.trimIndent()
+
+    @Test
+    fun `example a`() {
+        val result = puzzle.solveOne(exampleText)
+        assertEquals("tknk", result)
+    }
+
+    @Test
+    fun `example b`() {
+        val result = puzzle.solveTwo(exampleText)
+        assertEquals(60, result)
+    }
 
     @Test
     fun `puzzle part a`() {
@@ -49,12 +76,14 @@ class Puzzle7 {
     }
 
     fun solveTwo(puzzleText: String): Int {
+
+        var uglyDucklingNodeName = ""
+        var conformistDuckNodeName = ""
+
         val graph = buildGraph(puzzleText)
         val rootNodeName = solveOne(puzzleText)
         val rootNode = graph[rootNodeName]!!
         var nodeNameToWeights = rootNode.children.map { it to sumAHorse(graph, it) }
-        var uglyDucklingNodeName = ""
-        var conformistDuckNodeName = ""
 
         while (!nodeNameToWeights.all { it.second == nodeNameToWeights.first().second }) {
 
