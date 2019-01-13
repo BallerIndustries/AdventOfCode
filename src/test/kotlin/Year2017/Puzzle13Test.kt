@@ -27,14 +27,22 @@ class Puzzle13Test {
     }
 
     @Test
+    fun `example part b`() {
+        val result = puzzle.solveTwo(exampleText)
+        assertEquals(10, result)
+    }
+
+    @Test
     fun `puzzle part b`() {
+        // 146664 too low
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("70b856a24d586194331398c7fcfa0aaf", result)
+        assertEquals(3830344, result)
     }
 
     @Test
     fun `1 range layer test`() {
         val layer = Puzzle13.Layer(0, 1)
+
         assertEquals(0, layer.yPosAt(0))
         assertEquals(0, layer.yPosAt(1))
         assertEquals(0, layer.yPosAt(2))
@@ -133,17 +141,36 @@ class Puzzle13 {
     }
 
     fun solveOne(puzzleText: String): Int {
+        val layers = createLayers(puzzleText)
+        return simulateRun(layers, 0)
+    }
+
+    private fun createLayers(puzzleText: String): List<Layer> {
         val layers = puzzleText.split("\n").map {
             val tmp = it.split(": ").map { it.toInt() }
             Layer(tmp[0], tmp[1])
         }
+        return layers
+    }
 
-        // Find all the layers where we run into
-        return layers.filter { layer -> layer.yPosAt(layer.depth) == 0 }
+    private fun simulateRun(layers: List<Layer>, waitFor: Int): Int {
+        return layers.filter { layer -> layer.yPosAt(layer.depth + waitFor) == 0 }
             .sumBy { it.depth * it.range }
     }
 
-    fun solveTwo(puzzleText: String): String {
-        return ""
+    private fun didYouGetCaught(layers: List<Layer>, waitFor: Int): Boolean {
+        return layers.any { layer -> layer.yPosAt(layer.depth + waitFor) == 0 }
+    }
+
+    fun solveTwo(puzzleText: String): Int {
+        val layers = createLayers(puzzleText)
+
+        for (waitFor in 0 .. Int.MAX_VALUE) {
+            if (!didYouGetCaught(layers, waitFor)) {
+                return waitFor
+            }
+        }
+
+        throw RuntimeException("You can't ever do this!")
     }
 }
