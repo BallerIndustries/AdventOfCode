@@ -1,6 +1,7 @@
 package Year2017
 
 import junit.framework.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 
 class Puzzle17Test {
@@ -21,62 +22,73 @@ class Puzzle17Test {
     }
 
     @Test
+    @Ignore("Correct but slow")
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(3129487, result)
+        assertEquals(41797835, result)
     }
 }
 
 class Puzzle17 {
     fun solveOne(puzzleText: String): Int {
         val numberOfSteps = puzzleText.toInt()
-        var currentPosition = 0
-        val buffer = mutableListOf(0)
-
-        (1 .. 2017).forEach { numberToInsert ->
-            val newIndex = (currentPosition + numberOfSteps) % buffer.size
-
-            if (newIndex == buffer.lastIndex) {
-                buffer.add(numberToInsert)
-                currentPosition = buffer.lastIndex
-            }
-            else {
-                buffer.add(newIndex + 1, numberToInsert)
-                currentPosition = newIndex + 1
-            }
-        }
-
-        val index = buffer.indexOf(2017)
-        return buffer[index + 1]
+        val buffer = createSpinBuffer(2017, numberOfSteps)
+        val theNode = buffer.find(2017)
+        return theNode.next!!.data
     }
 
     fun solveTwo(puzzleText: String): Int {
         val numberOfSteps = puzzleText.toInt()
-        var currentPosition = 0
-        val buffer = mutableListOf(0)
+        val buffer = createSpinBuffer(50000000, numberOfSteps)
+        val theNode = buffer.find(0)
+        return theNode.next!!.data
+    }
 
-        (1 .. 50000000).forEach { numberToInsert ->
-
-            if (numberToInsert % 10000 == 0) println(numberToInsert)
-
-
-
-
-
-
-            val newIndex = (currentPosition + numberOfSteps) % buffer.size
-
-            if (newIndex == buffer.lastIndex) {
-                buffer.add(numberToInsert)
-                currentPosition = buffer.lastIndex
-            }
-            else {
-                buffer.add(newIndex + 1, numberToInsert)
-                currentPosition = newIndex + 1
+    data class Node(var previous: Node? = null, var next: Node? = null, val data: Int) {
+        companion object {
+            fun create(data: Int): Node {
+                val node = Node(null, null, data)
+                node.next = node
+                node.previous = node
+                return node
             }
         }
 
-        val index = buffer.indexOf(0)
-        return buffer[index + 1]
+        fun find(data: Int): Node {
+            var dog = this
+            while (dog.data != data) dog = dog.next!!
+            return dog
+        }
+
+        fun nodeAhead(places: Int): Node {
+            var dog = this
+            (0 until places).forEach { dog = dog.next!! }
+            return dog
+        }
+
+        fun insertAhead(nodeToInsert: Node) {
+            val me = this
+            val guyInFront = this.next!!
+
+            me.next = nodeToInsert
+            guyInFront.previous = nodeToInsert
+            nodeToInsert.previous = me
+            nodeToInsert.next = guyInFront
+        }
+    }
+
+    private fun createSpinBuffer(size: Int, numberOfSteps: Int): Node {
+        val zeroNode = Node.create(0)
+        var currentNode = zeroNode
+
+        (1..size).forEach { numberToInsert ->
+            if (numberToInsert % 1000000 == 0) println(numberToInsert)
+
+            currentNode = currentNode.nodeAhead(numberOfSteps)
+            currentNode.insertAhead(Node.create(numberToInsert))
+            currentNode = currentNode.next!!
+        }
+
+        return zeroNode
     }
 }
