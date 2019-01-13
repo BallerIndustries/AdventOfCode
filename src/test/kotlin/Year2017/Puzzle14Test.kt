@@ -29,7 +29,7 @@ class Puzzle14Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(10, result)
+        assertEquals(1074, result)
     }
 }
 
@@ -95,8 +95,6 @@ class Puzzle14 {
     }
 
     private fun getRegion(grid: Map<Point, Char>, point: Point): Set<Point> {
-        println("getResgion point = $point")
-
         val visited = mutableSetOf<Point>()
         val toProcess = mutableListOf(point)
         val region = mutableSetOf(point)
@@ -113,6 +111,4 @@ class Puzzle14 {
 
         return region
     }
-
-
 }
