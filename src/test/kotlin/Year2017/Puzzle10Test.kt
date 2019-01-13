@@ -16,7 +16,19 @@ class Puzzle10Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(1206, result)
+        assertEquals("70b856a24d586194331398c7fcfa0aaf", result)
+    }
+
+    @Test
+    fun `example 1`() {
+        val result = puzzle.solveTwo("")
+        assertEquals("a2582a3a0e66e6e86e3812dcb672a272", result)
+    }
+
+    @Test
+    fun `example 2`() {
+        val result = puzzle.solveTwo("AoC 2017")
+        assertEquals("33efeb34ea91902bb2f59c9920caa6cd", result)
     }
 }
 
@@ -76,7 +88,30 @@ class Puzzle10 {
         }
     }
 
-    fun solveTwo(puzzleText: String): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    fun solveTwo(puzzleText: String): String {
+        val lengths = puzzleText.map { it.toByte() } + listOf<Byte>(17, 31, 73, 47, 23)
+        val listOfNumbers = (0 .. 255).map { it }.toMutableList()
+        var currentPosition = 0
+        var skipSize = 0
+
+        (0 until 64).forEach {
+            lengths.forEach { length ->
+                // Reverse the order of the sublist from currentPosition to currentPosition + length
+                reverseTheJerks(listOfNumbers, currentPosition, length.toInt())
+
+                // Move currentPosition forward by that length plus the skipSize
+                currentPosition = (currentPosition + length + skipSize) % listOfNumbers.size
+
+                // Increase the skip size by one
+                skipSize++
+            }
+        }
+
+        // Create dense hash
+        val chunkyList = listOfNumbers.chunked(16).map { blockOfSixteen ->
+            (blockOfSixteen[0] xor blockOfSixteen[1] xor blockOfSixteen[2] xor blockOfSixteen[3] xor blockOfSixteen[4] xor blockOfSixteen[5] xor blockOfSixteen[6] xor blockOfSixteen[7] xor blockOfSixteen[8] xor blockOfSixteen[9] xor blockOfSixteen[10] xor blockOfSixteen[11] xor blockOfSixteen[12] xor blockOfSixteen[13] xor blockOfSixteen[14] xor blockOfSixteen[15]).toByte()
+        }
+
+        return chunkyList.map { String.format("%02X", it) }.joinToString("").toLowerCase()
     }
 }
