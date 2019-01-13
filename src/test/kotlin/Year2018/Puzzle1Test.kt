@@ -4,6 +4,7 @@ import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import java.io.BufferedReader
 import java.io.File
+import java.util.*
 
 class Puzzle1Test {
     val puzzleText = Puzzle1Test::class.java.getResource("/2018/puzzle1.txt").readText().replace("\r", "")
@@ -51,9 +52,47 @@ class Puzzle1Test {
         val result = puzzle.countChars(file)
         assertEquals(33899, result)
     }
+
+    @Test
+    fun martingale() {
+        // How often can you double your money?
+        val sims = 1000
+        val wins = (0 until sims).map { puzzle.martingaleSim(50000, 200, 55000) }.count { it }
+        val doublePercentage = wins / sims.toDouble()
+        println(doublePercentage)
+
+    }
 }
 
 class Puzzle1 {
+    val random = Random(System.currentTimeMillis())
+
+    fun martingaleSim(principal: Int, minBet: Int, goalAmount: Int): Boolean {
+        var money = principal
+        var currentBet = minBet
+        val moneys = mutableSetOf(money)
+        var turns = 0
+
+        while (money > minBet) {
+            val spin = random.nextInt(37)
+
+            if (spin % 2 == 0 && spin != 0) {
+                money += currentBet
+                currentBet = minBet
+                moneys.add(money)
+            }
+            else {
+                money -= currentBet
+                currentBet *= 2
+            }
+
+            turns++
+        }
+
+        println("You will be playing for ${turns * 5 / 60} hours")
+        return moneys.max()!! > goalAmount
+    }
+
     fun solveOne(puzzleText: String): Int {
         return puzzleText.split("\n").sumBy(this::parseNumber)
     }
