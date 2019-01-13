@@ -1,14 +1,12 @@
 package Year2018
 
 import junit.framework.TestCase.assertEquals
-import org.junit.Assert
 import org.junit.Test
 import java.io.BufferedReader
 import java.io.File
-import java.io.FileInputStream
 
 class Puzzle1Test {
-    val puzzleText = Puzzle1Test::class.java.getResource("/2018/puzzle1.txt").readText().replace("\r", "\n")
+    val puzzleText = Puzzle1Test::class.java.getResource("/2018/puzzle1.txt").readText().replace("\r", "")
     val puzzle = Puzzle1()
 
     @Test

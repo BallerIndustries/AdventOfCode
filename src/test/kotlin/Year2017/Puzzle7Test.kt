@@ -76,7 +76,6 @@ class Puzzle7 {
     }
 
     fun solveTwo(puzzleText: String): Int {
-
         var uglyDucklingNodeName = ""
         var conformistDuckNodeName = ""
 
