@@ -34,31 +34,65 @@ class Puzzle18Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(41797835, result)
+        assertEquals(7620, result)
     }
 }
 
 class Puzzle18 {
-
-    data class State(val programCounter: Long = 0L, val lastSoundPlayed: Long = -1L, val offset: Long = 0L, val recoverInstruction: Long? = null, val registers: Map<Char, Long> = mapOf())
+    data class State(
+        val inbox: MutableList<Long> = mutableListOf(),
+        val outbox: MutableList<Long> = mutableListOf(),
+        val programCounter: Long = 0L,
+        val lastSoundPlayed: Long = -1L,
+        val offset: Long? = null,
+        val recoverInstruction: Long? = null,
+        val registers: Map<Char, Long> = mapOf(),
+        val sendCount: Long = 0L
+    )
 
     fun solveOne(puzzleText: String): Long {
-        val codes = puzzleText.split("\n").map { line -> Instruction.parse(line) }
+        val codes = puzzleText.split("\n").map { line -> Instruction.parsePartOne(line) }
         var state = State()
 
         while (state.recoverInstruction == null) {
-            val instruction = codes[state.programCounter.toInt()]
-            state = instruction.execute(state)
-
-            val programCounter = if (state.offset != 0L) state.programCounter + state.offset else state.programCounter + 1
-            state = state.copy(offset = 0, programCounter = programCounter)
+            state = runProgram(codes, state)
         }
 
         return state.recoverInstruction!!
     }
 
-    fun solveTwo(puzzleText: String): Int {
-        return 348934983
+    private fun runProgram(codes: List<Instruction>, programStateConst: State): State {
+        var programState = programStateConst
+        val instruction = codes[programState.programCounter.toInt()]
+        programState = instruction.execute(programState)
+
+        val programCounter = if (programState.offset != null) programState.programCounter + programState.offset!! else programState.programCounter + 1
+        programState = programState.copy(offset = null, programCounter = programCounter)
+
+        return programState
+    }
+
+    fun solveTwo(puzzleText: String): Long {
+        val codes = puzzleText.split("\n").map { line -> Instruction.parsePartTwo(line) }
+        val programZeroQueue = mutableListOf<Long>()
+        val programOneQueue = mutableListOf<Long>()
+
+        var programZeroState = State(inbox = programZeroQueue, outbox = programOneQueue, registers = mapOf('p' to 0L))
+        var programOneState = State(inbox = programOneQueue, outbox = programZeroQueue, registers = mapOf('p' to 1L))
+
+        while (true) {
+            val programeZeroInstruction = codes[programZeroState.programCounter.toInt()]
+            val programeOneInstruction = codes[programOneState.programCounter.toInt()]
+
+            if (programeOneInstruction is Receive && programeZeroInstruction is Receive && programZeroQueue.isEmpty() && programOneQueue.isEmpty()) {
+                break
+            }
+
+            programZeroState = runProgram(codes, programZeroState)
+            programOneState = runProgram(codes, programOneState)
+        }
+
+        return programOneState.sendCount
     }
 
     data class Snd(val x: String) : Instruction {
@@ -110,6 +144,30 @@ class Puzzle18 {
         }
     }
 
+    data class Receive(val x: Char): Instruction {
+        override fun execute(state: State): State {
+            if (state.inbox.isEmpty()) {
+                println("inbox is empty, will wait for one cycle and try again")
+                return state.copy(offset = 0)
+            }
+            else {
+                val thejur = state.inbox.removeAt(0)
+                println("setting $x = $thejur from the message queue")
+                val newRegisters = state.registers + (x to thejur)
+                return state.copy(registers = newRegisters)
+            }
+        }
+    }
+
+    data class Send(val x: Char): Instruction {
+        override fun execute(state: State): State {
+            val xValue = getValueOrRegister(state, x.toString())
+            state.outbox.add(xValue)
+            println("sending $xValue to the other program's message queue")
+            return state.copy(sendCount = state.sendCount + 1)
+        }
+    }
+
     data class Rcv(val x: Char) : Instruction {
         override fun execute(state: State): State {
             val xValue = getValueOrRegister(state, x.toString())
@@ -142,7 +200,7 @@ class Puzzle18 {
 
     interface Instruction {
         companion object {
-            fun parse(text: String): Instruction {
+            fun parsePartOne(text: String): Instruction {
                 val tmp = text.split(" ")
 
                 return when (tmp[0]) {
@@ -152,6 +210,21 @@ class Puzzle18 {
                     "mul" -> Mul(tmp[1][0], tmp[2])
                     "mod" -> Mod(tmp[1][0], tmp[2])
                     "rcv" -> Rcv(tmp[1][0])
+                    "jgz" -> Jgz(tmp[1][0], tmp[2])
+                    else -> throw RuntimeException("fuck!")
+                }
+            }
+
+            fun parsePartTwo(text: String): Instruction {
+                val tmp = text.split(" ")
+
+                return when (tmp[0]) {
+                    "snd" -> Send(tmp[1][0])
+                    "set" -> Set(tmp[1][0], tmp[2])
+                    "add" -> Add(tmp[1][0], tmp[2])
+                    "mul" -> Mul(tmp[1][0], tmp[2])
+                    "mod" -> Mod(tmp[1][0], tmp[2])
+                    "rcv" -> Receive(tmp[1][0])
                     "jgz" -> Jgz(tmp[1][0], tmp[2])
                     else -> throw RuntimeException("fuck!")
                 }
