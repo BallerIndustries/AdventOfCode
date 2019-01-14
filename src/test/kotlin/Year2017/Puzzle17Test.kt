@@ -1,7 +1,6 @@
 package Year2017
 
 import junit.framework.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Test
 
 class Puzzle17Test {
@@ -22,7 +21,6 @@ class Puzzle17Test {
     }
 
     @Test
-    @Ignore("Correct but slow")
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(41797835, result)
@@ -44,12 +42,11 @@ class Puzzle17 {
         return theNode.next!!.data
     }
 
-    data class Node(var previous: Node? = null, var next: Node? = null, val data: Int) {
+    data class Node(var next: Node? = null, val data: Int) {
         companion object {
             fun create(data: Int): Node {
-                val node = Node(null, null, data)
+                val node = Node(null, data)
                 node.next = node
-                node.previous = node
                 return node
             }
         }
@@ -71,8 +68,6 @@ class Puzzle17 {
             val guyInFront = this.next!!
 
             me.next = nodeToInsert
-            guyInFront.previous = nodeToInsert
-            nodeToInsert.previous = me
             nodeToInsert.next = guyInFront
         }
     }
