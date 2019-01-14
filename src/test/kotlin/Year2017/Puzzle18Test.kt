@@ -39,112 +39,104 @@ class Puzzle18Test {
 }
 
 class Puzzle18 {
-    companion object {
-        var lastSoundPlayed = -1L
-        var offset = 0L
-        var recoverInstruction = 0L
-    }
+
+    data class State(val programCounter: Long = 0L, val lastSoundPlayed: Long = -1L, val offset: Long = 0L, val recoverInstruction: Long? = null, val registers: Map<Char, Long> = mapOf())
 
     fun solveOne(puzzleText: String): Long {
         val codes = puzzleText.split("\n").map { line -> Instruction.parse(line) }
-        var state = mapOf<Char, Long>()
-        var programCounter = 0L
+        var state = State()
 
-        while (true) {
-            val instruction = codes[programCounter.toInt()]
-
-            println(instruction)
-            println(state)
-            println("programCounter = $programCounter")
+        while (state.recoverInstruction == null) {
+            val instruction = codes[state.programCounter.toInt()]
             state = instruction.execute(state)
-            println()
-            programCounter = if (offset != 0L) programCounter + offset else programCounter + 1
-            offset = 0
 
-            if (recoverInstruction != 0L) {
-                return recoverInstruction
-            }
+            val programCounter = if (state.offset != 0L) state.programCounter + state.offset else state.programCounter + 1
+            state = state.copy(offset = 0, programCounter = programCounter)
         }
+
+        return state.recoverInstruction!!
     }
 
     fun solveTwo(puzzleText: String): Int {
         return 348934983
     }
 
-
     data class Snd(val x: String) : Instruction {
-        override fun execute(state: Map<Char, Long>): Map<Char, Long> {
-            lastSoundPlayed = getValueOrRegister(state, x)
+        override fun execute(state: State): State {
+            val lastSoundPlayed = getValueOrRegister(state, x)
             println("playing sound with frequency = $x")
-            return state
+            return state.copy(lastSoundPlayed = lastSoundPlayed)
         }
     }
 
     data class Set(val x: Char, val y: String) : Instruction {
-        override fun execute(state: Map<Char, Long>): Map<Char, Long> {
+        override fun execute(state: State): State {
             // Set register x to the value of y
             val yValue = getValueOrRegister(state, y)
             println("setting $x = $yValue")
-            return state + (x to yValue)
+            val newRegisters = state.registers + (x to yValue)
+            return state.copy(registers = newRegisters)
         }
     }
 
     data class Add(val x: Char, val y: String) : Instruction {
-        override fun execute(state: Map<Char, Long>): Map<Char, Long> {
+        override fun execute(state: State): State {
             val yValue = getValueOrRegister(state, y)
-            val xValue = state[x] ?: 0
+            val xValue = getValueOrRegister(state, x.toString())
             println("setting $x = $xValue + $yValue")
-            return state + (x to xValue + yValue)
+
+            val newRegisters = state.registers + (x to xValue + yValue)
+            return state.copy(registers = newRegisters)
         }
     }
 
     data class Mul(val x: Char, val y: String) : Instruction {
-        override fun execute(state: Map<Char, Long>): Map<Char, Long> {
+        override fun execute(state: State): State {
             val yValue = getValueOrRegister(state, y)
-            val xValue = state[x] ?: 0
+            val xValue = getValueOrRegister(state, x.toString())
             println("setting $x = $xValue * $yValue")
-            return state + (x to xValue * yValue)
+            val newRegisters = state.registers + (x to xValue * yValue)
+            return state.copy(registers = newRegisters)
         }
     }
 
     data class Mod(val x: Char, val y: String) : Instruction {
-        override fun execute(state: Map<Char, Long>): Map<Char, Long> {
+        override fun execute(state: State): State {
             val yValue = getValueOrRegister(state, y)
-            val xValue = state[x] ?: 0
+            val xValue = getValueOrRegister(state, x.toString())
             println("setting $x = $xValue % $yValue")
-            return state + (x to xValue % yValue)
+            val newRegisters = state.registers + (x to xValue % yValue)
+            return state.copy(registers = newRegisters)
         }
     }
 
     data class Rcv(val x: Char) : Instruction {
-        override fun execute(state: Map<Char, Long>): Map<Char, Long> {
+        override fun execute(state: State): State {
             val xValue = getValueOrRegister(state, x.toString())
 
             if (xValue != 0L) {
-                recoverInstruction = lastSoundPlayed
+                return state.copy(recoverInstruction = state.lastSoundPlayed)
             }
             else {
                 println("failed to recover, $x = $xValue")
+                return state
             }
-
-            return state
         }
     }
 
     data class Jgz(val x: Char, val y: String) : Instruction {
-        override fun execute(state: Map<Char, Long>): Map<Char, Long> {
+        override fun execute(state: State): State {
             val xValue = getValueOrRegister(state, x.toString())
             val yValue = getValueOrRegister(state, y)
 
             if (xValue > 0) {
                 println("jumping offset = $yValue")
-                offset = yValue
+                return state.copy(offset = yValue)
             }
             else {
                 println("skipping jump $x = 0")
+                return state
             }
-
-            return state
         }
     }
 
@@ -166,14 +158,13 @@ class Puzzle18 {
             }
         }
 
-        fun execute(state: Map<Char, Long>): Map<Char, Long>
+        fun execute(state: State): State
 
-        fun getValueOrRegister(state: Map<Char, Long>, valueOrRegister: String): Long {
-            if (valueOrRegister.toLongOrNull() != null) {
-                return valueOrRegister.toLong()
-            }
-            else {
-                return state[valueOrRegister[0]] ?: 0
+        fun getValueOrRegister(state: State, valueOrRegister: String): Long {
+            return if (valueOrRegister.toLongOrNull() != null) {
+                valueOrRegister.toLong()
+            } else {
+                state.registers[valueOrRegister[0]] ?: 0
             }
         }
     }
