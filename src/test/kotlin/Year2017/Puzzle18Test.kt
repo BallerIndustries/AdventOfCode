@@ -6,23 +6,40 @@ import org.junit.Test
 class Puzzle18Test {
     val puzzle = Puzzle18()
     val puzzleText = this::class.java.getResource("/2017/puzzle18.txt").readText().replace("\r", "")
-    val exampleText = """
-        set a 1
-        add a 2
-        mul a a
-        mod a 5
-        snd a
-        set a 0
-        rcv a
-        jgz a -1
-        set a 1
-        jgz a -2
-    """.trimIndent()
 
     @Test
     fun `example part a`() {
+        val exampleText = """
+            set a 1
+            add a 2
+            mul a a
+            mod a 5
+            snd a
+            set a 0
+            rcv a
+            jgz a -1
+            set a 1
+            jgz a -2
+        """.trimIndent()
+
         val result = puzzle.solveOne(exampleText)
         assertEquals(4, result)
+    }
+
+    @Test
+    fun `example part b`() {
+        val exampleText = """
+            snd 1
+            snd 2
+            snd p
+            rcv a
+            rcv b
+            rcv c
+            rcv d
+        """.trimIndent()
+
+        val result = puzzle.solveTwo(exampleText)
+        assertEquals(3, result)
     }
 
     @Test
