@@ -69,15 +69,9 @@ class Puzzle20 {
         var particles = parseParticles(puzzleText)
 
         (0 until 1000).forEach { time ->
-
             particles = particles.map { it.tick() }
             val collidedParticles = particles.groupBy { it.position }.filter { it.value.size > 1 }.flatMap { it.value }.map { it.particleNumber }.toSet()
-
             particles = particles.filter { !collidedParticles.contains(it.particleNumber) }
-//            println(particles.count())
-
-
-
         }
 
         return particles.count()
