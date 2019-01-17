@@ -3,8 +3,6 @@ package Year2017
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 import java.lang.RuntimeException
-import kotlin.math.cos
-import kotlin.math.sin
 
 class Puzzle21Test {
     val puzzle = Puzzle21()
@@ -59,7 +57,7 @@ class Puzzle21 {
     data class Point(val x: Int, val y: Int)
 
     data class Pattern(val data: Map<Point, Char>) {
-        fun width() = data.keys.maxBy { it.x }!!.x
+        fun width() = data.keys.maxBy { it.x }!!.x + 1
 
         val twoByTwoRotate = mapOf(
             Point(0, 0) to Point(1, 0),
@@ -84,7 +82,7 @@ class Puzzle21 {
 
         fun rotateRight(): Pattern {
             val width = width()
-            val rotateMatrix = if (width == 1) twoByTwoRotate else if (width == 2) threeByThreeRotate else throw RuntimeException()
+            val rotateMatrix = if (width == 2) twoByTwoRotate else if (width == 3) threeByThreeRotate else throw RuntimeException()
 
             val dog = data.map { (point, char) ->
                 rotateMatrix[point]!! to char
@@ -123,11 +121,29 @@ class Puzzle21 {
             return Pattern(mirroredData)
         }
 
-        override fun toString(): String {
-            val width = width().toInt()
+        fun giveMeThePengestCombos(): List<Pattern> {
 
-            val dog = (0 .. width).map { y ->
-                (0 .. width).map { x ->
+            return listOf(
+                this,
+                this.rotateRight(),
+                this.mirrorVertical(),
+                this.mirrorHorizontal(),
+
+                this.rotateRight().rotateRight(),
+                this.rotateRight().mirrorVertical(),
+                this.rotateRight().mirrorHorizontal(),
+
+                this.rotateRight().rotateRight().rotateRight(),
+                this.rotateRight().rotateRight().mirrorVertical(),
+                this.rotateRight().rotateRight().mirrorHorizontal()
+            )
+        }
+
+        override fun toString(): String {
+            val width = width()
+
+            val dog = (0 until width).map { y ->
+                (0 until width).map { x ->
 
                     val point = Point(x, y)
                     this.data[point]!!
@@ -136,14 +152,33 @@ class Puzzle21 {
 
             return dog
         }
+
+        fun split(count: Int): List<Pattern> {
+
+
+
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
     }
 
     fun solveOne(puzzleText: String): Int {
         // Parse the puzzleText
-        val enhancements = puzzleText.split("\n").associate { line ->
+        val enhancements = puzzleText.split("\n").flatMap { line ->
             val (from, to) = line.split(" => ").map { parsePattern(it) }
-            from to to
+            from.giveMeThePengestCombos().map { it to to }
+        }.toMap()
+
+
+        var currentPattern = ".#./..#/###"
+
+        (0 until 5).forEach {
+
+            val windows: List<Pattern> = splitUpPattern(currentPattern)
+
+
+
         }
+
 
 
 
@@ -153,6 +188,20 @@ class Puzzle21 {
 
 
         return 0
+    }
+
+    private fun splitUpPattern(patternText: String): List<Pattern> {
+        val pattern = parsePattern(patternText)
+
+        if (pattern.width() % 2 == 0) {
+            // Multiple of two
+            return pattern.split(2)
+        }
+        else {
+            // Multiple of three
+            return pattern.split(3)
+
+        }
     }
 
     fun parsePattern(text: String): Pattern {
