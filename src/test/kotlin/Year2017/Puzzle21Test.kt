@@ -125,6 +125,7 @@ class Puzzle21 {
 
             return listOf(
                 this,
+
                 this.rotateRight(),
                 this.mirrorVertical(),
                 this.mirrorHorizontal(),
@@ -135,7 +136,11 @@ class Puzzle21 {
 
                 this.rotateRight().rotateRight().rotateRight(),
                 this.rotateRight().rotateRight().mirrorVertical(),
-                this.rotateRight().rotateRight().mirrorHorizontal()
+                this.rotateRight().rotateRight().mirrorHorizontal(),
+
+                this.rotateRight().rotateRight().rotateRight().rotateRight(),
+                this.rotateRight().rotateRight().rotateRight().mirrorVertical(),
+                this.rotateRight().rotateRight().rotateRight().mirrorHorizontal()
             )
         }
 
@@ -154,10 +159,34 @@ class Puzzle21 {
         }
 
         fun split(count: Int): List<Pattern> {
+            if (count != 2 && count != 3) throw RuntimeException("WOaaahhh!!! NO!!!!")
+
+            var place = Point(0, 0)
+            val width = width()
+
+            while (true) {
+
+                if (place.x > width) {
+                    val subPattern = getPattern(place, count)
+                }
+
+
+
+
+            }
+
 
 
 
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        private fun getPattern(place: Point, count: Int): Pattern {
+            (place.x until place.x + count).map { x ->
+                (place.y until place.y + count)
+
+
+            }
         }
     }
 
