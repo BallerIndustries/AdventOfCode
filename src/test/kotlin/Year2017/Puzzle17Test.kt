@@ -1,6 +1,7 @@
 package Year2017
 
 import junit.framework.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 
 class Puzzle17Test {
@@ -21,6 +22,7 @@ class Puzzle17Test {
     }
 
     @Test
+    @Ignore("Works but too slow")
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(41797835, result)

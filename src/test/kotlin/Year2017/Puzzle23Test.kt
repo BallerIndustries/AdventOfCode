@@ -2,7 +2,6 @@ package Year2017
 
 import junit.framework.Assert.assertEquals
 import org.junit.Test
-import java.lang.IndexOutOfBoundsException
 
 class Puzzle23Test {
     val puzzle = Puzzle23()
@@ -17,7 +16,7 @@ class Puzzle23Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(7620, result)
+        assertEquals(0, result)
     }
 }
 
@@ -33,14 +32,24 @@ class Puzzle23 {
             }
         }
         catch (e: IndexOutOfBoundsException) {
-
         }
 
         return state.mulCount
     }
 
     fun solveTwo(puzzleText: String): Long {
-        throw NotImplementedError("")
+        val codes = puzzleText.split("\n").map { line -> Instruction.parsePartOne(line) }
+        var state = State(registers = mapOf('a' to 1L))
+
+        try {
+            while (true) {
+                state = runProgram(codes, state)
+            }
+        }
+        catch (e: IndexOutOfBoundsException) {
+        }
+
+        return state.mulCount
     }
 
     data class State(

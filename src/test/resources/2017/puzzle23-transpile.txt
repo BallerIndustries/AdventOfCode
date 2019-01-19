@@ -1,0 +1,36 @@
+01 set b 84                // b = 84
+02 set c b                 // c = b
+03 jnz a 2                 // if (a == 0) {
+04 jnz 1 5                 //
+05 mul b 100               //   b = b * 100
+                           // }
+06 sub b -100000           // b += 100000
+07 set c b                 // c = b
+08 sub c -17000            // c += 17000
+09 set f 1                 // f = 1
+10 set d 2                 // d = 2
+11 set e 2                 // e = 2
+12 set g d                 // g = d
+13 mul g e                 // g *= e
+14 sub g b                 // g -= b
+15 jnz g 2                 // if (g == 0) {
+16 set f 0                 //   f = 0
+17 sub e -1                //   e++
+                           // }
+18 set g e                 // g = e
+19 sub g b                 // g -= b
+20 jnz g -8                // if (g == 0) GOTO instruction #12
+21 sub d -1                // d++
+22 set g d                 // g -= d
+23 sub g b                 // g -= b
+24 jnz g -13               // if (g == 0) GOTO instruction #11
+25 jnz f 2                 // if (f == 0)
+26 sub h -1                //   h++
+27 set g b                 //   g = b
+                           // }
+28 sub g c                 // g -= c
+29 jnz g 2                 // if (g == 0) {
+30 jnz 1 3                 //
+31 sub b -17               //
+                           // }
+32 jnz 1 -23               // if (1 != 0) GOTO instruction #9

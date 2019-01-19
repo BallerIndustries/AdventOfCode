@@ -1,8 +1,8 @@
 package Year2017
 
 import junit.framework.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
-import java.lang.RuntimeException
 
 class Puzzle21Test {
     val puzzle = Puzzle21()
@@ -15,6 +15,7 @@ class Puzzle21Test {
     }
 
     @Test
+    @Ignore("Works, but too slow")
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(3081737, result)
