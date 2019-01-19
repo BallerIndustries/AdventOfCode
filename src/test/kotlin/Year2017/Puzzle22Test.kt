@@ -22,8 +22,34 @@ class Puzzle22Test {
 }
 
 class Puzzle22 {
+    data class Point(val x: Int, val y: Int)
+
     fun solveOne(puzzleText: String): Int {
+        val grid = parseGrid(puzzleText).toMutableMap()
+        println(grid)
+
+        val
+
+
+
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    private fun parseGrid(puzzleText: String): Map<Point, Char> {
+        val lines = puzzleText.split("\n")
+        val height = lines.count()
+        val width = lines.first().count()
+
+        val grid = (0 until width).flatMap { x ->
+            (0 until height).map { y ->
+
+                val p = Point(x, y)
+                val c = lines[y][x]
+
+                p to c
+            }
+        }.toMap()
+        return grid
     }
 
     fun solveTwo(puzzleText: String): Int {
