@@ -6,17 +6,28 @@ import org.junit.Test
 class Puzzle22Test {
     val puzzle = Puzzle22()
     val puzzleText = this::class.java.getResource("/2017/puzzle22.txt").readText().replace("\r", "")
-
     val exampleText = """
-            ..#
-            #..
-            ...
-        """.trimIndent()
+        ..#
+        #..
+        ...
+    """.trimIndent()
 
     @Test
     fun `example part a`() {
         val result = puzzle.solveOne(exampleText)
         assertEquals(5587, result)
+    }
+
+    @Test
+    fun `example part b 100 iterations`() {
+        val result = puzzle.solveTwo(exampleText, 100)
+        assertEquals(26, result)
+    }
+
+    @Test
+    fun `example part b`() {
+        val result = puzzle.solveTwo(exampleText)
+        assertEquals(2511944, result)
     }
 
     @Test
@@ -27,8 +38,8 @@ class Puzzle22Test {
 
     @Test
     fun `puzzle part a`() {
-        val result = puzzle.solveOne(puzzleText)
         // 4999 to low
+        val result = puzzle.solveOne(puzzleText)
         assertEquals(0, result)
     }
 
@@ -40,7 +51,28 @@ class Puzzle22Test {
 }
 
 class Puzzle22 {
-    enum class Direction { UP, DOWN, LEFT, RIGHT;
+    enum class NodeState(val char: Char?) {
+        CLEAN(null), WEAKENED('W'), INFECTED('#'), FLAGGED('F');
+
+        companion object {
+            fun from(char: Char?): NodeState {
+                val match = NodeState.values().find { it.char == char }!!
+                return match
+            }
+        }
+
+        fun becomeVirused(): NodeState {
+            return when (this) {
+                CLEAN -> WEAKENED
+                WEAKENED -> INFECTED
+                INFECTED -> FLAGGED
+                FLAGGED -> CLEAN
+            }
+        }
+    }
+
+    enum class Direction {
+        UP, DOWN, LEFT, RIGHT;
 
         fun left(): Direction {
             return when(this) {
@@ -57,6 +89,15 @@ class Puzzle22 {
                 DOWN -> LEFT
                 LEFT -> UP
                 RIGHT -> DOWN
+            }
+        }
+
+        fun reverse(): Puzzle22.Direction {
+            return when(this) {
+                UP -> DOWN
+                DOWN -> UP
+                LEFT -> RIGHT
+                RIGHT -> LEFT
             }
         }
     }
@@ -82,13 +123,6 @@ class Puzzle22 {
         var infectionsCaused = 0
 
         (0 until iterations).forEach {
-
-//            println("currentPoint = $currentPoint direction = $direction")
-//            println(printState(grid, currentPoint))
-//            println()
-//            println()
-//            println()
-
             direction = if (grid[currentPoint] == '#') direction.right() else direction.left()
 
             // toggle whether char is or is not infected
@@ -101,15 +135,12 @@ class Puzzle22 {
 
             grid[currentPoint] = newPointData
             currentPoint = currentPoint.move(direction)
-
-
         }
 
         return infectionsCaused
     }
 
     private fun printState(grid: Map<Point, Char?>, currentPoint: Point): String {
-
         val maxX = grid.keys.maxBy { it.x }!!.x
         val maxY = grid.keys.maxBy { it.y }!!.y
 
@@ -147,7 +178,41 @@ class Puzzle22 {
         return grid
     }
 
-    fun solveTwo(puzzleText: String): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    fun solveTwo(puzzleText: String, iterations: Int = 10000000): Int {
+        val grid = parseGrid(puzzleText).toMutableMap()
+        val width = grid.keys.maxBy { it.x }!!.x
+        val height = grid.keys.maxBy { it.y }!!.y
+
+        var currentPoint = Point(width / 2, height / 2)
+        var direction = Direction.UP
+        var infectionCount = 0
+
+        (0 until iterations).forEach {
+
+            // Write some code Angus!
+            val currentState = grid[currentPoint]
+            direction = when (currentState) {
+                null -> direction.left()
+                'W' -> direction
+                '#' -> direction.right()
+                'F' -> direction.reverse()
+                else -> throw RuntimeException("Oh no!")
+            }
+
+            // toggle whether char is or is not infected
+            val currentPointData = grid[currentPoint]
+            val currentPointState = NodeState.from(currentPointData)
+
+            val newPointData = currentPointState.becomeVirused()
+
+            if (newPointData == NodeState.INFECTED) {
+                infectionCount++
+            }
+
+            grid[currentPoint] = newPointData.char
+            currentPoint = currentPoint.move(direction)
+        }
+
+        return infectionCount
     }
 }
