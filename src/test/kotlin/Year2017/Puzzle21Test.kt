@@ -11,7 +11,7 @@ class Puzzle21Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(170, result)
+        assertEquals(197, result)
     }
 
     @Test
@@ -50,6 +50,27 @@ class Puzzle21Test {
         val pattern = puzzle.parsePattern("###/.../...")
         assertEquals("###/.../...", pattern.toString())
         assertEquals(".../.../###", pattern.mirrorVertical().toString())
+    }
+
+    @Test
+    fun `spit 4x4 into 4 2x2s patterns`() {
+        val pattern = puzzle.parsePattern("..../..../..../.###")
+        val patterns = pattern.split(2)
+
+        assertEquals(listOf(
+            puzzle.parsePattern("../.."),
+            puzzle.parsePattern("../.."),
+            puzzle.parsePattern("../.#"),
+            puzzle.parsePattern("../##")
+        ), patterns)
+    }
+
+    @Test
+    fun `split and then join, should get the same pattern`() {
+        val pattern = puzzle.parsePattern("..../..../..../.###")
+        val splitAndJoined = puzzle.joinWindows(pattern.split(2))
+        assertEquals(splitAndJoined, pattern)
+
     }
 }
 
@@ -159,34 +180,45 @@ class Puzzle21 {
         }
 
         fun split(count: Int): List<Pattern> {
+
             if (count != 2 && count != 3) throw RuntimeException("WOaaahhh!!! NO!!!!")
 
             var place = Point(0, 0)
             val width = width()
 
-            while (true) {
+            val returnList = mutableListOf<Pattern>()
 
-                if (place.x > width) {
-                    val subPattern = getPattern(place, count)
+            while (place.y < width) {
+                val subPattern = getPattern(place, count)
+                returnList.add(subPattern)
+
+                if (place.x + count < width) {
+                    place = place.copy(x = place.x + count)
+                }
+                else {
+                    place = place.copy(x = 0, y = place.y + count)
                 }
 
 
-
-
             }
 
-
-
-
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            return returnList
         }
 
         private fun getPattern(place: Point, count: Int): Pattern {
-            (place.x until place.x + count).map { x ->
-                (place.y until place.y + count)
+            //println("getPattern()")
+
+            val dog = (place.x until place.x + count).flatMap { x ->
+                (place.y until place.y + count).map { y ->
+                    val point = Point(x, y)
+                    //println(point)
+                    point.copy(x = x - place.x, y = y - place.y) to this.data[point]!!
+                }
+            }.toMap()
 
 
-            }
+
+            return Pattern(dog)
         }
     }
 
@@ -197,29 +229,39 @@ class Puzzle21 {
             from.giveMeThePengestCombos().map { it to to }
         }.toMap()
 
-
         var currentPattern = ".#./..#/###"
 
         (0 until 5).forEach {
-
             val windows: List<Pattern> = splitUpPattern(currentPattern)
-
-
-
+            val enhancedWindows = windows.map { enhancements[it]!! }
+            currentPattern = joinWindows(enhancedWindows).toString()
         }
 
-
-
-
-
-
-
-
-
-        return 0
+        return currentPattern.count { it == '#' }
     }
 
-    private fun splitUpPattern(patternText: String): List<Pattern> {
+    fun joinWindows(enhancedWindows: List<Pattern>): Pattern {
+        val joinedWidth = Math.sqrt(enhancedWindows.size.toDouble()).toInt()
+        val subPatternWidth = enhancedWindows.first().width()
+
+        val pushedWindows = enhancedWindows.mapIndexed { index, window: Pattern ->
+            val offsetX = (index % joinedWidth) * subPatternWidth
+            val offsetY = (index / joinedWidth) * subPatternWidth
+            val offset = Point(offsetX, offsetY)
+
+            val pushedData = window.data.map { (point, char) ->
+                val newPoint = point.copy(x = point.x + offset.x, y = point.y + offset.y)
+                newPoint to char
+            }.toMap()
+
+            Pattern(pushedData)
+        }
+
+        val allData = pushedWindows.flatMap { it.data.entries }.associate { it.key to it.value }
+        return Pattern(allData)
+    }
+
+    fun splitUpPattern(patternText: String): List<Pattern> {
         val pattern = parsePattern(patternText)
 
         if (pattern.width() % 2 == 0) {
@@ -229,7 +271,6 @@ class Puzzle21 {
         else {
             // Multiple of three
             return pattern.split(3)
-
         }
     }
 
