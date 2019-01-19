@@ -10,7 +10,7 @@ class Puzzle25Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(0, result)
+        assertEquals(633, result)
     }
 
     @Test
@@ -21,7 +21,6 @@ class Puzzle25Test {
 }
 
 class Puzzle25 {
-
     enum class Direction {
         LEFT, RIGHT;
 
@@ -36,16 +35,7 @@ class Puzzle25 {
         }
     }
 
-    data class State(
-        val name: String,
-        val zeroWrite: Int,
-        val zeroDirection: Direction,
-        val zeroNextState: String,
-        val oneWrite: Int,
-        val oneDirection: Direction,
-        val oneNextState: String
-    ) {
-
+    data class State(val name: String, val zeroWrite: Int, val zeroDirection: Direction, val zeroNextState: String, val oneWrite: Int, val oneDirection: Direction, val oneNextState: String) {
         companion object {
             fun parse(text: String): State {
                 val dog = text.split("\n").map { it.split(" ") }
@@ -64,16 +54,6 @@ class Puzzle25 {
         }
     }
 
-//    val states = listOf(
-//        State("A", zeroWrite = 1, zeroDirection = Direction.RIGHT, zeroNextState = "B", ),
-//        State("B"),
-//        State("C"),
-//        State("D"),
-//        State("E"),
-//        State("F")
-//
-//    )
-
     fun solveOne(puzzleText: String): Int {
         val lines = puzzleText.split("\n")
         val initialState = lines[0].split(" ").last().replace(".", "")
@@ -87,8 +67,6 @@ class Puzzle25 {
         val paper = mutableMapOf<Int, Int>()
 
         (0 until steps).forEach { opNum ->
-//            println(opNum)
-
             val numberAtPos = paper[currentX] ?: 0
             val currentState = states[currentStateName]!!
 
