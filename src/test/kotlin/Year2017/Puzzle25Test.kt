@@ -15,8 +15,7 @@ class Puzzle25Test {
 
     @Test
     fun `puzzle part b`() {
-        val result = puzzle.solveTwo(puzzleText)
-        assertEquals(0, result)
+        println("Merry Christmas Angus Cheng")
     }
 }
 

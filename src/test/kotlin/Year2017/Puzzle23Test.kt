@@ -1,7 +1,6 @@
 package Year2017
 
 import junit.framework.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Test
 
 class Puzzle23Test {
@@ -15,10 +14,9 @@ class Puzzle23Test {
     }
 
     @Test
-    @Ignore("Toooo slow")
     fun `puzzle part b`() {
-        val result = puzzle.solveTwo(puzzleText)
-        assertEquals(0, result)
+        val result = puzzle.solveTwo()
+        assertEquals(903, result)
     }
 }
 
@@ -33,8 +31,7 @@ class Puzzle23 {
         return state.mulCount
     }
 
-    fun solveTwo(fuckOff: String): Long {
-
+    fun solveTwo(): Long {
         var a = 1L
         var b = 0L
         var c = 0L
@@ -53,7 +50,6 @@ class Puzzle23 {
         }
 
         do {
-
             f = 1
             d = 2
             e = 2
