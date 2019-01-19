@@ -23,35 +23,59 @@ class Puzzle23Test {
 }
 
 class Puzzle23 {
-
     fun solveOne(puzzleText: String): Long {
         val codes = puzzleText.split("\n").map { line -> Instruction.parsePartOne(line) }
         var state = State()
 
-        try {
-            while (true) {
-                state = runProgram(codes, state)
-            }
-        }
-        catch (e: IndexOutOfBoundsException) {
-        }
+        try { while (true) state = runProgram(codes, state) }
+        catch (e: IndexOutOfBoundsException) { }
 
         return state.mulCount
     }
 
-    fun solveTwo(puzzleText: String): Long {
-        val codes = puzzleText.split("\n").map { line -> Instruction.parsePartOne(line) }
-        var state = State(registers = mapOf('a' to 1L))
+    fun solveTwo(fuckOff: String): Long {
 
-        try {
-            while (true) {
-                state = runProgram(codes, state)
+        var a = 1L
+        var b = 0L
+        var c = 0L
+        var d = 0L
+        var e = 0L
+        var f = 0L
+        var g = 0L
+        var h = 0L
+
+        b = 84
+        c = b
+
+        if (a != 0L) {
+            b = b * 100 + 100000
+            c = b + 17000
+        }
+
+        do {
+
+            f = 1
+            d = 2
+            e = 2
+
+            while (d * d <= b) {
+                if (b % d == 0L) {
+                    f = 0
+                    break
+                }
+
+                d++
             }
-        }
-        catch (e: IndexOutOfBoundsException) {
-        }
 
-        return state.mulCount
+            if (f == 0L) {
+                h++
+            }
+
+            g = b - c
+            b += 17
+        } while (g != 0L)
+
+        return h
     }
 
     data class State(
@@ -74,9 +98,7 @@ class Puzzle23 {
 
     data class Set(val x: Char, val y: String) : Instruction {
         override fun execute(state: State): State {
-            // Set register x to the value of y
             val yValue = getValueOrRegister(state, y)
-            println("setting $x = $yValue")
             val newRegisters = state.registers + (x to yValue)
             return state.copy(registers = newRegisters)
         }
@@ -86,7 +108,6 @@ class Puzzle23 {
         override fun execute(state: State): State {
             val yValue = getValueOrRegister(state, y)
             val xValue = getValueOrRegister(state, x.toString())
-            println("setting $x = $xValue - $yValue")
 
             val newRegisters = state.registers + (x to xValue - yValue)
             return state.copy(registers = newRegisters)
@@ -97,13 +118,10 @@ class Puzzle23 {
         override fun execute(state: State): State {
             val yValue = getValueOrRegister(state, y)
             val xValue = getValueOrRegister(state, x.toString())
-            println("setting $x = $xValue * $yValue")
             val newRegisters = state.registers + (x to xValue * yValue)
             return state.copy(registers = newRegisters, mulCount = state.mulCount + 1)
         }
     }
-
-
 
     data class Jnz(val x: Char, val y: String) : Instruction {
         override fun execute(state: State): State {
@@ -111,11 +129,9 @@ class Puzzle23 {
             val yValue = getValueOrRegister(state, y)
 
             if (xValue != 0L) {
-                println("jumping offset = $yValue")
                 return state.copy(offset = yValue)
             }
             else {
-                println("skipping jump $x = xValue")
                 return state
             }
         }
