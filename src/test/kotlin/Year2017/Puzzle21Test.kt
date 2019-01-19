@@ -17,7 +17,7 @@ class Puzzle21Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(571, result)
+        assertEquals(3081737, result)
     }
 
     @Test
@@ -223,21 +223,7 @@ class Puzzle21 {
     }
 
     fun solveOne(puzzleText: String): Int {
-        // Parse the puzzleText
-        val enhancements = puzzleText.split("\n").flatMap { line ->
-            val (from, to) = line.split(" => ").map { parsePattern(it) }
-            from.giveMeThePengestCombos().map { it to to }
-        }.toMap()
-
-        var currentPattern = ".#./..#/###"
-
-        (0 until 5).forEach {
-            val windows: List<Pattern> = splitUpPattern(currentPattern)
-            val enhancedWindows = windows.map { enhancements[it]!! }
-            currentPattern = joinWindows(enhancedWindows).toString()
-        }
-
-        return currentPattern.count { it == '#' }
+        return runIterations(puzzleText, 5)
     }
 
     fun joinWindows(enhancedWindows: List<Pattern>): Pattern {
@@ -261,7 +247,7 @@ class Puzzle21 {
         return Pattern(allData)
     }
 
-    fun splitUpPattern(patternText: String): List<Pattern> {
+    private fun splitUpPattern(patternText: String): List<Pattern> {
         val pattern = parsePattern(patternText)
 
         if (pattern.width() % 2 == 0) {
@@ -297,6 +283,26 @@ class Puzzle21 {
     }
 
     fun solveTwo(puzzleText: String): Int {
-        return 0
+        return runIterations(puzzleText, 18)
+    }
+
+    private fun runIterations(puzzleText: String, x: Int): Int {
+        val enhancements = puzzleText.split("\n").flatMap { line ->
+            val (from, to) = line.split(" => ").map { parsePattern(it) }
+            from.giveMeThePengestCombos().map { it to to }
+        }.toMap()
+
+        var currentPattern = ".#./..#/###"
+
+        (0 until x).forEach {
+
+            println(it)
+
+            val windows: List<Pattern> = splitUpPattern(currentPattern)
+            val enhancedWindows = windows.map { enhancements[it]!! }
+            currentPattern = joinWindows(enhancedWindows).toString()
+        }
+
+        return currentPattern.count { it == '#' }
     }
 }
