@@ -64,10 +64,10 @@ class Puzzle22 {
     data class Point(val x: Int, val y: Int) {
         fun move(direction: Direction): Point {
             return when (direction) {
-                Direction.UP -> this.copy(y - 1)
-                Direction.DOWN -> this.copy(y + 1)
-                Direction.LEFT -> this.copy(x - 1)
-                Direction.RIGHT -> this.copy(x + 1)
+                Direction.UP -> this.copy(y = y - 1)
+                Direction.DOWN -> this.copy(y = y + 1)
+                Direction.LEFT -> this.copy(x = x - 1)
+                Direction.RIGHT -> this.copy(x = x + 1)
             }
         }
     }
@@ -82,6 +82,13 @@ class Puzzle22 {
         var infectionsCaused = 0
 
         (0 until iterations).forEach {
+
+//            println("currentPoint = $currentPoint direction = $direction")
+//            println(printState(grid, currentPoint))
+//            println()
+//            println()
+//            println()
+
             direction = if (grid[currentPoint] == '#') direction.right() else direction.left()
 
             // toggle whether char is or is not infected
@@ -94,9 +101,33 @@ class Puzzle22 {
 
             grid[currentPoint] = newPointData
             currentPoint = currentPoint.move(direction)
+
+
         }
 
         return infectionsCaused
+    }
+
+    private fun printState(grid: Map<Point, Char?>, currentPoint: Point): String {
+
+        val maxX = grid.keys.maxBy { it.x }!!.x
+        val maxY = grid.keys.maxBy { it.y }!!.y
+
+        val width = (maxX * 2) - 1
+        val height = (maxY * 2) - 1
+
+        val spaghetti = (-3 until height + 3).map { y ->
+            (-3 until width + 3).map { x ->
+
+                val point = Point(x, y)
+                val char = grid[point] ?: '.'
+
+                val str = if (point == currentPoint) "[$char]" else " $char "
+                str
+            }.joinToString("")
+        }.joinToString("\n")
+
+        return spaghetti
     }
 
     private fun parseGrid(puzzleText: String): Map<Point, Char?> {
