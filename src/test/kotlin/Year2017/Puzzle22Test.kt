@@ -40,13 +40,13 @@ class Puzzle22Test {
     fun `puzzle part a`() {
         // 4999 to low
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(0, result)
+        assertEquals(5447, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(7620, result)
+        assertEquals(2511705, result)
     }
 }
 
