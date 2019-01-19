@@ -28,8 +28,28 @@ class Puzzle22 {
         val grid = parseGrid(puzzleText).toMutableMap()
         println(grid)
 
-        val
-
+        val width = grid.keys.maxBy { it.x }!!.x
+        val height = grid.keys.maxBy { it.y }!!.y
+        
+        var currentPoint = Point(width / 2, height / 2)
+        var direction = Direction.UP
+        
+        (0 until 10000).forEach {
+            
+            // toggle whether char is or is not infected
+            
+            if (grid[currentPoint] == '#') {
+                direction =direction.right()
+                
+            }
+            else {
+                direction = direction.left()
+                
+            }
+            
+            currentPoint = currentPoint.move(direction)
+            
+        }
 
 
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
