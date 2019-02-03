@@ -3,6 +3,8 @@ package Year2015
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 
+// TODO: Use ints instead of UShorts
+// TODO: Code reuse in the Instruction classes
 class Puzzle7Test {
     val puzzle = Puzzle7()
     val puzzleText = this::class.java.getResource(
@@ -39,33 +41,33 @@ class Puzzle7Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(956, result.toInt())
+        assertEquals(956, result)
     }
 
     @Test
     fun `puzzle part b`() {
-        val result = puzzle.solveTwo(puzzleText)
-
         // 33706 too low
-        assertEquals(17837115, result)
+        val result = puzzle.solveTwo(puzzleText)
+        assertEquals(40149, result)
     }
 }
 
 class Puzzle7 {
-    fun solveOne(text: String): UShort {
+    fun solveOne(text: String): Int {
         val state = stateAfter(text)
-        return state["a"]!!
+        return state["a"]!!.toInt()
     }
 
-    fun solveTwo(puzzleText: String): UShort {
-        val wireA = solveOne(puzzleText)
+    fun solveTwo(puzzleText: String): Int {
+        val wireA = solveOne(puzzleText).toUShort()
 
         val instructions = parseInstructions(puzzleText)
-        val state = mapOf<String, UShort>("b" to wireA)
+        val state = mapOf<String, UShort>()
+        val overrides = mapOf<String, UShort>("b" to wireA)
 
         // While any of the instructions have not been processed
-        val secondRunState = runInstructions(instructions, state)
-        return secondRunState["a"]!!
+        val secondRunState = runInstructions(instructions, state, overrides)
+        return secondRunState["a"]!!.toInt()
     }
 
     fun stateAfter(exampleText: String): Map<String, UShort> {
@@ -73,7 +75,7 @@ class Puzzle7 {
         val state = mapOf<String, UShort>()
 
         // While any of the instructions have not been processed
-        return runInstructions(instructions, state)
+        return runInstructions(instructions, state, mapOf())
     }
 
     private fun parseInstructions(exampleText: String): MutableMap<Instruction, Boolean> {
@@ -84,7 +86,7 @@ class Puzzle7 {
         return instructions
     }
 
-    private fun runInstructions(instructions: MutableMap<Instruction, Boolean>, state: Map<String, UShort>): Map<String, UShort> {
+    private fun runInstructions(instructions: MutableMap<Instruction, Boolean>, state: Map<String, UShort>, overrides: Map<String, UShort>): Map<String, UShort> {
         var state1 = state
 
         while (instructions.values.any { !it }) {
@@ -92,10 +94,9 @@ class Puzzle7 {
             val unprocessedInstructions = instructions.entries.filter { !it.value }
 
             unprocessedInstructions.forEach { (instruction) ->
-                val (wasSuccesful, newState) = instruction.execute(state1)
+                val (wasSuccesful, newState) = instruction.execute(state1, overrides)
 
                 if (wasSuccesful) {
-                    println("successfully executed instruction = $instruction")
                     state1 = newState
                     instructions[instruction] = true
                 }
@@ -122,11 +123,14 @@ class Puzzle7 {
             }
         }
 
-        fun execute(state: Map<String, UShort>): ExecutionResult
+        fun execute(state: Map<String, UShort>, overrides: Map<String, UShort>): ExecutionResult
 
-        fun tryGetValue(state: Map<String, UShort>, valueOrRegisterName: String): UShort?  {
+        fun tryGetValue(state: Map<String, UShort>, valueOrRegisterName: String, overrides: Map<String, UShort>): UShort?  {
             // It's a constant
             valueOrRegisterName.toUShortOrNull()?.let { return it }
+
+            // There's an override for this register, lets use it
+            overrides[valueOrRegisterName]?.let { return it }
 
             // It's a registerName
             return state[valueOrRegisterName]
@@ -141,8 +145,8 @@ class Puzzle7 {
     }
 
     data class Set(val operandA: String, val registerName: String): Instruction {
-        override fun execute(state: Map<String, UShort>): ExecutionResult {
-            val operandAValue = tryGetValue(state, operandA)
+        override fun execute(state: Map<String, UShort>, overrides: Map<String, UShort>): ExecutionResult {
+            val operandAValue = tryGetValue(state, operandA, overrides)
 
             if (operandAValue == null) {
                 return ExecutionResult.Failed
@@ -154,9 +158,9 @@ class Puzzle7 {
     }
 
     data class And(val operandA: String, val operandB: String, val registerName: String): Instruction {
-        override fun execute(state: Map<String, UShort>): ExecutionResult {
-            val operandAValue = tryGetValue(state, operandA)
-            val operandBValue = tryGetValue(state, operandB)
+        override fun execute(state: Map<String, UShort>, overrides: Map<String, UShort>): ExecutionResult {
+            val operandAValue = tryGetValue(state, operandA, overrides)
+            val operandBValue = tryGetValue(state, operandB, overrides)
 
             if (operandAValue == null || operandBValue == null) {
                 return ExecutionResult.Failed
@@ -169,9 +173,9 @@ class Puzzle7 {
     }
 
     data class Or(val operandA: String, val operandB: String, val registerName: String): Instruction {
-        override fun execute(state: Map<String, UShort>): ExecutionResult {
-            val operandAValue = tryGetValue(state, operandA)
-            val operandBValue = tryGetValue(state, operandB)
+        override fun execute(state: Map<String, UShort>, overrides: Map<String, UShort>): ExecutionResult {
+            val operandAValue = tryGetValue(state, operandA, overrides)
+            val operandBValue = tryGetValue(state, operandB, overrides)
 
             if (operandAValue == null || operandBValue == null) {
                 return ExecutionResult.Failed
@@ -184,9 +188,9 @@ class Puzzle7 {
     }
 
     data class LeftShift(val operandA: String, val operandB: String, val registerName: String): Instruction {
-        override fun execute(state: Map<String, UShort>): ExecutionResult {
-            val operandAValue = tryGetValue(state, operandA)
-            val operandBValue = tryGetValue(state, operandB)
+        override fun execute(state: Map<String, UShort>, overrides: Map<String, UShort>): ExecutionResult {
+            val operandAValue = tryGetValue(state, operandA, overrides)
+            val operandBValue = tryGetValue(state, operandB, overrides)
 
             if (operandAValue == null || operandBValue == null) {
                 return ExecutionResult.Failed
@@ -199,9 +203,9 @@ class Puzzle7 {
     }
 
     data class RightShift(val operandA: String, val operandB: String, val registerName: String): Instruction {
-        override fun execute(state: Map<String, UShort>): ExecutionResult {
-            val operandAValue = tryGetValue(state, operandA)
-            val operandBValue = tryGetValue(state, operandB)
+        override fun execute(state: Map<String, UShort>, overrides: Map<String, UShort>): ExecutionResult {
+            val operandAValue = tryGetValue(state, operandA, overrides)
+            val operandBValue = tryGetValue(state, operandB, overrides)
 
             if (operandAValue == null || operandBValue == null) {
                 return ExecutionResult.Failed
@@ -214,8 +218,8 @@ class Puzzle7 {
     }
 
     data class Not(val operandA: String, val registerName: String): Instruction {
-        override fun execute(state: Map<String, UShort>): ExecutionResult {
-            val operandAValue = tryGetValue(state, operandA)
+        override fun execute(state: Map<String, UShort>, overrides: Map<String, UShort>): ExecutionResult {
+            val operandAValue = tryGetValue(state, operandA, overrides)
 
             if (operandAValue == null) {
                 return ExecutionResult.Failed
