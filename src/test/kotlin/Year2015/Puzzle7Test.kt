@@ -1,15 +1,40 @@
 package Year2015
 
-import generateGrid
-import jdk.nashorn.internal.ir.Assignment
-import junit.framework.Assert.*
+import junit.framework.Assert.assertEquals
 import org.junit.Test
-import sun.reflect.generics.reflectiveObjects.NotImplementedException
 
 class Puzzle7Test {
     val puzzle = Puzzle7()
     val puzzleText = this::class.java.getResource(
             "/2015/puzzle7.txt").readText().replace("\r", "")
+
+    val exampleText = """
+        123 -> x
+        456 -> y
+        x AND y -> d
+        x OR y -> e
+        x LSHIFT 2 -> f
+        y RSHIFT 2 -> g
+        NOT x -> h
+        NOT y -> i
+    """.trimIndent()
+
+    @Test
+    fun `example part a`() {
+        val actual: Map<String, Long> = puzzle.stateAfter(exampleText)
+        val expected = mapOf(
+            "d" to 72L,
+            "e" to 507L,
+            "f" to 492L,
+            "g" to 114L,
+            "h" to 65412L,
+            "i" to 65079L,
+            "x" to 123L,
+            "y" to 456L
+        )
+
+        assertEquals(expected, actual)
+    }
 
     @Test
     fun `puzzle part a`() {
@@ -25,91 +50,161 @@ class Puzzle7Test {
 }
 
 class Puzzle7 {
-    class AndInstruction(val left: String, val right: String, val destination: String) : Instruction()
-    class NotInstruction(val source: String, val destination: String) : Instruction()
-    class RightShift(val source: String, val destination: String, val amount: Int) : Instruction()
-    class LeftShift(val source: String, val destination: String, val amount: Int) : Instruction()
-    class OrInstruction(val left: String, val right: String, val destination: String) : Instruction()
-
-    class AssignmentInstructino(val source: String, val destination: String) : Instruction() {
-        override fun canExecute(state: Map<String, Int>): Boolean {
-            return source.toIntOrNull() != null || state.containsKey(source)
-        }
-
-        override fun execute(state: Map<String, Int>): Map<String, Int> {
-            val copy = state.toMutableMap()
-
-            if (!canExecute(state)) {
-                copy[destination] = getValue(state, source)
-            }
-
-            return copy
-        }
-    }
-
-    abstract class Instruction {
-        open fun canExecute(state: Map<String, Int>): Boolean {
-            return false
-        }
-
-        open fun execute(state: Map<String, Int>): Map<String, Int> {
-            throw NotImplementedException()
-        }
-
-        fun getValue(state: Map<String, Int>, registerNameOrValue: String): Int {
-            if (registerNameOrValue.toIntOrNull() != null) return registerNameOrValue.toInt() else return state[registerNameOrValue]!!
-        }
-    }
-
-
-
-    fun getFromState(state: Map<String, Int>, registerNameOrValue: String): Int? {
-        val horse = registerNameOrValue.toIntOrNull()
-        return if (horse != null) horse else state[registerNameOrValue]
-    }
-
-    fun solveOne(puzzleText: String): Int {
-        val state = mutableMapOf<String, Int>()
-
-        val instructions = puzzleText.split("\n").map { line ->
-            val pieces = line.split(" ")
-
-            if (line.contains("AND")) {
-                AndInstruction(pieces[0], pieces[2], pieces[4])
-            }
-            else if (line.contains("OR")) {
-                OrInstruction(pieces[0], pieces[2], pieces[4])
-            }
-            else if (line.contains("NOT")) {
-                NotInstruction(pieces[1], pieces[3])
-            }
-            else if (line.contains("LSHIFT")) {
-                LeftShift(pieces[0], pieces[4], pieces[2].toInt())
-            }
-            else if (line.contains("RSHIFT")) {
-                RightShift(pieces[0], pieces[4], pieces[2].toInt())
-            }
-            else if (line.contains("->")) {
-                AssignmentInstructino(pieces[0], pieces[2])
-            }
-            else {
-                throw RuntimeException()
-            }
-        }
-
-        val executableInstructions = instructions.count { it.canExecute(state) }
-
-//        instructions.forEach { instruction -> }
-
-        println(executableInstructions)
-
-
-
-
-        return 0
+    fun solveOne(text: String): Int {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     fun solveTwo(puzzleText: String): Int {
-       return 0
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    fun stateAfter(exampleText: String): Map<String, Long> {
+        val instructions = exampleText.split("\n")
+            .map { Instruction.parse(it) }
+            .associate { it to false }
+            .toMutableMap()
+
+        var state = mapOf<String, Long>()
+
+        // While any of the instructions have not been processed
+        while (instructions.values.any { !it }) {
+
+            // Get unprocessed instructions
+            val unprocessedInstructions = instructions.entries.filter { !it.value }
+
+            unprocessedInstructions.forEach { (instruction ) ->
+
+                val (wasSuccesful, newState) = instruction.execute(state)
+
+                if (wasSuccesful) {
+                    state = newState
+                    instructions[instruction] = true
+                }
+            }
+        }
+
+        return state
+    }
+
+    interface Instruction {
+        companion object {
+            fun parse(text: String): Instruction {
+                val dog = text.split(" ")
+
+                return when {
+                    dog[1] == "AND" -> And(dog[0], dog[2], dog[4])
+                    dog[1] == "OR" -> Or(dog[0], dog[2], dog[4])
+                    dog[1] == "LSHIFT" -> LeftShift(dog[0], dog[2], dog[4])
+                    dog[1] == "RSHIFT" -> RightShift(dog[0], dog[2], dog[4])
+                    dog[0] == "NOT" -> Not(dog[1], dog[3])
+                    dog.count() == 3 && dog[1] == "->" -> Set(dog[0], dog[2])
+                    else -> throw RuntimeException("fuck a doodle doo")
+                }
+            }
+        }
+
+        fun execute(state: Map<String, Long>): ExecutionResult
+
+        fun tryGetValue(state: Map<String, Long>, valueOrRegisterName: String): Long?  {
+            // It's a constant
+            valueOrRegisterName.toLongOrNull()?.let { return it }
+
+            // It's a registerName
+            return state[valueOrRegisterName]
+        }
+    }
+
+    data class ExecutionResult(val succeeded: Boolean, val state: Map<String, Long>) {
+        companion object {
+            val Failed = ExecutionResult(false, mapOf())
+            fun Succeeded(state: Map<String, Long>) = ExecutionResult(true, state)
+        }
+    }
+
+    data class Set(val operandA: String, val registerName: String): Instruction {
+        override fun execute(state: Map<String, Long>): ExecutionResult {
+            val operandAValue = tryGetValue(state, operandA)
+
+            if (operandAValue == null) {
+                return ExecutionResult.Failed
+            }
+
+            val newState = state + (registerName to operandAValue)
+            return ExecutionResult.Succeeded(newState)
+        }
+    }
+
+    data class And(val operandA: String, val operandB: String, val registerName: String): Instruction {
+        override fun execute(state: Map<String, Long>): ExecutionResult {
+            val operandAValue = tryGetValue(state, operandA)
+            val operandBValue = tryGetValue(state, operandB)
+
+            if (operandAValue == null || operandBValue == null) {
+                return ExecutionResult.Failed
+            }
+
+            val andResult = operandAValue and operandBValue
+            val newState = state + (registerName to andResult)
+            return ExecutionResult.Succeeded(newState)
+        }
+    }
+
+    data class Or(val operandA: String, val operandB: String, val registerName: String): Instruction {
+        override fun execute(state: Map<String, Long>): ExecutionResult {
+            val operandAValue = tryGetValue(state, operandA)
+            val operandBValue = tryGetValue(state, operandB)
+
+            if (operandAValue == null || operandBValue == null) {
+                return ExecutionResult.Failed
+            }
+
+            val orResult = operandAValue or operandBValue
+            val newState = state + (registerName to orResult)
+            return ExecutionResult.Succeeded(newState)
+        }
+    }
+
+    data class LeftShift(val operandA: String, val operandB: String, val registerName: String): Instruction {
+        override fun execute(state: Map<String, Long>): ExecutionResult {
+            val operandAValue = tryGetValue(state, operandA)
+            val operandBValue = tryGetValue(state, operandB)
+
+            if (operandAValue == null || operandBValue == null) {
+                return ExecutionResult.Failed
+            }
+
+            val leftShiftResult = operandAValue shl operandBValue.toInt()
+            val newState = state + (registerName to leftShiftResult)
+            return ExecutionResult.Succeeded(newState)
+        }
+    }
+
+    data class RightShift(val operandA: String, val operandB: String, val registerName: String): Instruction {
+        override fun execute(state: Map<String, Long>): ExecutionResult {
+            val operandAValue = tryGetValue(state, operandA)
+            val operandBValue = tryGetValue(state, operandB)
+
+            if (operandAValue == null || operandBValue == null) {
+                return ExecutionResult.Failed
+            }
+
+            val leftShiftResult = operandAValue shr operandBValue.toInt()
+            val newState = state + (registerName to leftShiftResult)
+            return ExecutionResult.Succeeded(newState)
+        }
+    }
+
+    data class Not(val operandA: String, val registerName: String): Instruction {
+        override fun execute(state: Map<String, Long>): ExecutionResult {
+            val operandAValue = tryGetValue(state, operandA)
+
+            if (operandAValue == null) {
+                return ExecutionResult.Failed
+            }
+
+            val notResult = operandAValue.inv()
+            val newState = state + (registerName to notResult)
+            return ExecutionResult.Succeeded(newState)
+        }
     }
 }
