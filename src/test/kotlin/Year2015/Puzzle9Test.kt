@@ -23,7 +23,7 @@ class Puzzle9Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(1371, result)
+        assertEquals(117, result)
     }
 
     @Test
@@ -51,6 +51,13 @@ class Puzzle9 {
     fun solveOne(puzzleText: String): Int {
         val graph = parseGraph(puzzleText)
         val allTownNames = graph.keys.distinct().toSet() + graph.values.flatMap { horse: MutableList<NodeData> -> horse.map { it.townName }}.toSet()
+        val inProgress = getAllRoutes(allTownNames, graph)
+        val distances = inProgress.map { it.visitedTowns.sumBy { it.distance } }
+
+        return distances.min()!!
+    }
+
+    private fun getAllRoutes(allTownNames: Set<String>, graph: MutableMap<String, MutableList<NodeData>>): List<BeingBuilt> {
         var inProgress = allTownNames.map { startTown -> BeingBuilt(startTown, listOf(), allTownNames.filter { it != startTown }) }
 
         // This actually should be, while we can no longer visit any more towns
@@ -62,17 +69,15 @@ class Puzzle9 {
 
                 if (pathsFromCurrentTown == null) {
                     listOf()
-                }
-                else {
-                    pathsFromCurrentTown.map { nextNode: NodeData ->
+                } else {
+                    val validPathsFromCurrentTown = pathsFromCurrentTown.filter { !beingBuilt.visitedTowns.map { it.townName }.contains(it.townName) && beingBuilt.startTown != it.townName }
+                    validPathsFromCurrentTown.map { nextNode: NodeData ->
                         beingBuilt.copy(visitedTowns = beingBuilt.visitedTowns + nextNode, unvisited = beingBuilt.unvisited.filter { it != nextNode.townName })
                     }
                 }
             }
         }
-
-        val distances = inProgress.map { it.visitedTowns.sumBy { it.distance } }
-        return distances.min()!!
+        return inProgress
     }
 
     private fun parseGraph(puzzleText: String): MutableMap<String, MutableList<NodeData>> {
@@ -83,16 +88,27 @@ class Puzzle9 {
             val (from, _, to) = tmp
             val distance = tmp[4].toInt()
 
-            if (!octopus.containsKey(from)) {
-                octopus[from] = mutableListOf()
-            }
-
-            octopus[from] = (octopus[from]!! + NodeData(to, distance)).toMutableList()
+            addPath(octopus, from, to, distance)
+            addPath(octopus, to, from, distance)
         }
+
         return octopus
     }
 
+    fun addPath(graph: MutableMap<String, MutableList<NodeData>>, from: String, to: String, distance: Int) {
+        if (!graph.containsKey(from)) {
+            graph[from] = mutableListOf()
+        }
+
+        graph[from] = (graph[from]!! + NodeData(to, distance)).toMutableList()
+    }
+
     fun solveTwo(puzzleText: String): Int {
-        return -1
+        val graph = parseGraph(puzzleText)
+        val allTownNames = graph.keys.distinct().toSet() + graph.values.flatMap { horse: MutableList<NodeData> -> horse.map { it.townName }}.toSet()
+        val inProgress = getAllRoutes(allTownNames, graph)
+        val distances = inProgress.map { it.visitedTowns.sumBy { it.distance } }
+
+        return distances.max()!!
     }
 }
