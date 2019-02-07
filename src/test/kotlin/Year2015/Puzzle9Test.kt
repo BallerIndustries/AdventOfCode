@@ -29,7 +29,7 @@ class Puzzle9Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(2117, result)
+        assertEquals(909, result)
     }
 }
 
@@ -46,6 +46,11 @@ class Puzzle9 {
                 return visitedTowns.last().townName
             }
         }
+
+        fun getValidPaths(pathsFromCurrentTown: List<NodeData>): List<NodeData> {
+            val visitedTownNames = visitedTowns.map { it.townName }
+            return pathsFromCurrentTown.filter { !visitedTownNames.contains(it.townName) && startTown != it.townName }
+        }
     }
 
     fun solveOne(puzzleText: String): Int {
@@ -60,7 +65,6 @@ class Puzzle9 {
     private fun getAllRoutes(allTownNames: Set<String>, graph: MutableMap<String, MutableList<NodeData>>): List<BeingBuilt> {
         var inProgress = allTownNames.map { startTown -> BeingBuilt(startTown, listOf(), allTownNames.filter { it != startTown }) }
 
-        // This actually should be, while we can no longer visit any more towns
         while (inProgress.all { it.unvisited.isNotEmpty() }) {
 
             inProgress = inProgress.flatMap { beingBuilt ->
@@ -70,7 +74,7 @@ class Puzzle9 {
                 if (pathsFromCurrentTown == null) {
                     listOf()
                 } else {
-                    val validPathsFromCurrentTown = pathsFromCurrentTown.filter { !beingBuilt.visitedTowns.map { it.townName }.contains(it.townName) && beingBuilt.startTown != it.townName }
+                    val validPathsFromCurrentTown = beingBuilt.getValidPaths(pathsFromCurrentTown)
                     validPathsFromCurrentTown.map { nextNode: NodeData ->
                         beingBuilt.copy(visitedTowns = beingBuilt.visitedTowns + nextNode, unvisited = beingBuilt.unvisited.filter { it != nextNode.townName })
                     }
