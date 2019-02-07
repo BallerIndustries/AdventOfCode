@@ -8,6 +8,18 @@ class Puzzle9Test {
     val puzzleText = this::class.java.getResource(
             "/2015/puzzle9.txt").readText().replace("\r", "")
 
+    val exampleText = """
+        London to Dublin = 464
+        London to Belfast = 518
+        Dublin to Belfast = 141
+    """.trimIndent()
+
+    @Test
+    fun `example part a`() {
+        val result = puzzle.solveOne(exampleText)
+        assertEquals(605, result)
+    }
+
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
@@ -25,10 +37,42 @@ class Puzzle9 {
 
     data class NodeData(val townName: String, val distance: Int)
 
+    data class BeingBuilt(val startTown: String, val visitedTowns: List<NodeData>, val unvisited: List<String>) {
+        fun lastTownVisited(): String {
+            if (visitedTowns.isEmpty()) {
+                return startTown
+            }
+            else {
+                return visitedTowns.last().townName
+            }
+        }
+    }
+
     fun solveOne(puzzleText: String): Int {
         val graph = parseGraph(puzzleText)
-        println(graph)
-        return -1
+        val allTownNames = graph.keys.distinct().toSet() + graph.values.flatMap { horse: MutableList<NodeData> -> horse.map { it.townName }}.toSet()
+        var inProgress = allTownNames.map { startTown -> BeingBuilt(startTown, listOf(), allTownNames.filter { it != startTown }) }
+
+        // This actually should be, while we can no longer visit any more towns
+        while (inProgress.all { it.unvisited.isNotEmpty() }) {
+
+            inProgress = inProgress.flatMap { beingBuilt ->
+                val currentTown = beingBuilt.lastTownVisited()
+                val pathsFromCurrentTown = graph[currentTown]
+
+                if (pathsFromCurrentTown == null) {
+                    listOf()
+                }
+                else {
+                    pathsFromCurrentTown.map { nextNode: NodeData ->
+                        beingBuilt.copy(visitedTowns = beingBuilt.visitedTowns + nextNode, unvisited = beingBuilt.unvisited.filter { it != nextNode.townName })
+                    }
+                }
+            }
+        }
+
+        val distances = inProgress.map { it.visitedTowns.sumBy { it.distance } }
+        return distances.min()!!
     }
 
     private fun parseGraph(puzzleText: String): MutableMap<String, MutableList<NodeData>> {
