@@ -66,9 +66,9 @@ class Puzzle11 {
         return buffer
     }
 
-    fun intToPassword(number: Int): String {
-        var multiplier = 1
-    }
+//    fun intToPassword(number: Int): String {
+//        var multiplier = 1
+//    }
 
     fun solveOne(puzzleText: String): Int {
         return 1281928
