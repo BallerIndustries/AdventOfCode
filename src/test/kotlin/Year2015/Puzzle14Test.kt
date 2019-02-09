@@ -35,7 +35,7 @@ class Puzzle14Test {
     fun `puzzle part b`() {
         //647 is too low
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(725, result)
+        assertEquals(1256, result)
     }
 }
 
