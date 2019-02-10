@@ -12,14 +12,14 @@ class Puzzle16Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(18965440, result)
+        assertEquals(103, result)
     }
 
     @Test
     fun `puzzle part b`() {
         // 103 too low
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(16862900, result)
+        assertEquals(405, result)
     }
 }
 
@@ -44,13 +44,17 @@ class Puzzle16 {
             this.attributes.entries.forEach { (item, count) ->
                 val detectedCount = giftSueAttributes[item] ?: throw RuntimeException("Angerrrr!!")
 
-                if ((item == "cats" || item == "trees") && count > detectedCount) {
+                val atLeastProperties = setOf("cats", "trees")
+                val atMostProperties = setOf("pomeranians", "goldfish")
+                val specialCaseProperties = atLeastProperties + atMostProperties
+
+                if (atLeastProperties.contains(item) && count > detectedCount) {
                     matches++
                 }
-                else if ((item == "pomeranians" || item == "goldfish") && count < detectedCount) {
+                else if (atMostProperties.contains(item) && count < detectedCount) {
                     matches++
                 }
-                else if (detectedCount == count) {
+                else if (!specialCaseProperties.contains(item) && detectedCount == count) {
                     matches++
                 }
             }
@@ -104,6 +108,6 @@ class Puzzle16 {
         val maxScore = aunts.map { it.matchPercentageTwo(giftSueAttributes) }.max()!!
         val maxScoringAunts = aunts.filter { it.matchPercentageTwo(giftSueAttributes) == maxScore }
 
-        return 100
+        return maxScoringAunts.first().name.split(" ")[1].toInt()
     }
 }
