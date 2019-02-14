@@ -29,6 +29,7 @@ class Puzzle23 {
     data class State(val registerA: Int, val registerB: Int, val programCounter: Int) {
         companion object {
             fun initial() = State(0, 0, 0)
+            fun hyperBeamX() = State(1, 0, 0)
         }
 
         fun incrementProgramCounter() = this.copy(programCounter = this.programCounter + 1)
@@ -142,6 +143,17 @@ class Puzzle23 {
     }
 
     fun solveTwo(puzzleText: String): Int {
-        return 100
+        val instructions = puzzleText.split("\n").map { Instruction.parseLine(it) }
+        var currentState = State.hyperBeamX()
+
+        while (currentState.programCounter >= 0 && currentState.programCounter < instructions.count()) {
+            println(currentState.programCounter)
+            val currentInstruction = instructions[currentState.programCounter]
+            //println(currentState)
+            currentState = currentInstruction.execute(currentState)
+
+        }
+
+        return currentState.registerB
     }
 }
