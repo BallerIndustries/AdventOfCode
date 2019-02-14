@@ -120,7 +120,6 @@ class Puzzle23 {
         var currentState = State.initial()
 
         while (currentState.programCounter >= 0 && currentState.programCounter < instructions.count()) {
-            println(currentState.programCounter)
             val currentInstruction = instructions[currentState.programCounter]
             currentState = currentInstruction.execute(currentState)
 
@@ -134,7 +133,6 @@ class Puzzle23 {
         var currentState = State.hyperBeamX()
 
         while (currentState.programCounter >= 0 && currentState.programCounter < instructions.count()) {
-            println(currentState.programCounter)
             val currentInstruction = instructions[currentState.programCounter]
             currentState = currentInstruction.execute(currentState)
 
