@@ -66,7 +66,7 @@ class Puzzle18 {
             println(gridToString(dog))
             println()
 
-            dog = dog.entries.map { (point, char) ->
+            val newDog = dog.entries.map { (point, char) ->
 
                 val neighborsOnGrid = point.neighbours().filter { dog[it] != null }
                 val neighborsOn = neighborsOnGrid.count { dog[it] == '#' }
@@ -75,7 +75,7 @@ class Puzzle18 {
                 point to newChar
             }.toMap()
 
-
+            dog = newDog
         }
 
         return dog.values.count { it == '#' }
