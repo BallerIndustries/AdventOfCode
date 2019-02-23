@@ -35,8 +35,9 @@ class Puzzle17 {
 
             val newUsed = used + containerSize
             val indexOfItemToRemove= remaining.indexOf(containerSize)
-            val newRemaining = remaining.toMutableList()
+            var newRemaining = remaining.toMutableList()
             newRemaining.removeAt(indexOfItemToRemove)
+            newRemaining = newRemaining.filter { totalSize() + it <= 150 }.toMutableList()
 
             return InProgress(newUsed, newRemaining)
         }
@@ -51,12 +52,26 @@ class Puzzle17 {
             InProgress(listOf(it), remainingList)
         }
 
-        while (containerConfigurations.any { it.remaining.isNotEmpty() }) {
+        while (containerConfigurations.any { it.totalSize() < 150 }) {
             containerConfigurations = containerConfigurations.flatMap { containerConfiguration ->
-                containerConfiguration.remaining.map { remainingContainerSize ->
-                    containerConfiguration.addContainerSize(remainingContainerSize)
+
+                val totalSize = containerConfiguration.totalSize()
+                if (totalSize == 150) {
+                    listOf(containerConfiguration)
+                }
+                else if (totalSize > 150) {
+                    listOf()
+                }
+                else {
+                    containerConfiguration.remaining.mapNotNull { remainingContainerSize ->
+                            containerConfiguration.addContainerSize(remainingContainerSize)
+                    }
                 }
             }
+
+            containerConfigurations = containerConfigurations.filter { it.totalSize() <= 150 }
+
+            //containerConfigurations.
 
 
         }
