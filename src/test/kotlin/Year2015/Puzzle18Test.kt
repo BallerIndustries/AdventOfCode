@@ -7,7 +7,19 @@ class Puzzle18Test {
     val puzzle = Puzzle18()
     val puzzleText = this::class.java.getResource("/2015/puzzle18.txt").readText().replace("\r", "")
     val exampleText = """
+        .#.#.#
+        ...##.
+        #....#
+        ..#...
+        #.#..#
+        ####..
     """.trimIndent()
+
+    @Test
+    fun `example part a`() {
+        val result = puzzle.solveOne(exampleText)
+        assertEquals(10291029, result)
+    }
 
     @Test
     fun `puzzle part a`() {
@@ -51,6 +63,8 @@ class Puzzle18 {
         }.toMap()
 
         (0 until 100).forEach {
+            println(gridToString(dog))
+            println()
 
             dog = dog.entries.map { (point, char) ->
 
@@ -60,9 +74,25 @@ class Puzzle18 {
 
                 point to newChar
             }.toMap()
+
+
         }
 
         return dog.values.count { it == '#' }
+    }
+
+    private fun gridToString(dog: Map<Point, Char>): String {
+        val width = dog.keys.maxBy { it.x }!!.x
+        val height = dog.keys.maxBy { it.y }!!.y
+
+        val octopus = (0 .. height).map { y ->
+            (0 .. width).map { x ->
+                val point = Point(x, y)
+                dog[point]!!
+            }.joinToString("")
+        }
+
+        return octopus.joinToString("\n")
     }
 
     private fun runGameOfLife(char: Char, neighborsOn: Int): Char {
