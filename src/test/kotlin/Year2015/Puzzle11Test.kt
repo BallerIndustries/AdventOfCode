@@ -19,6 +19,60 @@ class Puzzle11Test {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(3579328, result)
     }
+
+    @Test
+    fun `a should match 1`() {
+        val result = puzzle.passwordToInt("a")
+        assertEquals(1, result)
+    }
+
+    @Test
+    fun `a 1 should match a`() {
+        val result = puzzle.intToPassword(1)
+        assertEquals("a", result)
+    }
+
+    @Test
+    fun `b should match 1`() {
+        val result = puzzle.passwordToInt("b")
+        assertEquals(2, result)
+    }
+
+    @Test
+    fun `aa should match 27`() {
+        val result = puzzle.passwordToInt("aa")
+        assertEquals(27, result)
+    }
+
+    @Test
+    fun `aaa should match 26*26`() {
+        val result = puzzle.passwordToInt("aaa")
+        assertEquals(26*26 + 26 + 1, result)
+    }
+
+    @Test
+    fun `aaaa should match 26*26`() {
+        val result = puzzle.passwordToInt("aaaa")
+        assertEquals(26*26*26 + 26*26 + 26 + 1, result)
+    }
+
+    @Test
+    fun `27 should match aa`() {
+        val result = puzzle.intToPassword(27)
+        assertEquals("aa", result)
+    }
+
+    @Test
+    fun `1 should match a`() {
+        val result = puzzle.intToPassword(1)
+        assertEquals("a", result)
+    }
+
+    @Test
+    fun `4 should match d`() {
+        val result = puzzle.intToPassword(4)
+        assertEquals("d", result)
+    }
 }
 
 class Puzzle11 {
@@ -52,13 +106,31 @@ class Puzzle11 {
         return false
     }
 
+
+    fun intToPassword(value: Int): String {
+        var cutOff = 25
+        var currentValue = value
+        val jur = ('a'..'z').toList()
+        var buffer = ""
+
+        while (currentValue > 0) {
+            val index = (currentValue % cutOff) - 1
+            val char = jur[index]
+            buffer = char + buffer
+            currentValue -= index
+            cutOff *= 26
+        }
+
+        return buffer
+    }
+
     fun passwordToInt(password: String): Int {
         var multiplier = 1
         var buffer = 0
 
-        (password.lastIndex .. 0).forEach { index ->
+        (0 .. password.lastIndex).reversed().forEach { index ->
             val char = password[index]
-            val cheese = (char.toInt() - 97) * multiplier
+            val cheese = (char.toInt() - 96) * multiplier
             buffer += cheese
             multiplier *= 26
         }
@@ -66,12 +138,19 @@ class Puzzle11 {
         return buffer
     }
 
-//    fun intToPassword(number: Int): String {
-//        var multiplier = 1
-//    }
+    fun solveOne(puzzleText: String): String {
+        var currentPassword = puzzleText
 
-    fun solveOne(puzzleText: String): Int {
-        return 1281928
+        while (true) {
+            println(currentPassword)
+
+            if (hasThreeCharStraight(currentPassword) && hasNoIOOrL(currentPassword) && hasTwoNonOverlappingPairs(currentPassword)) {
+                return currentPassword
+            }
+
+            val passwordAsInt = passwordToInt(currentPassword)
+            currentPassword = intToPassword(passwordAsInt + 1)
+        }
     }
 
     fun solveTwo(puzzleText: String): Int {

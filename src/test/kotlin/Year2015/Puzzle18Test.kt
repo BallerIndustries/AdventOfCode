@@ -16,23 +16,29 @@ class Puzzle18Test {
     """.trimIndent()
 
     @Test
+    fun `top left of origin is`() {
+        val result = Puzzle18.Point(0, 0).upLeft()
+        assertEquals(Puzzle18.Point(-1, -1), result)
+    }
+
+    @Test
     fun `example part a`() {
         val result = puzzle.solveOne(exampleText)
-        assertEquals(10291029, result)
+        assertEquals(4, result)
     }
 
     @Test
     fun `puzzle part a`() {
         // 539 too low
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(18965440, result)
+        assertEquals(768, result)
     }
 
     @Test
     fun `puzzle part b`() {
         // 103 too low
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(18862900, result)
+        assertEquals(781, result)
     }
 }
 
@@ -40,10 +46,12 @@ class Puzzle18 {
     data class Point(val x: Int, val y: Int) {
         fun up() = this.copy(y = this.y - 1)
         fun down() = this.copy(y = this.y + 1)
-        fun left() = this.copy(y = this.x - 1)
-        fun right() = this.copy(y = this.x + 1)
+        fun left() = this.copy(x = this.x - 1)
+        fun right() = this.copy(x = this.x + 1)
 
-        fun upLeft() = up().left()
+        fun upLeft(): Point {
+            return up().left()
+        }
         fun upRight() = up().right()
         fun downLeft() = down().left()
         fun downRight() = down().right()
@@ -52,6 +60,24 @@ class Puzzle18 {
     }
 
     fun solveOne(puzzleText: String): Int {
+        var grid = parseInput(puzzleText)
+
+        (0 until 100).forEach {
+            val newDog = grid.entries.map { (point, char) ->
+                val neighborsOnGrid = point.neighbours().filter { grid[it] != null }
+                val neighborsOn = neighborsOnGrid.count { grid[it] == '#' }
+                val newChar = runGameOfLife(char, neighborsOn)
+
+                point to newChar
+            }.toMap()
+
+            grid = newDog
+        }
+
+        return grid.values.count { it == '#' }
+    }
+
+    private fun parseInput(puzzleText: String): Map<Point, Char> {
         val lines = puzzleText.split("\n")
         val height = lines.size
         val width = lines[0].length
@@ -61,24 +87,7 @@ class Puzzle18 {
                 Point(x, y) to lines[y][x]
             }
         }.toMap()
-
-        (0 until 100).forEach {
-            println(gridToString(dog))
-            println()
-
-            val newDog = dog.entries.map { (point, char) ->
-
-                val neighborsOnGrid = point.neighbours().filter { dog[it] != null }
-                val neighborsOn = neighborsOnGrid.count { dog[it] == '#' }
-                val newChar = runGameOfLife(char, neighborsOn)
-
-                point to newChar
-            }.toMap()
-
-            dog = newDog
-        }
-
-        return dog.values.count { it == '#' }
+        return dog
     }
 
     private fun gridToString(dog: Map<Point, Char>): String {
@@ -108,6 +117,32 @@ class Puzzle18 {
     }
 
     fun solveTwo(puzzleText: String): Int {
-        return 393939
+        var grid = parseInput(puzzleText)
+        val maxX = grid.keys.maxBy { it.x }!!.x
+        val maxY = grid.keys.maxBy { it.y }!!.y
+        val corners = setOf(Point(0, 0), Point(0, maxY), Point(maxX, 0), Point(maxX, maxY))
+
+        grid = grid.entries.map { (point, char) ->
+            val newChar = if (corners.contains(point)) '#' else char
+            point to newChar
+        }.toMap()
+
+
+        (0 until 100).forEach {
+            grid = grid.entries.map { (point, char) ->
+                if (corners.contains(point)) {
+                    point to '#'
+                }
+                else {
+                    val neighborsOnGrid = point.neighbours().filter { grid[it] != null }
+                    val neighborsOn = neighborsOnGrid.count { grid[it] == '#' }
+                    val newChar = runGameOfLife(char, neighborsOn)
+
+                    point to newChar
+                }
+            }.toMap()
+        }
+
+        return grid.values.count { it == '#' }
     }
 }
