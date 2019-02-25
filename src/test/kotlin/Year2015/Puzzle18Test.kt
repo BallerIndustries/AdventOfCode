@@ -49,9 +49,7 @@ class Puzzle18 {
         fun left() = this.copy(x = this.x - 1)
         fun right() = this.copy(x = this.x + 1)
 
-        fun upLeft(): Point {
-            return up().left()
-        }
+        fun upLeft(): Point = up().left()
         fun upRight() = up().right()
         fun downLeft() = down().left()
         fun downRight() = down().right()
