@@ -2,6 +2,8 @@ package Year2015
 
 import junit.framework.Assert.assertEquals
 import org.junit.Test
+import java.util.*
+import kotlin.random.Random
 
 class Puzzle19Test {
     val puzzle = Puzzle19()
@@ -44,13 +46,19 @@ class Puzzle19Test {
 class Puzzle19 {
     data class Transition(val from: String, val to: String)
 
-    fun solveOne(puzzleText: String): Int {
+    fun parseInput(puzzleText: String): Pair<List<Transition>, String> {
         val (transitionText , startingMolecule) = puzzleText.split("\n\n")
 
         val transitions = transitionText.split("\n").map { line ->
             val (from, to) = line.split(" => ")
             Transition(from, to)
         }
+
+        return transitions to startingMolecule
+    }
+
+    fun solveOne(puzzleText: String): Int {
+        val (transitions , startingMolecule) = parseInput(puzzleText)
 
         val octopus = transitions.flatMap { transition ->
             val regex = Regex(transition.from)
@@ -72,6 +80,41 @@ class Puzzle19 {
     }
 
     fun solveTwo(puzzleText: String): Int {
-        return 394839
+        val (transitions, targetMolecule) = parseInput(puzzleText)
+
+        //val (finalMolecule, steps) = randomlyCreateMolecule(targetMolecule, transitions)
+
+        val spaghetti = (0.. 1000).map { randomlyCreateMolecule(targetMolecule, transitions) }
+
+
+
+        println("asdojaosidj")
+
+        return 3434
+    }
+
+    private fun randomlyCreateMolecule(targetMolecule: String, transitions: List<Transition>): Pair<String, Int> {
+        var currentMolecule = "e"
+        var steps = 0
+
+        while (currentMolecule.length < targetMolecule.length) {
+            val randomTransition = transitions.random()
+
+            currentMolecule = tryReplaceOneElement(currentMolecule, randomTransition)
+            steps++
+        }
+
+
+        return currentMolecule to steps
+    }
+
+    private fun tryReplaceOneElement(currentMolecule: String, randomTransition: Transition): String {
+        if (!currentMolecule.contains(randomTransition.from)) {
+            return currentMolecule
+        }
+
+        val regex = Regex(randomTransition.from)
+        val randomMatch = regex.findAll(currentMolecule).toList().random()
+        return replaceRange(currentMolecule, randomMatch.range, randomTransition.to)
     }
 }
