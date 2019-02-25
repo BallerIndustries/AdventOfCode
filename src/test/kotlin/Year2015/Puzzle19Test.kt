@@ -33,7 +33,7 @@ class Puzzle19Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(781, result)
+        assertEquals(195, result)
     }
 
     @Test
@@ -81,16 +81,30 @@ class Puzzle19 {
 
     fun solveTwo(puzzleText: String): Int {
         val (transitions, targetMolecule) = parseInput(puzzleText)
+        val spaghetti = (0.. 1000).map { randomlyDecreateMolecule(targetMolecule, transitions) }
+        return spaghetti.filter { it.first == "e" }.map { it.second }.min()!!
+    }
 
-        //val (finalMolecule, steps) = randomlyCreateMolecule(targetMolecule, transitions)
+    private fun randomlyDecreateMolecule(targetMolecule: String, transitions: List<Transition>): Pair<String, Int> {
+        var currentMolecule = targetMolecule
+        var steps = 0
 
-        val spaghetti = (0.. 1000).map { randomlyCreateMolecule(targetMolecule, transitions) }
+        val mirroredTransitions = transitions.map { Transition(it.to, it.from) }
 
+        while (currentMolecule != "e") {
+            val possibleTransitions = mirroredTransitions.filter { transition -> currentMolecule.contains(transition.from) }
 
+            if (possibleTransitions.isEmpty()) {
+                return "" to Int.MAX_VALUE
+            }
 
-        println("asdojaosidj")
+            val randomTransition = possibleTransitions.random()
+            currentMolecule = tryReplaceOneElement(currentMolecule, randomTransition)
+//            println(currentMolecule)
+            steps++
+        }
 
-        return 3434
+        return currentMolecule to steps
     }
 
     private fun randomlyCreateMolecule(targetMolecule: String, transitions: List<Transition>): Pair<String, Int> {
@@ -103,7 +117,6 @@ class Puzzle19 {
             currentMolecule = tryReplaceOneElement(currentMolecule, randomTransition)
             steps++
         }
-
 
         return currentMolecule to steps
     }
