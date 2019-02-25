@@ -1,6 +1,7 @@
 package Year2015
 
 import junit.framework.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 
 class Puzzle17Test {
@@ -10,12 +11,14 @@ class Puzzle17Test {
     """.trimIndent()
 
     @Test
+    @Ignore
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
         assertEquals(18965440, result)
     }
 
     @Test
+    @Ignore
     fun `puzzle part b`() {
         // 103 too low
         val result = puzzle.solveTwo(puzzleText)
