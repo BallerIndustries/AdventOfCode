@@ -15,13 +15,13 @@ class Puzzle21Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(255, result)
+        assertEquals(111, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(334, result)
+        assertEquals(188, result)
     }
 }
 
@@ -61,8 +61,6 @@ class Puzzle21 {
     fun parse(text: String): List<Item> {
         return text.split("\n")
             .map { line ->
-
-                //val (name, cost, damage, armors) = line.split("\\s")
                 val tmp = line.split(Regex("\\s+"))
                 val name = tmp[0]
                 val cost = tmp[1].toInt()
@@ -105,38 +103,36 @@ class Puzzle21 {
     data class Result(val playerWon: Boolean, val itemCost: Int)
 
     fun solveOne(puzzleText: String): Int {
-        val (hitPoints, damage, armour) = puzzleText.split("\n").map { line -> line.split(": ")[1].toInt() }
-        val initialBoss = Boss(hitPoints, damage, armour)
+        val initialBoss = parseBoss(puzzleText)
+        val simulationResults = simulate1000Rounds(initialBoss)
+        return simulationResults.filter { it.playerWon }.minBy { it.itemCost }!!.itemCost
+    }
 
+    fun solveTwo(puzzleText: String): Int {
+        val initialBoss = parseBoss(puzzleText)
+        val simulationResults = simulate1000Rounds(initialBoss)
+        return simulationResults.filter { !it.playerWon }.maxBy { it.itemCost }!!.itemCost
+    }
+
+    private fun simulate1000Rounds(initialBoss: Boss): List<Result> {
         // You must buy exactly one weapon; no dual-wielding. Armor is optional, but you can't use more than one.
         // You can buy 0-2 rings (at most one for each hand). You must use any items you buy. The shop only has one
         // of each item, so you can't buy, for example, two rings of Damage +3.
         val random = Random(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+        return list(random, initialBoss)
+    }
 
-//        (0 until 1000).forEach {
-//            val player = createRandomPlayer(random)
-//            println(player)
-//        }
-
-
-        val dog = (0 until 1000).map {
+    private fun list(random: Random, initialBoss: Boss): List<Result> {
+        return (0 until 1000).map {
             val player = createRandomPlayer(random)
             runRound(player, initialBoss)
-        }.filter {
-            it.playerWon
         }
-        .minBy {
-            it.itemCost
-        }!!.itemCost
-
-
-        return dog
     }
-    
+
     private fun runRound(playerYo: Player, bossYo: Boss): Result {
         var player = playerYo
         var boss = bossYo
-        
+
         while (true) {
             boss = boss.receiveDamage(player.damage())
 
@@ -164,7 +160,8 @@ class Puzzle21 {
         return Player(100, allItems)
     }
 
-    fun solveTwo(puzzleText: String): Int {
-        return 2328382
+    private fun parseBoss(puzzleText: String): Boss {
+        val (hitPoints, damage, armour) = puzzleText.split("\n").map { line -> line.split(": ")[1].toInt() }
+        return Boss(hitPoints, damage, armour)
     }
 }
