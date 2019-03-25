@@ -2,6 +2,7 @@ package Year2015
 
 import junit.framework.Assert.assertEquals
 import org.junit.Test
+import kotlin.random.Random
 
 class Puzzle11RedoTest {
     val puzzle = PuzzleRedo11()
@@ -28,12 +29,44 @@ class Puzzle11RedoTest {
 
     @Test
     fun `password a should equal integer 1`() {
-        assertEquals(1, puzzle.passwordToInt("a"))
+        assertEquals(0, puzzle.passwordToInt("a"))
     }
 
     @Test
     fun `integer 1 should equal password a`() {
-        assertEquals("a", puzzle.intToPassword(1))
+        assertEquals("a", puzzle.intToPassword(0))
+    }
+
+    @Test
+    fun `integer 2 should equal password b`() {
+        assertEquals("b", puzzle.intToPassword(1))
+    }
+
+    @Test
+    fun `integer 25 should equal password z`() {
+        assertEquals("z", puzzle.intToPassword(25))
+    }
+
+    @Test
+    fun `integer 26 should equal password ba`() {
+        assertEquals("ba", puzzle.intToPassword(26))
+    }
+
+    @Test
+    fun `ba should equal integer 26`() {
+        assertEquals(26, puzzle.passwordToInt("ba"))
+    }
+
+    @Test
+    fun `can round trip 100 random integers`() {
+        val random = Random(0)
+
+        (0 until 100).forEach {
+            val randomInteger = random.nextInt(0, Int.MAX_VALUE)
+//            println(randomInteger)
+            val roundTheWorld = puzzle.passwordToInt(puzzle.intToPassword(randomInteger))
+            assertEquals(randomInteger, roundTheWorld)
+        }
     }
 }
 
@@ -72,15 +105,15 @@ class PuzzleRedo11 {
         return "sdfds"
     }
 
-    val crazyMap: Map<Char, Int> = mapOf('a' to 1, 'b' to 2, 'c' to 3, 'd' to 4, 'e' to 5, 'f' to 6, 'g' to 7, 'h' to 8, 'i' to 9, 'j' to 10, 'k' to 11, 'l' to 12, 'm' to 13, 'n' to 14, 'o' to 15, 'p' to 16, 'q' to 17, 'r' to 18, 's' to 19, 't' to 20, 'u' to 21, 'v' to 22, 'w' to 23, 'x' to 24, 'y' to 25, 'z' to 26)
-    val invertedCrazyMap: Map<Int, Char> = crazyMap.entries.map { (key, value) -> value to key }.toMap()
+    val dog: Map<Char, Char> = mapOf('0' to 'a', '1' to 'b', '2' to 'c', '3' to 'd', '4' to 'e', '5' to 'f', '6' to 'g', '7' to 'h', '8' to 'i', '9' to 'j', 'a' to 'k', 'b' to 'l', 'c' to 'm', 'd' to 'n', 'e' to 'o', 'f' to 'p', 'g' to 'q', 'h' to 'r', 'i' to 's', 'j' to 't', 'k' to 'u', 'l' to 'v', 'm' to 'w', 'n' to 'x', 'o' to 'y', 'p' to 'z')
+    val inveredDog: Map<Char, Char> = dog.entries.map { (key, value) -> value to key }.toMap()
 
     fun passwordToInt(password: String): Int {
-        return password.toInt(26)
+        return password.map { inveredDog[it]!! }.joinToString("").toInt(26)
     }
 
     fun intToPassword(number: Int): String {
-        return number.toString(26)/*.map { char ->  }*/
+        return number.toString(26).map { dog[it]!! }.joinToString("")
     }
 
     fun solveOne(puzzleText: String): String {
