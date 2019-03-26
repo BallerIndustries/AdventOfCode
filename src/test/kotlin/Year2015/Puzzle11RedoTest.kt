@@ -28,6 +28,19 @@ class Puzzle11RedoTest {
     }
 
     @Test
+    fun `password after z should be ba`() {
+        val nextPassword = puzzle.nextPassword("z")
+        assertEquals("ba", nextPassword)
+    }
+
+
+    @Test
+    fun `password after ba should be bb`() {
+        val nextPassword = puzzle.nextPassword("ba")
+        assertEquals("bb", nextPassword)
+    }
+
+    @Test
     fun `password a should equal integer 1`() {
         assertEquals(0, puzzle.passwordToInt("a"))
     }
@@ -63,7 +76,6 @@ class Puzzle11RedoTest {
 
         (0 until 100).forEach {
             val randomInteger = random.nextInt(0, Int.MAX_VALUE)
-//            println(randomInteger)
             val roundTheWorld = puzzle.passwordToInt(puzzle.intToPassword(randomInteger))
             assertEquals(randomInteger, roundTheWorld)
         }
@@ -102,14 +114,14 @@ class PuzzleRedo11 {
     }
 
     fun nextPassword(password: String): String {
-        return "sdfds"
+        return intToPassword(passwordToInt(password) + 1)
     }
 
     val dog: Map<Char, Char> = mapOf('0' to 'a', '1' to 'b', '2' to 'c', '3' to 'd', '4' to 'e', '5' to 'f', '6' to 'g', '7' to 'h', '8' to 'i', '9' to 'j', 'a' to 'k', 'b' to 'l', 'c' to 'm', 'd' to 'n', 'e' to 'o', 'f' to 'p', 'g' to 'q', 'h' to 'r', 'i' to 's', 'j' to 't', 'k' to 'u', 'l' to 'v', 'm' to 'w', 'n' to 'x', 'o' to 'y', 'p' to 'z')
-    val inveredDog: Map<Char, Char> = dog.entries.map { (key, value) -> value to key }.toMap()
+    val invertedDog: Map<Char, Char> = dog.entries.map { (key, value) -> value to key }.toMap()
 
     fun passwordToInt(password: String): Int {
-        return password.map { inveredDog[it]!! }.joinToString("").toInt(26)
+        return password.map { invertedDog[it]!! }.joinToString("").toInt(26)
     }
 
     fun intToPassword(number: Int): String {
@@ -117,16 +129,18 @@ class PuzzleRedo11 {
     }
 
     fun solveOne(puzzleText: String): String {
-//        val dog = 25.toString(26)
-//        println("dog = $dog")
+        val initialPasswordAsInteger = puzzleText.toInt(26)
 
+        (initialPasswordAsInteger until Int.MAX_VALUE).forEach { number ->
 
+            val password = intToPassword(number)
 
-        val cra = (0 .. 100).associate { it to it.toString(26) }
-        println(cra)
+            if (hasNoIOOrL(password) && hasTwoNonOverlappingPairs(password) && hasThreeCharStraight(password)) {
+                return password
+            }
+        }
 
-
-        return "saduihas"
+        throw RuntimeException("I can't even!")
     }
 
     fun solveTwo(puzzleText: String): Int {
