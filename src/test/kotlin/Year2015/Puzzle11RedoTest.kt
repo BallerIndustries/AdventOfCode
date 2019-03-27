@@ -74,7 +74,7 @@ class Puzzle11RedoTest {
     fun `can round trip 100 random integers`() {
         val random = Random(0)
 
-        (0 until 100).forEach {
+        (0 until 100000).forEach {
             val randomInteger = random.nextInt(0, Int.MAX_VALUE)
             val roundTheWorld = puzzle.passwordToInt(puzzle.intToPassword(randomInteger))
             assertEquals(randomInteger, roundTheWorld)
