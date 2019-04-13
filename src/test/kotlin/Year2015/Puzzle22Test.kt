@@ -24,9 +24,12 @@ class Puzzle22Test {
 }
 
 class Puzzle22 {
+    enum class BattleResult { PLAYER_WON, PLAYER_KILLED_BY_BOSS, PLAYER_CANNOT_CAST_SPELL }
+
     interface Effect {
         val remainingTurns: Int
         val gameStateChange: GameStateChange
+        fun decrementTurnCount(): Effect
     }
 
     interface Spell {
@@ -35,18 +38,30 @@ class Puzzle22 {
     }
 
     data class ShieldEffect(override val remainingTurns: Int = 6): Effect {
+        override fun decrementTurnCount(): Effect {
+            return this.copy(remainingTurns = this.remainingTurns - 1)
+        }
+
         override val gameStateChange = { boss: Boss, player: Player ->
             Pair(boss, player.setArmor(7))
         }
     }
 
     data class PoisonEffect(override val remainingTurns: Int = 6): Effect {
+        override fun decrementTurnCount(): Effect {
+            return this.copy(remainingTurns = this.remainingTurns - 1)
+        }
+
         override val gameStateChange = { boss: Boss, player: Player ->
             Pair(boss.receiveDamage(3), player)
         }
     }
 
     data class RechargeEffect(override val remainingTurns: Int = 6): Effect {
+        override fun decrementTurnCount(): Effect {
+            return this.copy(remainingTurns = this.remainingTurns - 1)
+        }
+
         override val gameStateChange = { boss: Boss, player: Player ->
             Pair(boss, player.gainMana(101))
         }
@@ -102,16 +117,18 @@ class Puzzle22 {
 
         fun receiveDamage(amount: Int) = this.copy(hp = this.hp - amount)
 
+        fun isDead() = this.hp <= 0
+
         override fun toString(): String {
             return "Boss has $hp hit points"
         }
     }
 
-    data class Player(val hp: Int = 50, val armor: Int = 0, val mana: Int = 500, val effects: List<Effect> = emptyList()) {
+    data class Player(val hp: Int = 50, val armor: Int = 0, val mana: Int = 500, val effects: List<Effect> = emptyList(), val manaSpent: Int = 0) {
         val maxHp: Int = 50
         val maxMana: Int = 500
 
-        fun useMana(amount: Int) = this.copy(mana = this.mana - amount)
+        fun useMana(amount: Int) = this.copy(mana = this.mana - amount, manaSpent =  this.manaSpent + amount)
 
         fun heal(amount: Int) = this.copy(hp = Math.min(maxHp, this.hp + amount))
 
@@ -121,13 +138,56 @@ class Puzzle22 {
 
         fun gainMana(amount: Int) = this.copy(mana = Math.min(this.mana + amount, maxMana))
 
+        fun isDead() = this.hp <= 0
+
         fun receiveDamage(amount: Int): Player {
             val damageAmount = if (amount - armor >= 1) amount - armor else 1
             return this.copy(hp = this.hp - damageAmount)
         }
 
+        fun canCastSpell(allSpells: List<Spell>) = getCastableSpells(allSpells).isNotEmpty()
+
+        fun getCastableSpells(allSpells: List<Spell>): List<Spell> {
+            // TODO: Super shit, do this better you asshole
+            val liveEffectNames = effects.map { it::class.simpleName!!.replace("Effect", "") }.toSet()
+
+            val castableSpells = allSpells.filter { spell ->
+                val spellName = spell::class.simpleName!!.replace("Spell", "")
+                !liveEffectNames.contains(spellName)
+            }.filter { spell ->
+                this.mana > spell.manaCost
+            }
+
+//            println("castableSpells = $castableSpells")
+            return castableSpells
+        }
+
         override fun toString(): String {
-            return "Player has $hp hit points, $armor armor, $mana mana effects = $effects"
+            return "Player has $hp hit points, $armor armor, $mana mana effects = $effects manaSpent = $manaSpent"
+        }
+
+        fun getRandomSpell(allSpells: List<Spell>): Spell? {
+            val castableSpells = getCastableSpells(allSpells)
+            return if (castableSpells.isEmpty()) null else castableSpells.random()
+        }
+
+        // TODO: Not nice
+        fun triggerEffects(boss: Boss): Pair<Boss, Player> {
+            var b = boss
+            var p = this
+
+            p.effects.forEach { effect ->
+                val dog = effect.gameStateChange(boss, this)
+                b = dog.first
+                p = dog.second
+            }
+
+            val newEffects = p.effects
+                .map { effect -> effect.decrementTurnCount() }
+                .filter { it.remainingTurns > 0 }
+
+            p = p.copy(effects =  newEffects)
+            return b to p
         }
     }
 
@@ -137,26 +197,72 @@ class Puzzle22 {
         var boss = Boss.parse(puzzleText)
         var player = Player()
 
-        // pick a random spell
-        val randomSpell = allSpells.random()
+        val (battleResult, finalPlayer) = runBattle(boss, player)
 
-        println("-- Player Turn --")
-        println("- $player")
-        println("- $boss")
-        println("- Player casts ${randomSpell::class.simpleName?.replace("Spell", "")}.")
-        println()
+        println("battleResult = $battleResult finalPlayer = $finalPlayer")
+        return finalPlayer.manaSpent
+    }
+
+    private fun runBattle(boss: Boss, player: Player): Pair<BattleResult, Player> {
+        var boss = boss
+        var player = player
+
+        while (true) {
+            val turnResult = runATurn(player, boss)
+            boss = turnResult.first
+            player = turnResult.second
+
+            if (boss.isDead()) return BattleResult.PLAYER_WON to player
+            else if (!player.canCastSpell(allSpells)) return BattleResult.PLAYER_CANNOT_CAST_SPELL to player
+            else if (player.isDead()) return BattleResult.PLAYER_KILLED_BY_BOSS to player
+        }
+    }
+
+    private fun runATurn(player: Player, boss: Boss): Pair<Boss, Player> {
+        var player = player
+        var boss = boss
+
+        // TODO: Trigger effects at the start of the turns
+        var dog: Pair<Boss, Player> = player.triggerEffects(boss)
+        boss = dog.first
+        player = dog.second
+
+        if (player.isDead() || boss.isDead()) {
+            return boss to player
+        }
+
+        val randomSpell: Spell = player.getRandomSpell(allSpells) ?: return boss to player
+
+//        println("-- Player Turn --")
+//        println("- $player")
+//        println("- $boss")
+//        println("- Player casts ${randomSpell::class.simpleName?.replace("Spell", "")}.")
+//        println()
+
+        if (player.isDead() || boss.isDead()) {
+            return boss to player
+        }
+
+        // TODO: Trigger effects at the start of the turns
+        dog = player.triggerEffects(boss)
+        boss = dog.first
+        player = dog.second
+
+        if (player.isDead() || boss.isDead()) {
+            return boss to player
+        }
 
         val (nextBoss, nextPlayer) = randomSpell.gameStateChange(boss, player)
         boss = nextBoss
         player = nextPlayer
 
-        println("-- Player Turn --")
-        println("- $player")
-        println("- $boss")
+//        println("-- Boss Turn --")
+//        println("- $player")
+//        println("- $boss")
+//        println()
+
         player = player.receiveDamage(boss.damage)
-
-
-        return 100
+        return boss to player
     }
 
     fun solveTwo(puzzleText: String): Int {
