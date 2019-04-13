@@ -64,7 +64,7 @@ class Puzzle22 {
         override val manaCost = 73
 
         override val gameStateChange: GameStateChange = { boss, player ->
-            Pair(boss.receiveDamage(4), player.useMana(manaCost))
+            Pair(boss.receiveDamage(2), player.useMana(manaCost).heal(2))
         }
     }
 
@@ -72,7 +72,7 @@ class Puzzle22 {
         override val manaCost = 113
 
         override val gameStateChange: GameStateChange = { boss, player ->
-            Pair(boss.receiveDamage(4), player.useMana(manaCost))
+            Pair(boss, player.useMana(manaCost).addEffect(ShieldEffect()))
         }
     }
 
@@ -80,7 +80,7 @@ class Puzzle22 {
         override val manaCost = 173
 
         override val gameStateChange: GameStateChange = { boss, player ->
-            Pair(boss.receiveDamage(4), player.useMana(manaCost))
+            Pair(boss, player.useMana(manaCost).addEffect(PoisonEffect()))
         }
     }
 
@@ -88,7 +88,7 @@ class Puzzle22 {
         override val manaCost = 229
 
         override val gameStateChange: GameStateChange = { boss, player ->
-            Pair(boss.receiveDamage(4), player.useMana(manaCost))
+            Pair(boss, player.useMana(manaCost).addEffect(RechargeEffect()))
         }
     }
 
@@ -115,7 +115,7 @@ class Puzzle22 {
 
         fun heal(amount: Int) = this.copy(hp = Math.min(maxHp, this.hp + amount))
 
-        fun startEffect(effect: Effect) = this.copy(effects = this.effects + effect)
+        fun addEffect(effect: Effect) = this.copy(effects = this.effects + effect)
 
         fun setArmor(amount: Int) = this.copy(armor = amount)
 
@@ -126,8 +126,10 @@ class Puzzle22 {
             return this.copy(hp = this.hp - damageAmount)
         }
 
+//        fun invokeEffects
+
         override fun toString(): String {
-            return "Player has $hp hit points, $armor armor, $mana mana"
+            return "Player has $hp hit points, $armor armor, $mana mana effects = $effects"
         }
     }
 
