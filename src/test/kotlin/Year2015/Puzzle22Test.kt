@@ -12,6 +12,7 @@ class Puzzle22Test {
 
     @Test
     fun `puzzle part a`() {
+        // 992 too high
         val result = puzzle.solveOne(puzzleText)
         assertEquals(111, result)
     }
@@ -186,6 +187,11 @@ class Puzzle22 {
                 .map { effect -> effect.decrementTurnCount() }
                 .filter { it.remainingTurns > 0 }
 
+            // TODO: Super not nice! Fix this you dick
+            if (!newEffects.map { it::class.simpleName }.contains("ShieldEffect")) {
+                p = p.setArmor(0)
+            }
+
             p = p.copy(effects =  newEffects)
             return b to p
         }
@@ -194,13 +200,19 @@ class Puzzle22 {
     val allSpells = listOf(MagicMissileSpell(), DrainSpell(), ShieldSpell(), PoisonSpell(), RechargeSpell())
 
     fun solveOne(puzzleText: String): Int {
-        var boss = Boss.parse(puzzleText)
-        var player = Player()
+        val boss = Boss.parse(puzzleText)
+        val player = Player()
 
-        val (battleResult, finalPlayer) = runBattle(boss, player)
+        val playerWins = (0 until 1)
+            .map { runBattle(boss, player) }
+            .filter { it.first == BattleResult.PLAYER_WON }
+            .sortedBy { it.second.manaSpent }
 
-        println("battleResult = $battleResult finalPlayer = $finalPlayer")
-        return finalPlayer.manaSpent
+        println(playerWins)
+        println(playerWins.count())
+
+//        println("battleResult = $battleResult finalPlayer = $finalPlayer")
+        return 22
     }
 
     private fun runBattle(boss: Boss, player: Player): Pair<BattleResult, Player> {
@@ -233,15 +245,19 @@ class Puzzle22 {
 
         val randomSpell: Spell = player.getRandomSpell(allSpells) ?: return boss to player
 
-//        println("-- Player Turn --")
-//        println("- $player")
-//        println("- $boss")
-//        println("- Player casts ${randomSpell::class.simpleName?.replace("Spell", "")}.")
-//        println()
+        println("-- Player Turn --")
+        println("- $player")
+        println("- $boss")
+        println("- Player casts ${randomSpell::class.simpleName?.replace("Spell", "")}.")
+        println()
 
         if (player.isDead() || boss.isDead()) {
             return boss to player
         }
+
+        val (nextBoss, nextPlayer) = randomSpell.gameStateChange(boss, player)
+        boss = nextBoss
+        player = nextPlayer
 
         // TODO: Trigger effects at the start of the turns
         dog = player.triggerEffects(boss)
@@ -252,14 +268,10 @@ class Puzzle22 {
             return boss to player
         }
 
-        val (nextBoss, nextPlayer) = randomSpell.gameStateChange(boss, player)
-        boss = nextBoss
-        player = nextPlayer
-
-//        println("-- Boss Turn --")
-//        println("- $player")
-//        println("- $boss")
-//        println()
+        println("-- Boss Turn --")
+        println("- $player")
+        println("- $boss")
+        println()
 
         player = player.receiveDamage(boss.damage)
         return boss to player
