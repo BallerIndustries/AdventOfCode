@@ -34,47 +34,62 @@ class Puzzle22 {
         val gameStateChange: GameStateChange
     }
 
-    data class Shield(override val remainingTurns: Int = 6): Effect {
+    data class ShieldEffect(override val remainingTurns: Int = 6): Effect {
         override val gameStateChange = { boss: Boss, player: Player ->
             Pair(boss, player.setArmor(7))
         }
     }
 
-    data class Poison(override val remainingTurns: Int = 6): Effect {
+    data class PoisonEffect(override val remainingTurns: Int = 6): Effect {
         override val gameStateChange = { boss: Boss, player: Player ->
             Pair(boss.receiveDamage(3), player)
         }
     }
 
-    data class Recharge(override val remainingTurns: Int = 6): Effect {
+    data class RechargeEffect(override val remainingTurns: Int = 6): Effect {
         override val gameStateChange = { boss: Boss, player: Player ->
             Pair(boss, player.gainMana(101))
         }
     }
 
-//    data class Magic
+    class MagicMissileSpell : Spell {
+        override val manaCost = 53
 
-
-
-
-    val magicMissile: GameStateChange = { boss, player ->
-        Pair(boss.receiveDamage(4), player.useMana(53))
+        override val gameStateChange: GameStateChange = { boss, player ->
+            Pair(boss.receiveDamage(4), player.useMana(manaCost))
+        }
     }
 
-    val drain: GameStateChange = { boss, player ->
-        Pair(boss.receiveDamage(2), player.useMana(73).heal(2))
+    class DrainSpell : Spell {
+        override val manaCost = 73
+
+        override val gameStateChange: GameStateChange = { boss, player ->
+            Pair(boss.receiveDamage(4), player.useMana(manaCost))
+        }
     }
 
-    val shield: GameStateChange = { boss, player ->
-        Pair(boss, player.useMana(113).startEffect(Shield()))
+    class ShieldSpell : Spell {
+        override val manaCost = 113
+
+        override val gameStateChange: GameStateChange = { boss, player ->
+            Pair(boss.receiveDamage(4), player.useMana(manaCost))
+        }
     }
 
-    val poison: GameStateChange = { boss, player ->
-        Pair(boss, player.useMana(173).startEffect(Poison()))
+    class PoisonSpell : Spell {
+        override val manaCost = 173
+
+        override val gameStateChange: GameStateChange = { boss, player ->
+            Pair(boss.receiveDamage(4), player.useMana(manaCost))
+        }
     }
 
-    val recharge: GameStateChange = { boss, player ->
-        Pair(boss, player.useMana(229).startEffect(Recharge()))
+    class RechargeSpell : Spell {
+        override val manaCost = 229
+
+        override val gameStateChange: GameStateChange = { boss, player ->
+            Pair(boss.receiveDamage(4), player.useMana(manaCost))
+        }
     }
 
     data class Boss(val hp: Int, val damage: Int) {
@@ -86,6 +101,10 @@ class Puzzle22 {
         }
 
         fun receiveDamage(amount: Int) = this.copy(hp = this.hp - amount)
+
+        override fun toString(): String {
+            return "Boss has $hp hit points"
+        }
     }
 
     data class Player(val hp: Int = 50, val armor: Int = 0, val mana: Int = 500, val effects: List<Effect> = emptyList()) {
@@ -101,11 +120,41 @@ class Puzzle22 {
         fun setArmor(amount: Int) = this.copy(armor = amount)
 
         fun gainMana(amount: Int) = this.copy(mana = Math.min(this.mana + amount, maxMana))
+
+        fun receiveDamage(amount: Int): Player {
+            val damageAmount = if (amount - armor >= 1) amount - armor else 1
+            return this.copy(hp = this.hp - damageAmount)
+        }
+
+        override fun toString(): String {
+            return "Player has $hp hit points, $armor armor, $mana mana"
+        }
     }
 
-    fun solveOne(puzzleText: String): Int {
-        val boss = Boss.parse(puzzleText)
+    val allSpells = listOf(MagicMissileSpell(), DrainSpell(), ShieldSpell(), PoisonSpell(), RechargeSpell())
 
+    fun solveOne(puzzleText: String): Int {
+        var boss = Boss.parse(puzzleText)
+        var player = Player()
+
+
+
+        // pick a random spell
+        val randomSpell = allSpells.random()
+
+        println("-- Player Turn --")
+        println("- $player")
+        println("- $boss")
+        println("- Player casts ${randomSpell::class.simpleName?.replace("Spell", "")}.")
+        println()
+
+        val (nextBoss, nextPlayer) = randomSpell.gameStateChange(boss, player)
+        boss = nextBoss
+        player = nextPlayer
+
+        println("-- Player Turn --")
+        println("- $player")
+        println("- $boss")
 
 
         return 100
@@ -114,6 +163,4 @@ class Puzzle22 {
     fun solveTwo(puzzleText: String): Int {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
-
-
 }
