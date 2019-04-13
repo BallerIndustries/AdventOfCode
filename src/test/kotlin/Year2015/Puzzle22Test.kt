@@ -126,8 +126,6 @@ class Puzzle22 {
             return this.copy(hp = this.hp - damageAmount)
         }
 
-//        fun invokeEffects
-
         override fun toString(): String {
             return "Player has $hp hit points, $armor armor, $mana mana effects = $effects"
         }
@@ -138,8 +136,6 @@ class Puzzle22 {
     fun solveOne(puzzleText: String): Int {
         var boss = Boss.parse(puzzleText)
         var player = Player()
-
-
 
         // pick a random spell
         val randomSpell = allSpells.random()
@@ -157,6 +153,7 @@ class Puzzle22 {
         println("-- Player Turn --")
         println("- $player")
         println("- $boss")
+        player = player.receiveDamage(boss.damage)
 
 
         return 100
