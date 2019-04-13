@@ -31,6 +31,7 @@ class Puzzle22 {
         val remainingTurns: Int
         val gameStateChange: GameStateChange
         fun decrementTurnCount(): Effect
+        fun describe(): String
     }
 
     interface Spell {
@@ -39,6 +40,10 @@ class Puzzle22 {
     }
 
     data class ShieldEffect(override val remainingTurns: Int = 6): Effect {
+        override fun describe(): String {
+            return "Shields timer is now ${remainingTurns - 1}."
+        }
+
         override fun decrementTurnCount(): Effect {
             return this.copy(remainingTurns = this.remainingTurns - 1)
         }
@@ -49,6 +54,10 @@ class Puzzle22 {
     }
 
     data class PoisonEffect(override val remainingTurns: Int = 6): Effect {
+        override fun describe(): String {
+            return "Poison deals 3 damage; its timer is now ${remainingTurns - 1}."
+        }
+
         override fun decrementTurnCount(): Effect {
             return this.copy(remainingTurns = this.remainingTurns - 1)
         }
@@ -59,6 +68,10 @@ class Puzzle22 {
     }
 
     data class RechargeEffect(override val remainingTurns: Int = 6): Effect {
+        override fun describe(): String {
+            return "Recharge provides 101 mana; its timer is now ${remainingTurns - 1}."
+        }
+
         override fun decrementTurnCount(): Effect {
             return this.copy(remainingTurns = this.remainingTurns - 1)
         }
@@ -164,7 +177,7 @@ class Puzzle22 {
         }
 
         override fun toString(): String {
-            return "Player has $hp hit points, $armor armor, $mana mana effects = $effects manaSpent = $manaSpent"
+            return "Player has $hp hit points, $armor armor, $mana mana"
         }
 
         fun getRandomSpell(allSpells: List<Spell>): Spell? {
@@ -178,6 +191,7 @@ class Puzzle22 {
             var p = this
 
             p.effects.forEach { effect ->
+                println("${effect.describe()}")
                 val dog = effect.gameStateChange(boss, this)
                 b = dog.first
                 p = dog.second
@@ -234,6 +248,10 @@ class Puzzle22 {
         var player = player
         var boss = boss
 
+        println("-- Player Turn --")
+        println("- $player")
+        println("- $boss")
+
         // TODO: Trigger effects at the start of the turns
         var dog: Pair<Boss, Player> = player.triggerEffects(boss)
         boss = dog.first
@@ -245,9 +263,7 @@ class Puzzle22 {
 
         val randomSpell: Spell = player.getRandomSpell(allSpells) ?: return boss to player
 
-        println("-- Player Turn --")
-        println("- $player")
-        println("- $boss")
+
         println("- Player casts ${randomSpell::class.simpleName?.replace("Spell", "")}.")
         println()
 
@@ -259,6 +275,8 @@ class Puzzle22 {
         boss = nextBoss
         player = nextPlayer
 
+
+
         // TODO: Trigger effects at the start of the turns
         dog = player.triggerEffects(boss)
         boss = dog.first
@@ -268,12 +286,16 @@ class Puzzle22 {
             return boss to player
         }
 
+
         println("-- Boss Turn --")
         println("- $player")
         println("- $boss")
+        println("- Boss attacks for ${boss.damage - player.armor} damage")
         println()
 
         player = player.receiveDamage(boss.damage)
+
+
         return boss to player
     }
 
