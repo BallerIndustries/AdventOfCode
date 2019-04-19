@@ -165,15 +165,12 @@ class Puzzle22 {
             // TODO: Super shit, do this better you asshole
             val liveEffectNames = effects.map { it::class.simpleName!!.replace("Effect", "") }.toSet()
 
-            val castableSpells = allSpells.filter { spell ->
+            return allSpells.filter { spell ->
                 val spellName = spell::class.simpleName!!.replace("Spell", "")
                 !liveEffectNames.contains(spellName)
             }.filter { spell ->
-                this.mana > spell.manaCost
+                mana > spell.manaCost
             }
-
-//            println("castableSpells = $castableSpells")
-            return castableSpells
         }
 
         override fun toString(): String {
@@ -224,8 +221,6 @@ class Puzzle22 {
 
         println(playerWins)
         println(playerWins.count())
-
-//        println("battleResult = $battleResult finalPlayer = $finalPlayer")
         return 22
     }
 
@@ -262,8 +257,6 @@ class Puzzle22 {
         }
 
         val randomSpell: Spell = player.getRandomSpell(allSpells) ?: return boss to player
-
-
         println("- Player casts ${randomSpell::class.simpleName?.replace("Spell", "")}.")
         println()
 
@@ -275,8 +268,6 @@ class Puzzle22 {
         boss = nextBoss
         player = nextPlayer
 
-
-
         // TODO: Trigger effects at the start of the turns
         dog = player.triggerEffects(boss)
         boss = dog.first
@@ -286,7 +277,6 @@ class Puzzle22 {
             return boss to player
         }
 
-
         println("-- Boss Turn --")
         println("- $player")
         println("- $boss")
@@ -294,8 +284,6 @@ class Puzzle22 {
         println()
 
         player = player.receiveDamage(boss.damage)
-
-
         return boss to player
     }
 
