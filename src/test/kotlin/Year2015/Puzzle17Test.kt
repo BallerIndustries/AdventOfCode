@@ -1,7 +1,6 @@
 package Year2015
 
 import junit.framework.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Test
 
 class Puzzle17Test {
@@ -22,73 +21,51 @@ class Puzzle17Test {
     }
 
     @Test
-    @Ignore
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(18965440, result)
+        assertEquals(654, result)
     }
 
     @Test
-    @Ignore
     fun `puzzle part b`() {
-        // 103 too low
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(17862900, result)
-    }
-
-    @Test
-    fun `example part a next gen`() {
-        val result = puzzle.solveOneNextGen(puzzleText, 25)
-        assertEquals(4, result)
+        assertEquals(57, result)
     }
 }
 
 class Puzzle17 {
     data class Container(val id: Int, val size: Int)
 
-    data class InProgress(val used: List<Container>, val remaining: List<Container>) {
+    data class InProgress(val used: Set<Container>, val remaining: Set<Container>) {
         fun totalSize() = used.sumBy { it.size }
 
         fun addContainer(containerToAdd: Container): InProgress {
             if (!remaining.contains(containerToAdd)) throw RuntimeException("aaaghh noo!!!")
 
-            val indexOfItemToRemove= remaining.indexOf(containerToAdd)
-            val newUsed = used + remaining[indexOfItemToRemove]
-            val newRemaining = remaining.toMutableList()
-            newRemaining.removeAt(indexOfItemToRemove)
-
+            val newUsed = used + containerToAdd
+            val newRemaining = remaining.filter { it != containerToAdd }.toSet()
             return InProgress(newUsed, newRemaining)
         }
     }
 
-    fun solveOneNextGen(puzzleText: String, targetSize: Int = 150): Int {
-        val containers = puzzleText.split("\n")
-            .mapIndexed { index, text -> Container(index, text.toInt()) }
-            .sortedBy { it.size }
-
-        val memo = mutableMapOf<Int, List<List<Int>>>()
-
-        (1 .. targetSize).forEach { theSize ->
-            val combos = getCombinations(containers, theSize)
-        }
-
-        return 100
-    }
-
     fun solveOne(puzzleText: String, targetSize: Int = 150): Int {
         val containerSizes = puzzleText.split("\n").mapIndexed { index, text -> Container(index, text.toInt()) }
-
         val dog = getCombinations(containerSizes, targetSize)
-
         return dog.count()
+    }
+
+    fun solveTwo(puzzleText: String): Int {
+        val containerSizes = puzzleText.split("\n").mapIndexed { index, text -> Container(index, text.toInt()) }
+        val dog = getCombinations(containerSizes, 150)
+        val minListLength = dog.minBy { it.count() }!!.count()
+        return dog.count { it.count() == minListLength }
     }
 
     private fun getCombinations(containerSizes: List<Container>, targetSize: Int): List<List<Int>> {
         var containerConfigurations = containerSizes.mapIndexed { index, it ->
-            val remainingList = containerSizes.toMutableList()
-            remainingList.removeAt(index)
-            InProgress(listOf(it), remainingList)
-        }
+            val remainingList = containerSizes.toSet()
+            InProgress(setOf(), remainingList)
+        }.toSet()
 
         while (containerConfigurations.any { it.totalSize() < targetSize }) {
             containerConfigurations = containerConfigurations.flatMap { containerConfiguration ->
@@ -99,11 +76,11 @@ class Puzzle17 {
                 } else if (totalSize > targetSize) {
                     listOf()
                 } else {
-                    containerConfiguration.remaining.mapNotNull { remainingContainerSize ->
+                    containerConfiguration.remaining.map { remainingContainerSize ->
                         containerConfiguration.addContainer(remainingContainerSize)
                     }
                 }
-            }
+            }.toSet()
         }
 
         val dog = containerConfigurations
@@ -111,9 +88,5 @@ class Puzzle17 {
             .map { it.used.map { it.id }.sorted() }
             .distinct()
         return dog
-    }
-
-    fun solveTwo(puzzleText: String): Int {
-        return 100
     }
 }
