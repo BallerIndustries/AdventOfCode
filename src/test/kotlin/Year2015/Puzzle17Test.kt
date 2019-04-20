@@ -65,24 +65,12 @@ class Puzzle17 {
         val containers = puzzleText.split("\n")
             .mapIndexed { index, text -> Container(index, text.toInt()) }
             .sortedBy { it.size }
-            //.sortBy { }
 
         val memo = mutableMapOf<Int, List<List<Int>>>()
 
         (1 .. targetSize).forEach { theSize ->
-
             val combos = getCombinations(containers, theSize)
-
-
-
-
-
-
-
         }
-
-
-
 
         return 100
     }
