@@ -38,7 +38,8 @@ class Puzzle17Test {
 
     @Test
     fun `example part a next gen`() {
-        puzzle.solveOneNextGen(puzzleText, 25)
+        val result = puzzle.solveOneNextGen(puzzleText, 25)
+        assertEquals(4, result)
     }
 }
 
@@ -62,7 +63,25 @@ class Puzzle17 {
 
     fun solveOneNextGen(puzzleText: String, targetSize: Int = 150): Int {
         val containers = puzzleText.split("\n")
-                .mapIndexed { index, text -> Container(index, text.toInt()) }
+            .mapIndexed { index, text -> Container(index, text.toInt()) }
+            .sortedBy { it.size }
+            //.sortBy { }
+
+        val memo = mutableMapOf<Int, List<List<Int>>>()
+
+        (1 .. targetSize).forEach { theSize ->
+
+            val combos = getCombinations(containers, theSize)
+
+
+
+
+
+
+
+        }
+
+
 
 
         return 100
@@ -71,6 +90,12 @@ class Puzzle17 {
     fun solveOne(puzzleText: String, targetSize: Int = 150): Int {
         val containerSizes = puzzleText.split("\n").mapIndexed { index, text -> Container(index, text.toInt()) }
 
+        val dog = getCombinations(containerSizes, targetSize)
+
+        return dog.count()
+    }
+
+    private fun getCombinations(containerSizes: List<Container>, targetSize: Int): List<List<Int>> {
         var containerConfigurations = containerSizes.mapIndexed { index, it ->
             val remainingList = containerSizes.toMutableList()
             remainingList.removeAt(index)
@@ -83,24 +108,21 @@ class Puzzle17 {
                 val totalSize = containerConfiguration.totalSize()
                 if (totalSize == targetSize) {
                     listOf(containerConfiguration)
-                }
-                else if (totalSize > targetSize) {
+                } else if (totalSize > targetSize) {
                     listOf()
-                }
-                else {
+                } else {
                     containerConfiguration.remaining.mapNotNull { remainingContainerSize ->
-                            containerConfiguration.addContainer(remainingContainerSize)
+                        containerConfiguration.addContainer(remainingContainerSize)
                     }
                 }
             }
         }
 
         val dog = containerConfigurations
-                .filter { it.used.sumBy { it.size } == targetSize }
-                .map { it.used.map { it.id }.sorted() }
-                .distinct()
-
-        return dog.count()
+            .filter { it.used.sumBy { it.size } == targetSize }
+            .map { it.used.map { it.id }.sorted() }
+            .distinct()
+        return dog
     }
 
     fun solveTwo(puzzleText: String): Int {
