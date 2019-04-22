@@ -169,7 +169,7 @@ class Puzzle22Test {
 }
 
 class Puzzle22 {
-    enum class BattleResult { PLAYER_WON, PLAYER_KILLED_BY_BOSS, PLAYER_CANNOT_CAST_SPELL }
+    enum class BattleResult { PLAYER_WON, PLAYER_KILLED_BY_BOSS, PLAYER_CANNOT_CAST_SPELL, BEYOND_MIN_MANA }
 
     interface Effect {
         val remainingTurns: Int
@@ -393,16 +393,30 @@ class Puzzle22 {
     fun solveOne(puzzleText: String): Int {
         val boss = Boss.parse(puzzleText)
         val player = Player()
+        var minManaSpent = Int.MAX_VALUE
+        val theNumber = 100000000
 
-        val playerWins = (0 until 100000)
-            .map { runBattle(boss, player) }
+        val playerWins = (0 until theNumber)
+            .mapIndexed { index, it ->
+                val battleResult = runBattle(boss, player, minManaSpent)
+
+                if (battleResult.first == BattleResult.PLAYER_WON && battleResult.second.manaSpent < minManaSpent) {
+                    minManaSpent = battleResult.second.manaSpent
+                }
+
+                if (index % 10000 == 0) {
+                    println("${index.toDouble() / theNumber}")
+                }
+
+                battleResult
+            }
             .filter { it.first == BattleResult.PLAYER_WON }
             .sortedBy { it.second.manaSpent }
 
         return playerWins.minBy { it.second.manaSpent }!!.second.manaSpent
     }
 
-    private fun runBattle(boss: Boss, player: Player): Pair<BattleResult, Player> {
+    private fun runBattle(boss: Boss, player: Player, minManaSpent: Int): Pair<BattleResult, Player> {
         var boss = boss
         var player = player
 
@@ -415,8 +429,16 @@ class Puzzle22 {
             if (boss.isDead()) {
                 println("Player won! manaSpent = ${player.manaSpent}")
                 return BattleResult.PLAYER_WON to player
-            } else if (!player.canCastSpell(allSpells)) return BattleResult.PLAYER_CANNOT_CAST_SPELL to player
-            else if (player.isDead()) return BattleResult.PLAYER_KILLED_BY_BOSS to player
+            }
+            else if (!player.canCastSpell(allSpells)) {
+                return BattleResult.PLAYER_CANNOT_CAST_SPELL to player
+            }
+            else if (player.isDead()) {
+                return BattleResult.PLAYER_KILLED_BY_BOSS to player
+            }
+            else if (player.manaSpent > minManaSpent) {
+                return BattleResult.BEYOND_MIN_MANA to player
+            }
         }
     }
 
