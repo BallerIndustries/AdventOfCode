@@ -1,6 +1,7 @@
 package Year2015
 
 import junit.framework.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 
 typealias GameStateChange = (Puzzle22.Boss, Puzzle22.Player) -> Pair<Puzzle22.Boss, Puzzle22.Player>
@@ -152,6 +153,7 @@ class Puzzle22Test {
     }
 
     @Test
+    @Ignore
     fun `puzzle part a`() {
         // 992 too high
         val result = puzzle.solveOne(puzzleText)
@@ -183,7 +185,7 @@ class Puzzle22 {
 
     data class ShieldEffect(override val remainingTurns: Int = 6): Effect {
         override fun describe(): String {
-            return "Shields timer is now ${remainingTurns - 1}."
+            return "Shield's timer is now ${remainingTurns - 1}."
         }
 
         override fun decrementTurnCount(): Effect {
@@ -310,8 +312,6 @@ class Puzzle22 {
 
         fun addEffect(effect: Effect) = this.copy(effects = this.effects + effect)
 
-//        fun setArmor(amount: Int) = this.copy(armor = amount)
-
         fun getArmor(): Int {
             val hasArmor = this.effects.any { it as? ShieldEffect != null }
             return if (hasArmor) 7 else 0
@@ -355,7 +355,8 @@ class Puzzle22 {
             var b = boss
             var p = this
 
-            p.effects.forEach { effect ->
+            p.effects.sortedByDescending { it.remainingTurns }
+                .forEach { effect ->
 
                 val dog = effect.gameStateChange(boss, this)
                 b = dog.first
@@ -363,6 +364,9 @@ class Puzzle22 {
 
                 if (b.isDead()) {
                     logger("${effect.describe()}. This kills the boss, and the player wins.")
+                }
+                else if (effect as? ShieldEffect != null) {
+                    logger(effect.describe())
                 }
                 else {
                     logger("${effect.describe()}; its timer is now ${effect.remainingTurns - 1}.")
@@ -372,11 +376,6 @@ class Puzzle22 {
             val newEffects = p.effects
                 .map { effect -> effect.decrementTurnCount() }
                 .filter { it.remainingTurns > 0 }
-
-            // TODO: Super not nice! Fix this you dick
-//            if (!newEffects.map { it::class.simpleName }.contains("ShieldEffect")) {
-//                p = p.setArmor(0)
-//            }
 
             p = p.copy(effects =  newEffects)
             return b to p
@@ -465,7 +464,17 @@ class Puzzle22 {
             return boss to player
         }
 
-        logger("Boss attacks for ${boss.damage - player.getArmor()} damage.")
+        //
+
+        val armor = player.getArmor()
+        if (armor > 0) {
+            logger("Boss attacks for ${boss.damage} - $armor = ${boss.damage - armor} damage.")
+        }
+        else {
+            logger("Boss attacks for ${boss.damage - armor} damage.")
+        }
+
+
         logger("")
 
         player = player.receiveDamage(boss.damage)
