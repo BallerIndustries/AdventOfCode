@@ -15,42 +15,53 @@ class Puzzle22Test {
         println(text)
     }
 
+    fun simulateBattle(boss: Puzzle22.Boss, player: Puzzle22.Player, spells: List<Puzzle22.Spell>): String {
+        var mutBoss = boss
+        var mutPlayer = player
+
+        spells.forEach { spell ->
+
+            val spellGetter = { spell }
+            val (boasss, playa) = puzzle.runATurn(mutPlayer, mutBoss, spellGetter, consoleSavingLogger)
+
+            mutBoss = boasss
+            mutPlayer = playa
+        }
+
+        return debugLines.joinToString("\n")
+    }
+
     @Test
     fun `example one`() {
         val player = Puzzle22.Player(hp = 10, armor = 0, mana = 250)
         val boss = Puzzle22.Boss(hp = 13, damage = 8)
 
-        val playerSpellGetter = { Puzzle22.PoisonSpell() }
-        val (boss2, player2) = puzzle.runATurn(player, boss, playerSpellGetter, consoleSavingLogger)
+        val expectedOutput = """
+            -- Player turn --
+            - Player has 10 hit points, 0 armor, 250 mana
+            - Boss has 13 hit points
+            Player casts Poison.
 
-        val playerSpellGetter2 = { Puzzle22.MagicMissileSpell() }
-        val (boss3, player3) = puzzle.runATurn(player2, boss2, playerSpellGetter2, consoleSavingLogger)
+            -- Boss turn --
+            - Player has 10 hit points, 0 armor, 77 mana
+            - Boss has 13 hit points
+            Poison deals 3 damage; its timer is now 5.
+            Boss attacks for 8 damage.
 
-        val expectedLines = listOf(
-            "-- Player turn --",
-            "- Player has 10 hit points, 0 armor, 250 mana",
-            "- Boss has 13 hit points",
-            "Player casts Poison.",
-            "",
-            "-- Boss turn --",
-            "- Player has 10 hit points, 0 armor, 77 mana",
-            "- Boss has 13 hit points",
-            "Poison deals 3 damage; its timer is now 5.",
-            "Boss attacks for 8 damage.",
-            "",
-            "-- Player turn --",
-            "- Player has 2 hit points, 0 armor, 77 mana",
-            "- Boss has 10 hit points",
-            "Poison deals 3 damage; its timer is now 4.",
-            "Player casts Magic Missile, dealing 4 damage.",
-            "",
-            "-- Boss turn --",
-            "- Player has 2 hit points, 0 armor, 24 mana",
-            "- Boss has 3 hit points",
-            "Poison deals 3 damage. This kills the boss, and the player wins."
-        )
+            -- Player turn --
+            - Player has 2 hit points, 0 armor, 77 mana
+            - Boss has 10 hit points
+            Poison deals 3 damage; its timer is now 4.
+            Player casts Magic Missile, dealing 4 damage.
 
-        assertEquals(expectedLines.joinToString("\n"), debugLines.joinToString("\n"))
+            -- Boss turn --
+            - Player has 2 hit points, 0 armor, 24 mana
+            - Boss has 3 hit points
+            Poison deals 3 damage. This kills the boss, and the player wins.
+        """.trimIndent()
+
+        val consoleOutput = simulateBattle(boss, player, listOf(Puzzle22.PoisonSpell(), Puzzle22.MagicMissileSpell()))
+        assertEquals(expectedOutput, consoleOutput)
     }
 
     @Test
@@ -285,7 +296,7 @@ class Puzzle22 {
         val boss = Boss.parse(puzzleText)
         val player = Player()
 
-        val playerWins = (0 until 1)
+        val playerWins = (0 until Int.MAX_VALUE)
             .map { runBattle(boss, player) }
             .filter { it.first == BattleResult.PLAYER_WON }
             .sortedBy { it.second.manaSpent }
@@ -301,12 +312,14 @@ class Puzzle22 {
 
         while (true) {
             val playerSpellGetter = { player.getRandomSpell(allSpells) }
-            val turnResult = runATurn(player, boss, playerSpellGetter)
+            val turnResult = runATurn(player, boss, playerSpellGetter, { })
             boss = turnResult.first
             player = turnResult.second
 
-            if (boss.isDead()) return BattleResult.PLAYER_WON to player
-            else if (!player.canCastSpell(allSpells)) return BattleResult.PLAYER_CANNOT_CAST_SPELL to player
+            if (boss.isDead()) {
+                println("Player won! manaSpent = ${player.manaSpent}")
+                return BattleResult.PLAYER_WON to player
+            } else if (!player.canCastSpell(allSpells)) return BattleResult.PLAYER_CANNOT_CAST_SPELL to player
             else if (player.isDead()) return BattleResult.PLAYER_KILLED_BY_BOSS to player
         }
     }
