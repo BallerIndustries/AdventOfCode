@@ -6,16 +6,18 @@ import org.junit.Test
 typealias GameStateChange = (Puzzle22.Boss, Puzzle22.Player) -> Pair<Puzzle22.Boss, Puzzle22.Player>
 
 class Puzzle22Test {
-    val puzzle = Puzzle22()
-    val puzzleText = this::class.java.getResource("/2015/puzzle22.txt").readText().replace("\r", "")
+    private val puzzle = Puzzle22()
 
-    val debugLines = mutableListOf<String>()
-    val consoleSavingLogger : (String) -> Unit = { text ->
+    private val puzzleText = this::class.java.getResource("/2015/puzzle22.txt").readText().replace("\r", "")
+
+    private val debugLines = mutableListOf<String>()
+
+    private val consoleSavingLogger : (String) -> Unit = { text ->
         debugLines.add(text)
         println(text)
     }
 
-    fun simulateBattle(boss: Puzzle22.Boss, player: Puzzle22.Player, spells: List<Puzzle22.Spell>): String {
+    private fun simulateBattle(boss: Puzzle22.Boss, player: Puzzle22.Player, spells: List<Puzzle22.Spell>): String {
         var mutBoss = boss
         var mutPlayer = player
 
@@ -33,7 +35,7 @@ class Puzzle22Test {
 
     @Test
     fun `example one`() {
-        val player = Puzzle22.Player(hp = 10, armor = 0, mana = 250)
+        val player = Puzzle22.Player(hp = 10, mana = 250)
         val boss = Puzzle22.Boss(hp = 13, damage = 8)
 
         val expectedOutput = """
@@ -66,7 +68,7 @@ class Puzzle22Test {
 
     @Test
     fun `example two`() {
-        val player = Puzzle22.Player(hp = 10, armor = 0, mana = 250)
+        val player = Puzzle22.Player(hp = 10, mana = 250)
         val boss = Puzzle22.Boss(hp = 14, damage = 8)
 
         val expectedOutput = """
@@ -189,7 +191,7 @@ class Puzzle22 {
         }
 
         override val gameStateChange = { boss: Boss, player: Player ->
-            Pair(boss, player.setArmor(7))
+            Pair(boss, player)
         }
     }
 
@@ -298,7 +300,7 @@ class Puzzle22 {
         }
     }
 
-    data class Player(val hp: Int = 50, val armor: Int = 0, val mana: Int = 500, val effects: List<Effect> = emptyList(), val manaSpent: Int = 0) {
+    data class Player(val hp: Int = 50, val mana: Int = 500, val effects: List<Effect> = emptyList(), val manaSpent: Int = 0) {
         val maxHp: Int = 50
         val maxMana: Int = 500
 
@@ -308,13 +310,19 @@ class Puzzle22 {
 
         fun addEffect(effect: Effect) = this.copy(effects = this.effects + effect)
 
-        fun setArmor(amount: Int) = this.copy(armor = amount)
+//        fun setArmor(amount: Int) = this.copy(armor = amount)
+
+        fun getArmor(): Int {
+            val hasArmor = this.effects.any { it as? ShieldEffect != null }
+            return if (hasArmor) 7 else 0
+        }
 
         fun gainMana(amount: Int) = this.copy(mana = Math.min(this.mana + amount, maxMana))
 
         fun isDead() = this.hp <= 0
 
         fun receiveDamage(amount: Int): Player {
+            val armor = getArmor()
             val damageAmount = if (amount - armor >= 1) amount - armor else 1
             return this.copy(hp = this.hp - damageAmount)
         }
@@ -334,7 +342,7 @@ class Puzzle22 {
         }
 
         override fun toString(): String {
-            return "Player has $hp hit points, $armor armor, $mana mana"
+            return "Player has $hp hit points, ${getArmor()} armor, $mana mana"
         }
 
         fun getRandomSpell(allSpells: List<Spell>): Spell? {
@@ -366,9 +374,9 @@ class Puzzle22 {
                 .filter { it.remainingTurns > 0 }
 
             // TODO: Super not nice! Fix this you dick
-            if (!newEffects.map { it::class.simpleName }.contains("ShieldEffect")) {
-                p = p.setArmor(0)
-            }
+//            if (!newEffects.map { it::class.simpleName }.contains("ShieldEffect")) {
+//                p = p.setArmor(0)
+//            }
 
             p = p.copy(effects =  newEffects)
             return b to p
@@ -440,7 +448,6 @@ class Puzzle22 {
         boss = nextBoss
         player = nextPlayer
 
-
         if (player.isDead() || boss.isDead()) {
             return boss to player
         }
@@ -458,7 +465,7 @@ class Puzzle22 {
             return boss to player
         }
 
-        logger("Boss attacks for ${boss.damage - player.armor} damage.")
+        logger("Boss attacks for ${boss.damage - player.getArmor()} damage.")
         logger("")
 
         player = player.receiveDamage(boss.damage)
