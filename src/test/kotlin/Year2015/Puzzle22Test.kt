@@ -156,6 +156,7 @@ class Puzzle22Test {
     @Ignore
     fun `puzzle part a`() {
         // 992 too high
+        // 973 too high
         val result = puzzle.solveOne(puzzleText)
         assertEquals(111, result)
     }
@@ -239,7 +240,7 @@ class Puzzle22 {
 
     class DrainSpell : Spell {
         override fun describe(): String {
-            return "Player casts Drain."
+            return "Player casts Drain, dealing 2 damage, and healing 2 hit points."
         }
 
         override val manaCost = 73
@@ -342,7 +343,12 @@ class Puzzle22 {
         }
 
         override fun toString(): String {
-            return "Player has $hp hit points, ${getArmor()} armor, $mana mana"
+            if (hp == 1) {
+                return "Player has $hp hit point, ${getArmor()} armor, $mana mana"
+            }
+            else {
+                return "Player has $hp hit points, ${getArmor()} armor, $mana mana"
+            }
         }
 
         fun getRandomSpell(allSpells: List<Spell>): Spell? {
@@ -358,7 +364,7 @@ class Puzzle22 {
             p.effects.sortedByDescending { it.remainingTurns }
                 .forEach { effect ->
 
-                val dog = effect.gameStateChange(boss, this)
+                val dog = effect.gameStateChange(b, this)
                 b = dog.first
                 p = dog.second
 
@@ -388,14 +394,12 @@ class Puzzle22 {
         val boss = Boss.parse(puzzleText)
         val player = Player()
 
-        val playerWins = (0 until Int.MAX_VALUE)
+        val playerWins = (0 until 100000)
             .map { runBattle(boss, player) }
             .filter { it.first == BattleResult.PLAYER_WON }
             .sortedBy { it.second.manaSpent }
 
-        println(playerWins)
-        println(playerWins.count())
-        return 22
+        return playerWins.minBy { it.second.manaSpent }!!.second.manaSpent
     }
 
     private fun runBattle(boss: Boss, player: Player): Pair<BattleResult, Player> {
@@ -464,8 +468,6 @@ class Puzzle22 {
             return boss to player
         }
 
-        //
-
         val armor = player.getArmor()
         if (armor > 0) {
             logger("Boss attacks for ${boss.damage} - $armor = ${boss.damage - armor} damage.")
@@ -474,9 +476,7 @@ class Puzzle22 {
             logger("Boss attacks for ${boss.damage - armor} damage.")
         }
 
-
         logger("")
-
         player = player.receiveDamage(boss.damage)
         return boss to player
     }
