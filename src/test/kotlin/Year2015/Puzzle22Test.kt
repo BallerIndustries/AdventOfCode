@@ -65,6 +65,91 @@ class Puzzle22Test {
     }
 
     @Test
+    fun `example two`() {
+        val player = Puzzle22.Player(hp = 10, armor = 0, mana = 250)
+        val boss = Puzzle22.Boss(hp = 14, damage = 8)
+
+        val expectedOutput = """
+            -- Player turn --
+            - Player has 10 hit points, 0 armor, 250 mana
+            - Boss has 14 hit points
+            Player casts Recharge.
+
+            -- Boss turn --
+            - Player has 10 hit points, 0 armor, 21 mana
+            - Boss has 14 hit points
+            Recharge provides 101 mana; its timer is now 4.
+            Boss attacks for 8 damage.
+
+            -- Player turn --
+            - Player has 2 hit points, 0 armor, 122 mana
+            - Boss has 14 hit points
+            Recharge provides 101 mana; its timer is now 3.
+            Player casts Shield, increasing armor by 7.
+
+            -- Boss turn --
+            - Player has 2 hit points, 7 armor, 110 mana
+            - Boss has 14 hit points
+            Shield's timer is now 5.
+            Recharge provides 101 mana; its timer is now 2.
+            Boss attacks for 8 - 7 = 1 damage.
+
+            -- Player turn --
+            - Player has 1 hit point, 7 armor, 211 mana
+            - Boss has 14 hit points
+            Shield's timer is now 4.
+            Recharge provides 101 mana; its timer is now 1.
+            Player casts Drain, dealing 2 damage, and healing 2 hit points.
+
+            -- Boss turn --
+            - Player has 3 hit points, 7 armor, 239 mana
+            - Boss has 12 hit points
+            Shield's timer is now 3.
+            Recharge provides 101 mana; its timer is now 0.
+            Recharge wears off.
+            Boss attacks for 8 - 7 = 1 damage.
+
+            -- Player turn --
+            - Player has 2 hit points, 7 armor, 340 mana
+            - Boss has 12 hit points
+            Shield's timer is now 2.
+            Player casts Poison.
+
+            -- Boss turn --
+            - Player has 2 hit points, 7 armor, 167 mana
+            - Boss has 12 hit points
+            Shield's timer is now 1.
+            Poison deals 3 damage; its timer is now 5.
+            Boss attacks for 8 - 7 = 1 damage.
+
+            -- Player turn --
+            - Player has 1 hit point, 7 armor, 167 mana
+            - Boss has 9 hit points
+            Shield's timer is now 0.
+            Shield wears off, decreasing armor by 7.
+            Poison deals 3 damage; its timer is now 4.
+            Player casts Magic Missile, dealing 4 damage.
+
+            -- Boss turn --
+            - Player has 1 hit point, 0 armor, 114 mana
+            - Boss has 2 hit points
+            Poison deals 3 damage. This kills the boss, and the player wins.
+        """.trimIndent()
+
+        val spells = listOf(
+            Puzzle22.RechargeSpell(),
+            Puzzle22.ShieldSpell(),
+            Puzzle22.DrainSpell(),
+            Puzzle22.PoisonSpell(),
+            Puzzle22.MagicMissileSpell()
+        )
+
+        val consoleOutput = simulateBattle(boss, player, spells)
+        assertEquals(expectedOutput, consoleOutput)
+
+    }
+
+    @Test
     fun `puzzle part a`() {
         // 992 too high
         val result = puzzle.solveOne(puzzleText)
@@ -122,9 +207,9 @@ class Puzzle22 {
         }
     }
 
-    data class RechargeEffect(override val remainingTurns: Int = 6): Effect {
+    data class RechargeEffect(override val remainingTurns: Int = 5): Effect {
         override fun describe(): String {
-            return "Recharge provides 101 mana; its timer is now ${remainingTurns - 1}."
+            return "Recharge provides 101 mana"
         }
 
         override fun decrementTurnCount(): Effect {
@@ -150,7 +235,7 @@ class Puzzle22 {
 
     class DrainSpell : Spell {
         override fun describe(): String {
-            return "Player casts Poison."
+            return "Player casts Drain."
         }
 
         override val manaCost = 73
@@ -162,7 +247,7 @@ class Puzzle22 {
 
     class ShieldSpell : Spell {
         override fun describe(): String {
-            return "Player casts Poison."
+            return "Player casts Shield, increasing armor by 7."
         }
 
         override val manaCost = 113
@@ -186,7 +271,7 @@ class Puzzle22 {
 
     class RechargeSpell : Spell {
         override fun describe(): String {
-            return "Player casts Poison."
+            return "Player casts Recharge."
         }
 
         override val manaCost = 229
