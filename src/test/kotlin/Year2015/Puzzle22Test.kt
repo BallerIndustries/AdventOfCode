@@ -8,7 +8,50 @@ typealias GameStateChange = (Puzzle22.Boss, Puzzle22.Player) -> Pair<Puzzle22.Bo
 class Puzzle22Test {
     val puzzle = Puzzle22()
     val puzzleText = this::class.java.getResource("/2015/puzzle22.txt").readText().replace("\r", "")
-    val exampleText = """""".trimIndent()
+
+    val debugLines = mutableListOf<String>()
+    val consoleSavingLogger : (String) -> Unit = { text ->
+        debugLines.add(text)
+        println(text)
+    }
+
+    @Test
+    fun `example one`() {
+        val player = Puzzle22.Player(hp = 10, armor = 0, mana = 250)
+        val boss = Puzzle22.Boss(hp = 13, damage = 8)
+
+        val playerSpellGetter = { Puzzle22.PoisonSpell() }
+        val (boss2, player2) = puzzle.runATurn(player, boss, playerSpellGetter, consoleSavingLogger)
+
+        val playerSpellGetter2 = { Puzzle22.MagicMissileSpell() }
+        val (boss3, player3) = puzzle.runATurn(player2, boss2, playerSpellGetter2, consoleSavingLogger)
+
+        val expectedLines = listOf(
+            "-- Player turn --",
+            "- Player has 10 hit points, 0 armor, 250 mana",
+            "- Boss has 13 hit points",
+            "Player casts Poison.",
+            "",
+            "-- Boss turn --",
+            "- Player has 10 hit points, 0 armor, 77 mana",
+            "- Boss has 13 hit points",
+            "Poison deals 3 damage; its timer is now 5.",
+            "Boss attacks for 8 damage.",
+            "",
+            "-- Player turn --",
+            "- Player has 2 hit points, 0 armor, 77 mana",
+            "- Boss has 10 hit points",
+            "Poison deals 3 damage; its timer is now 4.",
+            "Player casts Magic Missile, dealing 4 damage.",
+            "",
+            "-- Boss turn --",
+            "- Player has 2 hit points, 0 armor, 24 mana",
+            "- Boss has 3 hit points",
+            "Poison deals 3 damage. This kills the boss, and the player wins."
+        )
+
+        assertEquals(expectedLines.joinToString("\n"), debugLines.joinToString("\n"))
+    }
 
     @Test
     fun `puzzle part a`() {
@@ -37,6 +80,7 @@ class Puzzle22 {
     interface Spell {
         val manaCost: Int
         val gameStateChange: GameStateChange
+        fun describe(): String
     }
 
     data class ShieldEffect(override val remainingTurns: Int = 6): Effect {
@@ -55,7 +99,7 @@ class Puzzle22 {
 
     data class PoisonEffect(override val remainingTurns: Int = 6): Effect {
         override fun describe(): String {
-            return "Poison deals 3 damage; its timer is now ${remainingTurns - 1}."
+            return "Poison deals 3 damage"
         }
 
         override fun decrementTurnCount(): Effect {
@@ -82,6 +126,10 @@ class Puzzle22 {
     }
 
     class MagicMissileSpell : Spell {
+        override fun describe(): String {
+            return "Player casts Magic Missile, dealing 4 damage."
+        }
+
         override val manaCost = 53
 
         override val gameStateChange: GameStateChange = { boss, player ->
@@ -90,6 +138,10 @@ class Puzzle22 {
     }
 
     class DrainSpell : Spell {
+        override fun describe(): String {
+            return "Player casts Poison."
+        }
+
         override val manaCost = 73
 
         override val gameStateChange: GameStateChange = { boss, player ->
@@ -98,6 +150,10 @@ class Puzzle22 {
     }
 
     class ShieldSpell : Spell {
+        override fun describe(): String {
+            return "Player casts Poison."
+        }
+
         override val manaCost = 113
 
         override val gameStateChange: GameStateChange = { boss, player ->
@@ -106,6 +162,10 @@ class Puzzle22 {
     }
 
     class PoisonSpell : Spell {
+        override fun describe(): String {
+            return "Player casts Poison."
+        }
+
         override val manaCost = 173
 
         override val gameStateChange: GameStateChange = { boss, player ->
@@ -114,6 +174,10 @@ class Puzzle22 {
     }
 
     class RechargeSpell : Spell {
+        override fun describe(): String {
+            return "Player casts Poison."
+        }
+
         override val manaCost = 229
 
         override val gameStateChange: GameStateChange = { boss, player ->
@@ -183,15 +247,22 @@ class Puzzle22 {
         }
 
         // TODO: Not nice
-        fun triggerEffects(boss: Boss): Pair<Boss, Player> {
+        fun triggerEffects(boss: Boss, logger: (String) -> Unit): Pair<Boss, Player> {
             var b = boss
             var p = this
 
             p.effects.forEach { effect ->
-                println("${effect.describe()}")
+
                 val dog = effect.gameStateChange(boss, this)
                 b = dog.first
                 p = dog.second
+
+                if (b.isDead()) {
+                    logger("${effect.describe()}. This kills the boss, and the player wins.")
+                }
+                else {
+                    logger("${effect.describe()}; its timer is now ${effect.remainingTurns - 1}.")
+                }
             }
 
             val newEffects = p.effects
@@ -229,7 +300,8 @@ class Puzzle22 {
         var player = player
 
         while (true) {
-            val turnResult = runATurn(player, boss)
+            val playerSpellGetter = { player.getRandomSpell(allSpells) }
+            val turnResult = runATurn(player, boss, playerSpellGetter)
             boss = turnResult.first
             player = turnResult.second
 
@@ -239,16 +311,18 @@ class Puzzle22 {
         }
     }
 
-    private fun runATurn(player: Player, boss: Boss): Pair<Boss, Player> {
+    val consoleLogger : (String) -> Unit = { text -> println(text) }
+
+    fun runATurn(player: Player, boss: Boss, playerSpellGetter: () -> Spell?, logger: (String) -> Unit = consoleLogger): Pair<Boss, Player> {
         var player = player
         var boss = boss
 
-        println("-- Player Turn --")
-        println("- $player")
-        println("- $boss")
+        logger("-- Player turn --")
+        logger("- $player")
+        logger("- $boss")
 
         // TODO: Trigger effects at the start of the turns
-        var dog: Pair<Boss, Player> = player.triggerEffects(boss)
+        var dog: Pair<Boss, Player> = player.triggerEffects(boss, logger)
         boss = dog.first
         player = dog.second
 
@@ -256,9 +330,9 @@ class Puzzle22 {
             return boss to player
         }
 
-        val randomSpell: Spell = player.getRandomSpell(allSpells) ?: return boss to player
-        println("- Player casts ${randomSpell::class.simpleName?.replace("Spell", "")}.")
-        println()
+        val randomSpell: Spell = playerSpellGetter() ?: return boss to player
+        logger(randomSpell.describe())
+        logger("")
 
         if (player.isDead() || boss.isDead()) {
             return boss to player
@@ -268,8 +342,17 @@ class Puzzle22 {
         boss = nextBoss
         player = nextPlayer
 
+
+        if (player.isDead() || boss.isDead()) {
+            return boss to player
+        }
+
+        logger("-- Boss turn --")
+        logger("- $player")
+        logger("- $boss")
+
         // TODO: Trigger effects at the start of the turns
-        dog = player.triggerEffects(boss)
+        dog = player.triggerEffects(boss, logger)
         boss = dog.first
         player = dog.second
 
@@ -277,11 +360,8 @@ class Puzzle22 {
             return boss to player
         }
 
-        println("-- Boss Turn --")
-        println("- $player")
-        println("- $boss")
-        println("- Boss attacks for ${boss.damage - player.armor} damage")
-        println()
+        logger("Boss attacks for ${boss.damage - player.armor} damage.")
+        logger("")
 
         player = player.receiveDamage(boss.damage)
         return boss to player
