@@ -303,9 +303,11 @@ class Puzzle22 {
         }
     }
 
-    data class Player(val hp: Int = 50, val mana: Int = 500, val effects: List<Effect> = emptyList(), val manaSpent: Int = 0) {
+    data class Player(val hp: Int = 50, val mana: Int = 500, val effects: List<Effect> = emptyList(), val manaSpent: Int = 0, val spellsCast: List<String> = listOf()) {
         val maxHp: Int = 50
         val maxMana: Int = 500
+
+        fun addSpellCast(spellName: String) = this.copy(spellsCast = this.spellsCast + spellName)
 
         fun useMana(amount: Int) = this.copy(mana = this.mana - amount, manaSpent =  this.manaSpent + amount)
 
@@ -394,7 +396,7 @@ class Puzzle22 {
         val boss = Boss.parse(puzzleText)
         val player = Player()
         var minManaSpent = Int.MAX_VALUE
-        val theNumber = 100000000
+        val theNumber = 100000
 
         val playerWins = (0 until theNumber)
             .mapIndexed { index, it ->
@@ -405,15 +407,17 @@ class Puzzle22 {
                 }
 
                 if (index % 10000 == 0) {
-                    println("${index.toDouble() / theNumber}")
+                    println("${(index.toDouble() / theNumber) * 100} %")
                 }
 
                 battleResult
             }
             .filter { it.first == BattleResult.PLAYER_WON }
-            .sortedBy { it.second.manaSpent }
+            .map { it.second }
+            .sortedBy { it.manaSpent }
 
-        return playerWins.minBy { it.second.manaSpent }!!.second.manaSpent
+        val shellGame = playerWins.map { it.spellsCast }.toSet()
+        return playerWins.minBy { it.manaSpent }!!.manaSpent
     }
 
     private fun runBattle(boss: Boss, player: Player, minManaSpent: Int): Pair<BattleResult, Player> {
@@ -422,7 +426,7 @@ class Puzzle22 {
 
         while (true) {
             val playerSpellGetter = { player.getRandomSpell(allSpells) }
-            val turnResult = runATurn(player, boss, playerSpellGetter, { })
+            val turnResult = runATurn(player, boss, playerSpellGetter, {})
             boss = turnResult.first
             player = turnResult.second
 
@@ -462,6 +466,7 @@ class Puzzle22 {
         }
 
         val randomSpell: Spell = playerSpellGetter() ?: return boss to player
+        player = player.addSpellCast(randomSpell::class.simpleName!!)
         logger(randomSpell.describe())
         logger("")
 

@@ -1,0 +1,56 @@
+<html lang="en">
+<head>
+    <title>The HTML5 Herald</title>
+</head>
+
+<body>
+    <script type="text/javascript">
+        function onScroll(event) {
+            const scrollTop = event.target.scrollTop
+            const james = document.getElementById("james")
+            const angus = document.getElementById("angus")
+
+            james.scrollTop = scrollTop
+            angus.scrollTop = scrollTop
+        }
+    </script>
+
+    <div style="display: flex; flex-wrap: nowrap; background-color: DodgerBlue;">
+        <div id="angus" style="height: 100px; overflow-y: scroll; padding: 20px; overflow: hidden;" onscroll="onScroll(event)">
+            <p>
+                A <br />
+                B <br />
+                C <br />
+                D <br />
+                E <br />
+                F <br />
+
+                A <br />
+                B <br />
+                C <br />
+                D <br />
+                E <br />
+                F <br />
+            </p>
+        </div>
+
+        <div id="james" style="height: 100px; overflow-y: scroll; padding: 20px" onscroll="onScroll(event)">
+            <p>
+                A <br />
+                B <br />
+                C <br />
+                D <br />
+                E <br />
+                F <br />
+
+                A <br />
+                B <br />
+                C <br />
+                D <br />
+                E <br />
+                F <br />
+            </p>
+        </div>
+    </div>
+</body>
+</html>
