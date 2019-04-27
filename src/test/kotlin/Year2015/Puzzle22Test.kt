@@ -1,6 +1,7 @@
 package Year2015
 
 import junit.framework.Assert.assertEquals
+import junit.framework.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
 
@@ -149,7 +150,22 @@ class Puzzle22Test {
 
         val consoleOutput = simulateBattle(boss, player, spells)
         assertEquals(expectedOutput, consoleOutput)
+    }
 
+    @Test
+    fun `should be able to cast an effect the same turn that it ends`() {
+        val player = Puzzle22.Player(hp = 1000, mana = 2500)
+        val boss = Puzzle22.Boss(hp = 1000, damage = 8)
+
+        val spells = listOf(
+            Puzzle22.PoisonSpell(),
+            Puzzle22.MagicMissileSpell(),
+            Puzzle22.MagicMissileSpell()
+        )
+
+        simulateBattle(boss, player, spells)
+        val canCastPoisonSpell = player.canCastSpell(listOf(Puzzle22.PoisonSpell()))
+        assertTrue(canCastPoisonSpell)
     }
 
     @Test
