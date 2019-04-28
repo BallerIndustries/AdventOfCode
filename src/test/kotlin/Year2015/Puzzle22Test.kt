@@ -412,28 +412,32 @@ class Puzzle22 {
         val boss = Boss.parse(puzzleText)
         val player = Player()
         var minManaSpent = Int.MAX_VALUE
-        val theNumber = 100000
+        val theNumber = 100_000_000
+        //val wins = mutableListOf<BattleResult>()
+        var minWin: BattleResult? = null
+
 
         val playerWins = (0 until theNumber)
-            .mapIndexed { index, it ->
+            .forEach { index  ->
                 val battleResult = runBattle(boss, player, minManaSpent)
 
                 if (battleResult.first == BattleResult.PLAYER_WON && battleResult.second.manaSpent < minManaSpent) {
                     minManaSpent = battleResult.second.manaSpent
+                    println(minManaSpent)
                 }
 
                 if (index % 10000 == 0) {
                     println("${(index.toDouble() / theNumber) * 100} %")
                 }
-
-                battleResult
             }
-            .filter { it.first == BattleResult.PLAYER_WON }
-            .map { it.second }
-            .sortedBy { it.manaSpent }
+//            .filter { it.first == BattleResult.PLAYER_WON }
+//            .map { it.second }
+//            .sortedBy { it.manaSpent }
 
-        val shellGame = playerWins.map { it.spellsCast }.toSet()
-        return playerWins.minBy { it.manaSpent }!!.manaSpent
+//        val shellGame = playerWins.map { it.spellsCast }.toSet()
+//        return playerWins.minBy { it.manaSpent }!!.manaSpent
+
+        return minManaSpent
     }
 
     private fun runBattle(boss: Boss, player: Player, minManaSpent: Int): Pair<BattleResult, Player> {
@@ -447,7 +451,7 @@ class Puzzle22 {
             player = turnResult.second
 
             if (boss.isDead()) {
-                println("Player won! manaSpent = ${player.manaSpent}")
+//                println("Player won! manaSpent = ${player.manaSpent}")
                 return BattleResult.PLAYER_WON to player
             }
             else if (!player.canCastSpell(allSpells)) {
