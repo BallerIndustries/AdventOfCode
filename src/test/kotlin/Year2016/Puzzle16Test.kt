@@ -18,9 +18,16 @@ class Puzzle16Test {
     }
 
     @Test
-    fun `fill a disk of length 20 with an intial state of 10000`() {
+    fun `checksum for generated data that fills a disk of length 20 with an initial state of 10000`() {
         val actual = puzzle.solveOne("10000", 20)
         val expected = "100"
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `generated data that fills a disk of length 20 with an initial state of 10000`() {
+        val actual = puzzle.generateData("10000", 20)
+        val expected = "10000011110010000111110"
         assertEquals(expected, actual)
     }
 }
@@ -28,13 +35,19 @@ class Puzzle16Test {
 class Puzzle16 {
     fun solveOne(puzzleText: String, length: Int = 272): String {
         var generatedData = puzzleText
-        val dog = mapOf('0' to '1', '1' to '0')
-
-        while (generatedData.length < length) {
-            generatedData = generatedData + "0" + generatedData.map { dog[it]!! }.joinToString("")
-        }
+        generatedData = generateData(generatedData, length)
 
         return calculateChecksum(generatedData.substring(0, length))
+    }
+
+    fun generateData(generatedData: String, length: Int): String {
+        var generatedData1 = generatedData
+        val dog = mapOf('0' to '1', '1' to '0')
+
+        while (generatedData1.length < length) {
+            generatedData1 = generatedData1 + "0" + generatedData1.map { dog[it]!! }.joinToString("")
+        }
+        return generatedData1
     }
 
     fun calculateChecksum(randomData: String): String {
