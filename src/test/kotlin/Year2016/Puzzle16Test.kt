@@ -10,6 +10,7 @@ class Puzzle16Test {
     @Test
     fun `can solve part a`() {
         val checksum: String = puzzle.solveOne(puzzleText)
+        assertEquals("10010110010011110", checksum)
     }
 
     @Test
@@ -20,7 +21,7 @@ class Puzzle16Test {
     @Test
     fun `checksum for generated data that fills a disk of length 20 with an initial state of 10000`() {
         val actual = puzzle.solveOne("10000", 20)
-        val expected = "100"
+        val expected = "01100"
         assertEquals(expected, actual)
     }
 
@@ -45,7 +46,7 @@ class Puzzle16 {
         val dog = mapOf('0' to '1', '1' to '0')
 
         while (generatedData1.length < length) {
-            generatedData1 = generatedData1 + "0" + generatedData1.map { dog[it]!! }.joinToString("")
+            generatedData1 = generatedData1 + "0" + generatedData1.reversed().map { dog[it]!! }.joinToString("")
         }
         return generatedData1
     }
@@ -72,6 +73,6 @@ class Puzzle16 {
     }
 
     fun solveTwo(puzzleText: String): String {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return solveOne(puzzleText, 35651584)
     }
 }
