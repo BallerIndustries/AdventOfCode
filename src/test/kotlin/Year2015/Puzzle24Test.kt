@@ -11,13 +11,13 @@ class Puzzle24Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(255, result)
+        assertEquals(10723906903, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(334, result)
+        assertEquals(74850409, result)
     }
 
     @Test
@@ -28,6 +28,7 @@ class Puzzle24Test {
     }
 }
 
+// TODO: Please do this again with DFS instead of random search
 class Puzzle24 {
     data class InProgress(val used: List<Long>, val remaining: List<Long>) {
         companion object {
@@ -71,7 +72,7 @@ class Puzzle24 {
         var smallestLength = Int.MAX_VALUE
         var smallestQE = Long.MAX_VALUE
 
-        while (true) {
+        for (i in 0 until 1000000) {
             val dork = tickAlongUntilTarget(weights, targetWeight) ?: continue
 
             if ((dork.used.size < smallestLength) || (dork.used.size == smallestLength && dork.quantumEntanglement() < smallestQE)) {
@@ -81,16 +82,16 @@ class Puzzle24 {
             }
         }
 
-        return 222
+        return smallestQE
     }
 
-    fun solveTwo(puzzleText: String): Int {
+    fun solveTwo(puzzleText: String): Long {
         val weights = puzzleText.split("\n").map { it.toLong() }.sortedDescending()
         val targetWeight = weights.sum() / 4
         var smallestLength = Int.MAX_VALUE
         var smallestQE = Long.MAX_VALUE
 
-        while (true) {
+        for (i in 0 until 100000) {
             val dork = tickAlongUntilTarget(weights, targetWeight) ?: continue
 
             if ((dork.used.size < smallestLength) || (dork.used.size == smallestLength && dork.quantumEntanglement() < smallestQE)) {
@@ -100,6 +101,6 @@ class Puzzle24 {
             }
         }
 
-        return 222
+        return smallestQE
     }
 }
