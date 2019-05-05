@@ -1,9 +1,7 @@
 package Year2015
 
-import Year2015.Puzzle24.InProgress.Companion.startingPoint
 import junit.framework.Assert.assertEquals
 import org.junit.Test
-import java.lang.RuntimeException
 
 class Puzzle24Test {
     val puzzle = Puzzle24()
@@ -21,54 +19,87 @@ class Puzzle24Test {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(334, result)
     }
+
+    @Test
+    fun `quantum entanglement of 2, 4, 6 should be`() {
+        val dog = Puzzle24.InProgress(listOf(2, 4, 6), listOf())
+        val result = dog.quantumEntanglement()
+        assertEquals(48, result)
+    }
 }
 
 class Puzzle24 {
-
-    data class InProgress(val used: Set<Int>, val remaining: Set<Int>) {
-
+    data class InProgress(val used: List<Long>, val remaining: List<Long>) {
         companion object {
-            fun startingPoint(number: Int, allNumbers: List<Int>): InProgress {
-              return InProgress(setOf(number), (allNumbers - number).toSet())
+            fun create(weights: List<Long>): InProgress {
+                val theOne = weights.random()
+                return InProgress(listOf(theOne), weights.filter { it != theOne })
             }
         }
 
-        fun tickAlong(targetSum: Int): List<InProgress> {
-            return remaining.mapNotNull { remainingNumber ->
-                val newUsed = this.used + remainingNumber
-                val newRemaining = this.remaining - remainingNumber
-                val sum = newUsed.sum()
+        fun tickAlong(): InProgress {
+            val theOne = remaining.random()
+            return InProgress(used + theOne, remaining.filter { it != theOne })
+        }
 
-                if (sum == targetSum) {
-                    null
-                }
-                else if (sum > targetSum) {
-                    null
-                }
-                else {
-                    InProgress(newUsed, newRemaining)
-                }
+        fun quantumEntanglement(): Long {
+            return used.fold(1L) { acc: Long, value: Long ->
+                acc * value
             }
         }
+
+        override fun toString(): String {
+            return "InProgress(used=$used, remaining=$remaining, quantumEntanglement=${quantumEntanglement()})"
+        }
+
+
     }
 
+    fun tickAlongUntilTarget(weights: List<Long>, target: Long): InProgress? {
+        var inProgress = InProgress.create(weights)
 
-    fun solveOne(puzzleText: String): Int {
-        val weights = puzzleText.split("\n").map { it.toInt() }.sortedDescending()
-        val compartmentWeight = weights.sum() / 3
+        while (inProgress.used.sum() < target) {
+            inProgress = inProgress.tickAlong()
+        }
 
-        var inProgressStuff = weights.map { startingPoint(it, weights) }
+        return if (inProgress.used.sum() == target) inProgress else null
+    }
 
-//        while (inProgressStuff.any { it.remaining.isNotEmpty() }) {
-//            inProgressStuff = inProgressStuff.flatMap { inProgress -> inProgress.tickAlong(compartmentWeight) }
-//        }
+    fun solveOne(puzzleText: String): Long {
+        val weights = puzzleText.split("\n").map { it.toLong() }.sortedDescending()
+        val targetWeight = weights.sum() / 3
+        var smallestLength = Int.MAX_VALUE
+        var smallestQE = Long.MAX_VALUE
 
-        // Lets do a depth first search instead
+        while (true) {
+            val dork = tickAlongUntilTarget(weights, targetWeight) ?: continue
+
+            if ((dork.used.size < smallestLength) || (dork.used.size == smallestLength && dork.quantumEntanglement() < smallestQE)) {
+                smallestLength = dork.used.size
+                smallestQE = dork.quantumEntanglement()
+                println("smallestLength = $smallestLength dork = $dork")
+            }
+        }
 
         return 222
     }
 
     fun solveTwo(puzzleText: String): Int {
-        return 444
+        val weights = puzzleText.split("\n").map { it.toLong() }.sortedDescending()
+        val targetWeight = weights.sum() / 4
+        var smallestLength = Int.MAX_VALUE
+        var smallestQE = Long.MAX_VALUE
+
+        while (true) {
+            val dork = tickAlongUntilTarget(weights, targetWeight) ?: continue
+
+            if ((dork.used.size < smallestLength) || (dork.used.size == smallestLength && dork.quantumEntanglement() < smallestQE)) {
+                smallestLength = dork.used.size
+                smallestQE = dork.quantumEntanglement()
+                println("smallestLength = $smallestLength dork = $dork")
+            }
+        }
+
+        return 222
     }
 }
