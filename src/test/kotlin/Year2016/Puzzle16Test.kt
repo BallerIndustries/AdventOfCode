@@ -49,7 +49,6 @@ class Puzzle16 {
 
         while (buffer.length < length) {
             val newBuffer = StringBuilder(buffer.count())
-
             var index = buffer.lastIndex
 
             while (index >= 0) {
