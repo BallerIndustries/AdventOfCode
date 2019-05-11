@@ -16,14 +16,9 @@ class Puzzle20Test {
 
     @Test
     fun `can solve part b`() {
+        // 108 is too low
         val result= puzzle.solveTwo(puzzleText)
         assertEquals(1410630, result)
-    }
-
-    @Test
-    fun `part two with aoc example`() {
-        val result= puzzle.solveTwo("5")
-        assertEquals(2, result)
     }
 }
 
@@ -90,14 +85,19 @@ class Puzzle20 {
 
     private fun extendOutThisBork(rangesAheadOfThisIndex: MutableList<LongRange>, currentRange: LongRange): Pair<LongRange, MutableList<LongRange>> {
         var currentRange1 = currentRange
-        var rangesThatCollideUs = rangesAheadOfThisIndex.filter { range -> range.contains(currentRange1.endInclusive) }
+        var rangesThatCollideUs = rangesAheadOfThisIndex.filter { range ->
+            range.contains(currentRange1.endInclusive) || range.contains(currentRange1.start) || currentRange1.contains(range.endInclusive) || currentRange1.contains(range.start)
+        }
+
         val rangesToDrop = mutableListOf<LongRange>()
 
         while (rangesThatCollideUs.isNotEmpty()) {
             // Modify the current range
             val collAndMe = rangesThatCollideUs.toList() + listOf(currentRange1)
             val maxEnd = collAndMe.maxBy { range -> range.endInclusive }!!.endInclusive
-            currentRange1 = LongRange(currentRange1.start, maxEnd)
+            val minStart = collAndMe.minBy { range -> range.start }!!.start
+
+            currentRange1 = LongRange(minStart, maxEnd)
 
             // Clear out the collided ranges
             rangesToDrop.addAll(rangesThatCollideUs)
@@ -105,7 +105,9 @@ class Puzzle20 {
             // Find collisions we haven't already found
             val dog = rangesAheadOfThisIndex
                 .filter { range -> !rangesToDrop.contains(range) }
-                .filter { range -> range.contains(currentRange1.endInclusive) }
+                .filter { range ->
+                    range.contains(currentRange1.endInclusive) || range.contains(currentRange1.start) || currentRange1.contains(range.endInclusive) || currentRange1.contains(range.start)
+                }
 
             rangesThatCollideUs = dog
         }
