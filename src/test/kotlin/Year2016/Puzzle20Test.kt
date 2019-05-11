@@ -18,7 +18,7 @@ class Puzzle20Test {
     fun `can solve part b`() {
         // 108 is too low
         val result= puzzle.solveTwo(puzzleText)
-        assertEquals(1410630, result)
+        assertEquals(109, result)
     }
 }
 
@@ -37,50 +37,26 @@ class Puzzle20 {
     }
 
     fun solveTwo(puzzleText: String): Long {
-        var ranges = parseRanges(puzzleText).toMutableList()
-        var index = 0
+        val ranges = parseRanges(puzzleText).toMutableList()
+        removeOverlaps(ranges)
 
-        do {
-            removeOverlaps(index, ranges)
-        } while (hasOverlaps(ranges))
-
-        if (hasOverlaps(ranges)) {
-            throw RuntimeException("Mate!!!")
-        }
-
-        val theMagicLong = 4294967295L
+        val theMagicLong = 4294967296L
         val killedIpAddressed = (ranges.sumByDouble { it.endInclusive.toDouble() - it.start.toDouble() + 1.0  }).toLong()
         return theMagicLong - killedIpAddressed
     }
 
-    private fun removeOverlaps(index: Int, ranges: MutableList<LongRange>) {
-        var index1 = index
-        while (index1 < ranges.size) {
-            var currentRange = ranges[index1]
-            val rangesAheadOfThisIndex = ranges.subList(index1 + 1, ranges.size)
+    private fun removeOverlaps(ranges: MutableList<LongRange>) {
+        var index = 0
+
+        while (index < ranges.size) {
+            var currentRange = ranges[index]
+            val rangesAheadOfThisIndex = ranges.subList(index + 1, ranges.size)
             val tmp = extendOutThisBork(rangesAheadOfThisIndex, currentRange)
 
-            ranges[index1] = tmp.first
+            ranges[index] = tmp.first
             ranges.removeAll(tmp.second)
-            index1++
+            index++
         }
-    }
-
-    private fun hasOverlaps(ranges: MutableList<LongRange>): Boolean {
-        for (index in 0 until ranges.size) {
-            val thisRange = ranges[index]
-
-            for (jindex in index + 1 until ranges.size) {
-                val thatRange = ranges[jindex]
-
-                if (thisRange.contains(thatRange.start) || thisRange.contains(thatRange.endInclusive) || thatRange.contains(thisRange.start) || thatRange.contains(thisRange.endInclusive)) {
-                    println("thisRange = $thisRange thatRange = $thatRange")
-                    return true
-                }
-            }
-        }
-
-        return false
     }
 
     private fun extendOutThisBork(rangesAheadOfThisIndex: MutableList<LongRange>, currentRange: LongRange): Pair<LongRange, MutableList<LongRange>> {
