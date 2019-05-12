@@ -65,6 +65,10 @@ class Puzzle21Test {
 
 class Puzzle21 {
     data class SwapPosition(val indexA: Int, val indexB: Int) : Operation {
+        override fun undo(text: String): String {
+            return SwapPosition(indexB, indexA).execute(text)
+        }
+
         override fun execute(text: String): String {
             val buffer = StringBuilder(text)
             buffer.setCharAt(indexA, text[indexB])
@@ -73,10 +77,14 @@ class Puzzle21 {
         }
     }
 
-    data class SwapLetter(val charA: Char, val charB: Char) : Operation {
+    data class SwapLetter(val indexA: Char, val indexB: Char) : Operation {
+        override fun undo(text: String): String {
+            return SwapLetter(indexB, indexA).execute(text)
+        }
+
         override fun execute(text: String): String {
-            val indexA = text.indexOf(charA)
-            val indexB = text.indexOf(charB)
+            val indexA = text.indexOf(indexA)
+            val indexB = text.indexOf(indexB)
 
             val buffer = StringBuilder(text)
             buffer.setCharAt(indexA, text[indexB])
@@ -86,6 +94,10 @@ class Puzzle21 {
     }
 
     data class RotateLeft(val steps: Int) : Operation {
+        override fun undo(text: String): String {
+            return RotateRight(steps).execute(text)
+        }
+
         override fun execute(text: String): String {
             val buffer = StringBuilder()
             buffer.append(text.substring(steps, text.length))
@@ -95,6 +107,10 @@ class Puzzle21 {
     }
 
     data class RotateRight(val steps: Int) : Operation {
+        override fun undo(text: String): String {
+            return RotateLeft(steps).execute(text)
+        }
+
         override fun execute(text: String): String {
             val buffer = StringBuilder()
             val midPoint = text.length - (steps % text.length)
@@ -105,6 +121,22 @@ class Puzzle21 {
     }
 
     data class RotateBasedOnPosition(val letter: Char) : Operation {
+        override fun undo(text: String): String {
+            val indexOfLetter = text.indexOf(letter)
+
+            return when(indexOfLetter) {
+                0 -> RotateLeft(1).execute(text)
+                1 -> RotateLeft(1).execute(text)
+                2 -> RotateRight(2).execute(text)
+                3 -> RotateLeft(2).execute(text)
+                4 -> RotateRight(1).execute(text)
+                5 -> RotateLeft(3).execute(text)
+                6 -> text
+                7 -> RotateRight(4).execute(text)
+                else -> throw RuntimeException("Wah wah wah")
+            }
+        }
+
         override fun execute(text: String): String {
             val indexOfLetter = text.indexOf(letter)
             val rotateCount = if (indexOfLetter >= 4) indexOfLetter + 1 + 1 else indexOfLetter + 1
@@ -113,6 +145,10 @@ class Puzzle21 {
     }
 
     data class ReversePositions(val from: Int, val to: Int) : Operation {
+        override fun undo(text: String): String {
+            return execute(text)
+        }
+
         override fun execute(text: String): String {
             val buffer = StringBuilder()
             buffer.append(text.substring(0, from))
@@ -120,9 +156,14 @@ class Puzzle21 {
             buffer.append(text.substring(to + 1, text.length))
             return buffer.toString()
         }
+
     }
 
     data class MovePosition(val fromIndex: Int, val toIndex: Int) : Operation {
+        override fun undo(text: String): String {
+            return MovePosition(toIndex, fromIndex).execute(text)
+        }
+
         override fun execute(text: String): String {
             val buffer = StringBuilder(text)
             buffer.deleteCharAt(fromIndex)
@@ -150,26 +191,21 @@ class Puzzle21 {
         }
 
         fun execute(text: String): String
+
+        fun undo(text: String): String
     }
 
     fun solveOne(puzzleText: String): String {
         val operations = puzzleText.split("\n").map(Operation.Companion::parse)
         var text = "abcdefgh"
-
-        operations.forEach { operation ->
-            try {
-                text = operation.execute(text)
-            }
-            catch (e: Exception) {
-                println("Blew up on operation = $operation")
-                throw e
-            }
-        }
-
+        operations.forEach { operation -> text = operation.execute(text) }
         return text
     }
 
-    fun solveTwo(puzzleText: String): Long {
-        return 100L
+    fun solveTwo(puzzleText: String): String {
+        val operations = puzzleText.split("\n").map(Operation.Companion::parse).reversed()
+        var text = "fbgdceah"
+        operations.forEach { operation -> text = operation.undo(text) }
+        return text
     }
 }
