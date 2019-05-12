@@ -66,6 +66,17 @@ class Puzzle21 {
     }
 
     interface Operation {
+        companion object {
+            fun parse(line: String): Operation {
+                val tmp = line.split(" ")
+
+                return when {
+                    line.startsWith("swap position") -> SwapPosition(tmp[2].toInt(), tmp[5].toInt())
+                    else -> throw RuntimeException("Asdasdasd")
+                }
+            }
+        }
+
         fun execute(text: String): String
     }
 
