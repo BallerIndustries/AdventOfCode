@@ -17,7 +17,7 @@ class Puzzle21Test {
     fun `can solve part b`() {
         // 108 is too low
         val result= puzzle.solveTwo(puzzleText)
-        assertEquals(109, result)
+        assertEquals("gahedfcb", result)
     }
 
     @Test
@@ -156,7 +156,6 @@ class Puzzle21 {
             buffer.append(text.substring(to + 1, text.length))
             return buffer.toString()
         }
-
     }
 
     data class MovePosition(val fromIndex: Int, val toIndex: Int) : Operation {
