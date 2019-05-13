@@ -1,6 +1,7 @@
 package Year2016
 
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 import kotlin.random.Random
 
@@ -8,6 +9,7 @@ class Puzzle24Test {
     val puzzle = Puzzle24()
     val puzzleText = this::class.java.getResource("/2016/puzzle24.txt").readText().replace("\r", "")
 
+    @Ignore
     @Test
     fun `can solve part a`() {
         //42728 too high
