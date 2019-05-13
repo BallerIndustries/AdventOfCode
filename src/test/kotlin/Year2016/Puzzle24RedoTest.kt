@@ -35,6 +35,20 @@ class Puzzle24RedoTest {
         """.trimIndent()
 
     @Test
+    fun `can build weighted graph for example text`() {
+        val graph = puzzle.buildWeightedGraph(exampleText).toMap()
+        val expected = mapOf(
+            '4' to setOf(Puzzle24Redo.Path('0', 2), Puzzle24Redo.Path('3', 8)),
+            '3' to setOf(Puzzle24Redo.Path('2', 2), Puzzle24Redo.Path('4', 8)),
+            '1' to setOf(Puzzle24Redo.Path('0', 2), Puzzle24Redo.Path('2', 6)),
+            '2' to setOf(Puzzle24Redo.Path('1', 6), Puzzle24Redo.Path('3', 2)),
+            '0' to setOf(Puzzle24Redo.Path('1', 2), Puzzle24Redo.Path('4', 2))
+        )
+
+        assertEquals(expected, graph)
+    }
+
+    @Test
     fun `can get min distance from 0 to 1 for example`() {
         val distance: Int = puzzle.minDistance(exampleText, '0', '1')
         assertEquals(2, distance)
@@ -68,13 +82,40 @@ class Puzzle24Redo {
         fun neighbours() = listOf(up(), down(), left(), right())
     }
 
+    data class Path(val nodeName: Char, val weight: Int)
+
     fun solveOne(puzzleText: String): Int {
-        val (placesToVisit, grid, startPosition) = parseGrid(puzzleText)
+        val graph = buildWeightedGraph(puzzleText)
+
+        println(graph)
 
 
 
 
         return 1298
+    }
+
+    fun buildWeightedGraph(puzzleText: String): Map<Char, Set<Path>> {
+        val (placesToVisit, grid, startPosition) = parseGrid(puzzleText)
+        val graph = mutableMapOf<Char, Set<Path>>()
+        val dorks = (placesToVisit + ('0' to startPosition)).entries.map { it.key to it.value }
+
+        for (index in 0 until dorks.size) {
+            for (jindex in index + 1 until dorks.size) {
+
+                val from = dorks[index].first
+                val to = dorks[jindex].first
+                val minDistance = minDistance(puzzleText, from, to)
+
+                if (minDistance == -1) {
+                    continue
+                }
+
+                graph[from] = (graph[from] ?: setOf()) + Path(to, minDistance)
+                graph[to] = (graph[to] ?: setOf()) + Path(from, minDistance)
+            }
+        }
+        return graph
     }
 
     fun solveTwo(puzzleText: String): Int {
@@ -123,7 +164,7 @@ class Puzzle24Redo {
                 .flatMap { point -> point.neighbours() }
                 .filter { point ->
                     val char = gridWithDigits[point]!!
-                    char == '.' || char == to && !visited.contains(point)
+                    (char == '.' || char == to) && !visited.contains(point)
                 }
                 .toMutableSet()
 
