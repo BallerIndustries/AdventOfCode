@@ -47,19 +47,17 @@ class Puzzle24 {
 
     val random = Random(122)
 
-    data class Continuation(val currentPosition: Point, val remainingPlacesToVisit: Set<Point>, val stepsTaken: Int, val pathTaken: List<Point>)
+    data class Continuation(val currentPosition: Point, val remainingPlacesToVisit: Set<Point>, val stepsTaken: Int)
 
     fun solveOne(puzzleText: String): Int {
         val (placesToVisit, grid) = parseGrid(puzzleText)
         var currentPosition = placesToVisit['0']!!
         var remainingPlacesToVisit = placesToVisit.filter { it.key != '0' }.map { it.value }.toSet()
         var stepsTaken = 0
-        var pathTaken = mutableListOf<Point>(currentPosition)
 
-        val continuations = mutableListOf(Continuation(currentPosition, remainingPlacesToVisit, stepsTaken, pathTaken))
+        val continuations = mutableListOf(Continuation(currentPosition, remainingPlacesToVisit, stepsTaken))
         val continuationStates = mutableSetOf(Pair(currentPosition, remainingPlacesToVisit))
         val solutions = mutableListOf(Int.MAX_VALUE)
-        val pathSolutions = mutableListOf<List<Point>>()
 
         while (continuations.isNotEmpty()) {
             val randomIndex = random.nextInt(continuations.size)
@@ -67,20 +65,16 @@ class Puzzle24 {
             currentPosition = tmp.currentPosition
             remainingPlacesToVisit = tmp.remainingPlacesToVisit
             stepsTaken = tmp.stepsTaken
-            pathTaken = tmp.pathTaken.map { it }.toMutableList()
 
             while (remainingPlacesToVisit.isNotEmpty()) {
-//                println(currentPosition)
-
                 // Did we visit one of the points?
                 if (remainingPlacesToVisit.contains(currentPosition)) {
                     remainingPlacesToVisit = remainingPlacesToVisit.filter { it != currentPosition }.toSet()
                 }
 
                 if (remainingPlacesToVisit.isEmpty()) {
-                    println("Wow found a path! Only took stepsTaken = $stepsTaken")
                     solutions.add(stepsTaken)
-                    pathSolutions.add(pathTaken)
+                    println("Wow found a path! Only took stepsTaken = $stepsTaken continuations.size = ${continuations.size}")
                     break
                 }
 
@@ -98,7 +92,6 @@ class Puzzle24 {
 
                 if (nextSteps.size == 1) {
                     currentPosition = nextSteps.first()
-                    pathTaken.add(currentPosition)
                     stepsTaken++
                     continue
                 }
@@ -107,14 +100,17 @@ class Puzzle24 {
                 val stepsWeDidNotChoose = randomNextSteps.subList(1, randomNextSteps.size)
 
                 stepsWeDidNotChoose.forEach { nextStep ->
-                    continuationStates.add(nextStep to remainingPlacesToVisit)
-                    continuations.add(Continuation(nextStep, remainingPlacesToVisit, stepsTaken + 1, pathTaken + nextStep))
+                    val pair = nextStep to remainingPlacesToVisit
+                    continuations.add(Continuation(nextStep, remainingPlacesToVisit, stepsTaken + 1))
+                    continuationStates.add(pair)
                 }
 
                 currentPosition = randomNextSteps.first()
-                pathTaken.add(currentPosition)
                 stepsTaken++
             }
+
+            val minLength = solutions.min()!!
+            continuations.removeIf { it.stepsTaken > minLength }
         }
 
         return solutions.min()!!
