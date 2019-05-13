@@ -49,6 +49,12 @@ class Puzzle24RedoTest {
     }
 
     @Test
+    fun `can build weighted graph for real puzzle`() {
+        val dog = puzzle.buildWeightedGraph(puzzleText)
+        println(dog)
+    }
+
+    @Test
     fun `can get min distance from 0 to 1 for example`() {
         val distance: Int = puzzle.minDistance(exampleText, '0', '1')
         assertEquals(2, distance)
