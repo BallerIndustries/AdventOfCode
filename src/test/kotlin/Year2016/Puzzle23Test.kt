@@ -14,6 +14,22 @@ class Puzzle23Test {
     }
 
     @Test
+    fun `example part a`() {
+        val dog = """
+            cpy 2 a
+            tgl a
+            tgl a
+            tgl a
+            cpy 1 a
+            dec a
+            dec a
+        """.trimIndent()
+
+        val result = puzzle.solveOne(dog)
+        assertEquals(3, result)
+    }
+
+    @Test
     fun `can solve part b`() {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(123123, result)
@@ -30,78 +46,124 @@ class Puzzle23 {
                 "inc" -> IncrementRegister(tmp[1])
                 "dec" -> DecrementRegister(tmp[1])
                 "jnz" -> JumpIfNotZero(tmp[1], tmp[2])
+                "tgl" -> Toggle(tmp[1])
                 else -> throw RuntimeException("Sorry don't support that command. command = ${tmp[0]}")
             }
         }
     }
 
-    fun runCommands(commandText: String, initialState: State = State()): State {
-        var state = initialState
-        val commands = parseCommandText(commandText)
+    fun solveOne(puzzleText: String): Int {
+        var state = State(commands = parseCommandText(puzzleText))
 
-        while (state.programCounter < commands.size) {
-            val command = commands[state.programCounter]
+        while (state.programCounter < parseCommandText(puzzleText).size && state.programCounter >= 0) {
+            val command = state.commands[state.programCounter]
             state = command.execute(state)
         }
 
-        return state
+        return state.registers["a"]!!
     }
 
-    fun solveOne(puzzleText: String): Long {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    fun solveTwo(puzzleText: String): Int {
+        var state = State(commands = parseCommandText(puzzleText), registers = State.partBState)
 
-    fun solveTwo(puzzleText: String): Long {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        while (state.programCounter < parseCommandText(puzzleText).size && state.programCounter >= 0) {
+            val command = state.commands[state.programCounter]
+            state = command.execute(state)
+            println("command = $command state = $state")
+        }
+
+        return state.registers["a"]!!
     }
 
     interface Command {
         fun execute(state: State): State
+        fun toggle(): Command
+    }
+
+    data class Toggle(val deltaValueOrRegister: String): Command {
+        override fun toggle(): Command {
+            return IncrementRegister(deltaValueOrRegister)
+        }
+
+        override fun execute(state: State): State {
+            val delta = state.getValueOrValueFromRegister(deltaValueOrRegister)
+
+            val index = state.programCounter + delta
+
+            if (index < 0 || index > state.commands.lastIndex) {
+                return state.copy(programCounter = state.programCounter + 1)
+            }
+
+            val commands = state.commands.map { it }.toMutableList()
+            commands[index] = commands[index].toggle()
+            return state.copy(programCounter = state.programCounter + 1, commands = commands)
+        }
     }
 
     data class Copy(val valueOrRegister: String, val destinationRegister: String) : Command {
+        override fun toggle(): Command {
+            return JumpIfNotZero(valueOrRegister, destinationRegister)
+        }
+
         override fun execute(state: State): State {
             val newProgramCounter = state.programCounter + 1
             val mutableRegisters = state.registers + mapOf(destinationRegister to state.getValueOrValueFromRegister(valueOrRegister))
-            return State(newProgramCounter, mutableRegisters)
+            return state.copy(programCounter = newProgramCounter, registers = mutableRegisters)
         }
     }
 
     data class IncrementRegister(val sourceRegister: String) : Command {
+        override fun toggle(): Command {
+            return DecrementRegister(sourceRegister)
+        }
+
         override fun execute(state: State): State {
             val newProgramCounter = state.programCounter + 1
             val newRegisters = state.registers + mapOf(sourceRegister to state.getValueOrValueFromRegister(sourceRegister) + 1)
-            return State(newProgramCounter, newRegisters)
+            return state.copy(programCounter = newProgramCounter, registers = newRegisters)
         }
     }
 
     data class DecrementRegister(val sourceRegister: String) : Command {
+        override fun toggle(): Command {
+            return IncrementRegister(sourceRegister)
+        }
+
         override fun execute(state: State): State {
             val newProgramCounter = state.programCounter + 1
             val newRegisters = state.registers + mapOf(sourceRegister to state.getValueOrValueFromRegister(sourceRegister) - 1)
-            return State(newProgramCounter, newRegisters)
+            return state.copy(programCounter = newProgramCounter, registers = newRegisters)
         }
     }
 
     data class JumpIfNotZero(val conditionalValueOrRegister: String, val deltaValueOrRegister: String) : Command {
+        override fun toggle(): Command {
+            return Copy(conditionalValueOrRegister, deltaValueOrRegister)
+        }
+
         override fun execute(state: State): State {
             if (state.getValueOrValueFromRegister(conditionalValueOrRegister) == 0) {
-                return State(state.programCounter + 1, state.registers)
+                return state.copy(programCounter = state.programCounter + 1, registers = state.registers)
             }
             else {
                 val deltaValue = state.getValueOrValueFromRegister(deltaValueOrRegister)
-                return State(state.programCounter + deltaValue, state.registers)
+                return state.copy(programCounter = state.programCounter + deltaValue, registers = state.registers)
             }
         }
     }
 
-    data class State(val programCounter: Int = 0, val registers: Map<String, Int> = initialRegisters) {
+    data class State(val programCounter: Int = 0, val registers: Map<String, Int> = initialRegisters, val commands: List<Command>) {
         companion object {
-            val initialRegisters = mapOf("a" to 0, "b" to 0, "c" to 0, "d" to 0)
+            val initialRegisters = mapOf("a" to 7, "b" to 0, "c" to 0, "d" to 0)
+            val partBState = mapOf("a" to 12, "b" to 0, "c" to 0, "d" to 0)
         }
 
         fun getValueOrValueFromRegister(valueOrRegister: String): Int {
             return if (valueOrRegister.toIntOrNull() != null) valueOrRegister.toInt() else registers[valueOrRegister]!!
+        }
+
+        override fun toString(): String {
+            return "State(programCounter=$programCounter, registers=$registers commands=$commands)"
         }
     }
 }
