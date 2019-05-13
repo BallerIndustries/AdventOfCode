@@ -2,6 +2,7 @@ package Year2016
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import kotlin.random.Random
 
 class Puzzle24Test {
     val puzzle = Puzzle24()
@@ -9,8 +10,23 @@ class Puzzle24Test {
 
     @Test
     fun `can solve part a`() {
+        //42728 too high
         val result = puzzle.solveOne(puzzleText)
         assertEquals(12748, result)
+    }
+
+    @Test
+    fun `example part a`() {
+        val exampleText = """
+            ###########
+            #0.1.....2#
+            #.#######.#
+            #4.......3#
+            ###########
+        """.trimIndent()
+
+        val result = puzzle.solveOne(exampleText)
+        assertEquals(14, result)
     }
 
     @Test
@@ -21,28 +37,101 @@ class Puzzle24Test {
 }
 
 class Puzzle24 {
-    data class Point(val x: Int, val y: Int)
+    data class Point(val x: Int, val y: Int) {
+        fun up() = this.copy(y = this.y - 1)
+        fun down() = this.copy(y = this.y + 1)
+        fun right() = this.copy(x = this.x + 1)
+        fun left() = this.copy(x = this.x - 1)
+        fun neighbours() = listOf(up(), down(), left(), right())
+    }
+
+    val random = Random(122)
 
     fun solveOne(puzzleText: String): Int {
         val (placesToVisit, grid) = parseGrid(puzzleText)
         println(placesToVisit)
         println(grid)
-        return 2398729
+
+        var currentPosition = placesToVisit['0']!!
+        var remainingPlacesToVisit = placesToVisit.filter { it.key != '0' }.map { it.value }.toSet()
+        var stepsTaken = 0
+
+        var continuations = mutableListOf(Triple(currentPosition, remainingPlacesToVisit, stepsTaken))
+        val continuationStates = mutableSetOf(Pair(currentPosition, remainingPlacesToVisit))
+        val solutions = mutableListOf(Int.MAX_VALUE)
+
+        while (continuations.isNotEmpty()) {
+            val randomIndex = random.nextInt(continuations.size)
+            val tmp = continuations.removeAt(randomIndex)
+            currentPosition = tmp.first
+            remainingPlacesToVisit = tmp.second
+            stepsTaken = tmp.third
+
+            while (remainingPlacesToVisit.isNotEmpty()) {
+                // Did we visit one of the points?
+                if (remainingPlacesToVisit.contains(currentPosition)) {
+                    remainingPlacesToVisit = remainingPlacesToVisit.filter { it != currentPosition }.toSet()
+                }
+
+                if (remainingPlacesToVisit.isEmpty()) {
+                    println("Wow found a path! Only took stepsTaken = $stepsTaken")
+                    solutions.add(stepsTaken)
+                    break
+                }
+
+                if (stepsTaken > solutions.min()!!) {
+//                    println("Pruning this branch. continuations.size = ${continuations.size}")
+                    break
+                }
+
+                val nextSteps = currentPosition.neighbours().filter { grid[it] != '#' }
+
+                if (nextSteps.isEmpty()) {
+                    throw RuntimeException("Nowhere to go! This shouldn't happen actually")
+                }
+
+                if (nextSteps.size == 1) {
+                    currentPosition = nextSteps.first()
+                    stepsTaken++
+                    continue
+                }
+
+                val randomNextSteps = nextSteps.shuffled(random)
+//                val randomNextSteps = nextSteps.map { it }
+                currentPosition = randomNextSteps.first()
+                val stepsWeDidNotChoose = randomNextSteps.subList(1, randomNextSteps.size)
+
+                stepsWeDidNotChoose.forEach { nextStep ->
+                    // Add in steps to continue
+                    if (!continuationStates.contains(nextStep to remainingPlacesToVisit)) {
+                        continuationStates.add(nextStep to remainingPlacesToVisit)
+                        continuations.add(Triple(nextStep, remainingPlacesToVisit, stepsTaken + 1))
+                    }
+                }
+
+                stepsTaken++
+            }
+        }
+
+        return solutions.min()!!
     }
 
-    private fun parseGrid(puzzleText: String): Pair<List<Int>, Map<Point, Char>> {
+    fun manhattanDistance(a: Point, b: Point) = Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
+
+    fun solveTwo(puzzleText: String): Int {
+        return 2323
+    }
+
+    private fun parseGrid(puzzleText: String): Pair<Map<Char, Point>, Map<Point, Char>> {
         val lines = puzzleText.split("\n")
         val height = lines.count()
         val width = lines[0].count()
 
-        val gridWithDigits = (0 until width).flatMap { x ->
-            (0 until height).map { y ->
-                Point(x, y) to lines[y][x]
-            }
-        }.toMap()
+        val gridWithDigits = (0 until width).flatMap { x -> (0 until height).map { y -> Point(x, y) to lines[y][x] } }.toMap()
+        val placesToVisit = gridWithDigits.entries
+                .filter { it.value.isDigit() }
+                .associate { (key, value) -> value to key }
 
-
-        val placesToVisit = gridWithDigits.values.filter { it.isDigit() }.map { it.toString().toInt() }
         val grid = gridWithDigits.entries.associate { (key, value) ->
             if (value.isDigit()) {
                 key to '.'
@@ -50,10 +139,7 @@ class Puzzle24 {
                 key to value
             }
         }
-        return Pair(placesToVisit, grid)
-    }
 
-    fun solveTwo(puzzleText: String): Int {
-        return 2323
+        return Pair(placesToVisit, grid)
     }
 }
