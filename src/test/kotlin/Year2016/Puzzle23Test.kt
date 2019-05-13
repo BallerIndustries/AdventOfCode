@@ -10,7 +10,7 @@ class Puzzle23Test {
     @Test
     fun `can solve part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(981, result)
+        assertEquals(12748, result)
     }
 
     @Test
@@ -32,7 +32,7 @@ class Puzzle23Test {
     @Test
     fun `can solve part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(123123, result)
+        assertEquals(479009308, result)
     }
 }
 
@@ -47,6 +47,7 @@ class Puzzle23 {
                 "dec" -> DecrementRegister(tmp[1])
                 "jnz" -> JumpIfNotZero(tmp[1], tmp[2])
                 "tgl" -> Toggle(tmp[1])
+                "mul" -> Multiply(tmp[1], tmp[2], tmp[3])
                 else -> throw RuntimeException("Sorry don't support that command. command = ${tmp[0]}")
             }
         }
@@ -64,12 +65,25 @@ class Puzzle23 {
     }
 
     fun solveTwo(puzzleText: String): Int {
-        var state = State(commands = parseCommandText(puzzleText), registers = State.partBState)
+        val original = "cpy b c\n" +
+                "inc a\n" +
+                "dec c\n" +
+                "jnz c -2\n" +
+                "dec d\n" +
+                "jnz d -5"
+
+        val replacement = "mul b d a\n" +
+                "cpy 0 c\n" +
+                "cpy 0 c\n" +
+                "cpy 0 c\n" +
+                "cpy 0 c\n" +
+                "cpy 0 d"
+
+        var state = State(commands = parseCommandText(puzzleText.replace(original, replacement)), registers = State.partBState)
 
         while (state.programCounter < parseCommandText(puzzleText).size && state.programCounter >= 0) {
             val command = state.commands[state.programCounter]
             state = command.execute(state)
-            println("command = $command state = $state")
         }
 
         return state.registers["a"]!!
@@ -149,6 +163,18 @@ class Puzzle23 {
                 val deltaValue = state.getValueOrValueFromRegister(deltaValueOrRegister)
                 return state.copy(programCounter = state.programCounter + deltaValue, registers = state.registers)
             }
+        }
+    }
+
+    data class Multiply(val operandA: String, val operandB: String, val destinationRegister: String): Command {
+        override fun execute(state: State): State {
+            val valueA = state.getValueOrValueFromRegister(operandA)
+            val valueB = state.getValueOrValueFromRegister(operandB)
+            return state.copy(programCounter = state.programCounter + 1, registers = state.registers + (destinationRegister to valueA * valueB))
+        }
+
+        override fun toggle(): Command {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
     }
 
