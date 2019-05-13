@@ -106,8 +106,7 @@ class Puzzle24Redo {
         val height = lines.count()
         val width = lines[0].count()
 
-        val gridWithDigits = (0 until width).flatMap { x -> (0 until height).map { y -> Point(x, y) to lines[y][x] } }.toMap()
-        return gridWithDigits
+        return (0 until width).flatMap { x -> (0 until height).map { y -> Point(x, y) to lines[y][x] } }.toMap()
     }
 
     fun minDistance(puzzleText: String, from: Char, to: Char): Int {
