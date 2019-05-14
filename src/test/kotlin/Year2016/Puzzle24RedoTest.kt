@@ -92,8 +92,46 @@ class Puzzle24Redo {
 
     fun solveOne(puzzleText: String): Int {
         val graph = buildWeightedGraph(puzzleText)
-
         println(graph)
+
+        val initialNodesToVisit = graph.keys.filter { it != '0' }.toSet()
+        val continues = mutableListOf(Triple('0', initialNodesToVisit, 0))
+
+        while (continues.isNotEmpty()) {
+            val tmp = continues.removeAt(0)
+            var currentNode = tmp.first
+            var nodesToVisit = tmp.second
+            var distanceTravelled = tmp.third
+
+            while (nodesToVisit.isNotEmpty()) {
+
+                // Visit the current node
+                nodesToVisit = nodesToVisit.filter { it != currentNode }.toSet()
+
+                if (nodesToVisit.isEmpty()) {
+                    break
+                }
+
+                // Figure out what paths we can take
+                val pathsWeCanTake = graph[currentNode]!!.filter { path -> nodesToVisit.contains(path.nodeName) }
+
+                // Take the first path
+                val firstPath = pathsWeCanTake.first()
+                currentNode = firstPath.nodeName
+                distanceTravelled += firstPath.weight
+
+                // Add the remaining paths as continuations
+                val newContinuations = pathsWeCanTake.subList(1, pathsWeCanTake.size).map { futurePath ->
+                    Triple(futurePath.nodeName, nodesToVisit, distanceTravelled + futurePath.weight)
+                }
+
+                continues.addAll(newContinuations)
+            }
+
+            println(distanceTravelled)
+        }
+
+
 
 
 
@@ -102,7 +140,7 @@ class Puzzle24Redo {
     }
 
     fun buildWeightedGraph(puzzleText: String): Map<Char, Set<Path>> {
-        val (placesToVisit, grid, startPosition) = parseGrid(puzzleText)
+        val (placesToVisit, _, startPosition) = parseGrid(puzzleText)
         val graph = mutableMapOf<Char, Set<Path>>()
         val dorks = (placesToVisit + ('0' to startPosition)).entries.map { it.key to it.value }
 
