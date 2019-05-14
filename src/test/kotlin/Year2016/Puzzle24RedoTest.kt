@@ -94,25 +94,29 @@ class Puzzle24Redo {
 
     fun solveOne(puzzleText: String): Int {
         val graph = buildWeightedGraph(puzzleText)
-        println(graph)
+        println(graph['4'])
 
         val initialNodesToVisit = graph.keys.filter { it != '0' }.toSet()
         val continues = mutableListOf(Triple('0', initialNodesToVisit, 0))
         val solutions = mutableSetOf<Int>()
 
-        while (continues.isNotEmpty()) {
-            val tmp = continues.removeAt(0)
-            var currentNode = tmp.first
-            var nodesToVisit = tmp.second
-            var distanceTravelled = tmp.third
+        while (true) {
+            var currentNode = '0'
+            var nodesToVisit = initialNodesToVisit
+            var distanceTravelled = 0
 
             while (nodesToVisit.isNotEmpty()) {
                 // Visit the current node
                 nodesToVisit = nodesToVisit.filter { it != currentNode }.toSet()
 
                 if (nodesToVisit.isEmpty()) {
-                    println(distanceTravelled)
-                    solutions.add(distanceTravelled)
+                    if (distanceTravelled < solutions.min() ?: Int.MAX_VALUE) {
+                        solutions.add(distanceTravelled)
+                        val distHome = graph[currentNode]!!.find { it.nodeName == '0' }!!.weight
+                        val distanceAndHome = distanceTravelled + distHome
+                        println("distanceAndHome = $distanceAndHome distanceTravelled = $distanceTravelled currentNode = $currentNode")
+                    }
+
                     break
                 }
 
