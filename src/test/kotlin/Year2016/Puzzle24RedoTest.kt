@@ -10,6 +10,8 @@ class Puzzle24RedoTest {
     @Test
     fun `can solve part a`() {
         //42728 too high
+        //1220 too high
+        //902?
         val result = puzzle.solveOne(puzzleText)
         assertEquals(12748, result)
     }
@@ -96,6 +98,7 @@ class Puzzle24Redo {
 
         val initialNodesToVisit = graph.keys.filter { it != '0' }.toSet()
         val continues = mutableListOf(Triple('0', initialNodesToVisit, 0))
+        val solutions = mutableSetOf<Int>()
 
         while (continues.isNotEmpty()) {
             val tmp = continues.removeAt(0)
@@ -104,39 +107,37 @@ class Puzzle24Redo {
             var distanceTravelled = tmp.third
 
             while (nodesToVisit.isNotEmpty()) {
-
                 // Visit the current node
                 nodesToVisit = nodesToVisit.filter { it != currentNode }.toSet()
 
                 if (nodesToVisit.isEmpty()) {
+                    println(distanceTravelled)
+                    solutions.add(distanceTravelled)
+                    break
+                }
+
+                if (distanceTravelled > solutions.min() ?: Int.MAX_VALUE) {
                     break
                 }
 
                 // Figure out what paths we can take
-                val pathsWeCanTake = graph[currentNode]!!.filter { path -> nodesToVisit.contains(path.nodeName) }
+                val randomPathsWeCanTake = graph[currentNode]!!.shuffled()
 
                 // Take the first path
-                val firstPath = pathsWeCanTake.first()
+                val firstPath = randomPathsWeCanTake.first()
                 currentNode = firstPath.nodeName
                 distanceTravelled += firstPath.weight
 
                 // Add the remaining paths as continuations
-                val newContinuations = pathsWeCanTake.subList(1, pathsWeCanTake.size).map { futurePath ->
+                val newContinuations = randomPathsWeCanTake.subList(1, randomPathsWeCanTake.size).map { futurePath ->
                     Triple(futurePath.nodeName, nodesToVisit, distanceTravelled + futurePath.weight)
                 }
 
                 continues.addAll(newContinuations)
             }
-
-            println(distanceTravelled)
         }
 
-
-
-
-
-
-        return 1298
+        return 100
     }
 
     fun buildWeightedGraph(puzzleText: String): Map<Char, Set<Path>> {
