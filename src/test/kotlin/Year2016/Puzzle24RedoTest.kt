@@ -168,7 +168,56 @@ class Puzzle24Redo {
     }
 
     fun solveTwo(puzzleText: String): Int {
-        return 2323
+        val graph = buildWeightedGraph(puzzleText)
+//        println(graph['4'])
+
+        val initialNodesToVisit = graph.keys.filter { it != '0' }.toSet()
+        val continues = mutableListOf(Triple('0', initialNodesToVisit, 0))
+        val solutions = mutableSetOf<Int>()
+
+        while (true) {
+            var currentNode = '0'
+            var nodesToVisit = initialNodesToVisit
+            var distanceTravelled = 0
+
+            while (nodesToVisit.isNotEmpty()) {
+                // Visit the current node
+                nodesToVisit = nodesToVisit.filter { it != currentNode }.toSet()
+
+                if (nodesToVisit.isEmpty()) {
+                    val distHome = graph[currentNode]!!.find { it.nodeName == '0' }!!.weight
+                    val distanceAndHome = distanceTravelled + distHome
+
+                    if (distanceAndHome < solutions.min() ?: Int.MAX_VALUE) {
+                        solutions.add(distanceAndHome)
+                        println("distanceAndHome = $distanceAndHome")
+                    }
+
+                    break
+                }
+
+                if (distanceTravelled > solutions.min() ?: Int.MAX_VALUE) {
+                    break
+                }
+
+                // Figure out what paths we can take
+                val randomPathsWeCanTake = graph[currentNode]!!.shuffled()
+
+                // Take the first path
+                val firstPath = randomPathsWeCanTake.first()
+                currentNode = firstPath.nodeName
+                distanceTravelled += firstPath.weight
+
+                // Add the remaining paths as continuations
+                val newContinuations = randomPathsWeCanTake.subList(1, randomPathsWeCanTake.size).map { futurePath ->
+                    Triple(futurePath.nodeName, nodesToVisit, distanceTravelled + futurePath.weight)
+                }
+
+                continues.addAll(newContinuations)
+            }
+        }
+
+        return 100
     }
 
     private fun manhattanDistance(a: Point, b: Point) = Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
