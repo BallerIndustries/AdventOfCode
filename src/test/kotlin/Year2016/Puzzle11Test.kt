@@ -2,6 +2,7 @@ package Year2016
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.lang.RuntimeException
 
 class Puzzle11Test {
     val puzzle = Puzzle11()
@@ -47,13 +48,35 @@ class Puzzle11 {
 
     data class Floor(val number: Int, val things: Set<Thing>)
 
+    data class Elevator(val floorNumber: Int) {
+        fun moveUp() = this.copy(this.floorNumber + 1)
+        fun moveDown() = this.copy(this.floorNumber - 1)
+    }
+
+    data class State(val elevator: Elevator, val floors: Map<Int, Floor>) {
+        fun nextStates(): List<State> {
+
+            // Elevator can go up or down
+            // Elevator can have 1 item or 2 items
+            throw NotImplementedError("asdasda")
+
+        }
+    }
+
     fun solveOne(puzzleText: String): String {
-        val floors = parseText(puzzleText)
+        val initialFloors = parseText(puzzleText)
+        val initialElevator = Elevator(1)
+        val initialState = State(initialElevator, initialFloors)
+
+        // Elevator can move up or down
+        // Elevator must take 1 or 2 items when going up or down
+        // if a chip is ever left in the same area as another RTG, and it's not connected to its own RTG, the chip will be fried.
+
 
         return ""
     }
 
-    private fun parseText(puzzleText: String): List<Floor> {
+    private fun parseText(puzzleText: String): Map<Int, Floor> {
         return puzzleText.split("\n").mapIndexed { index, line ->
             val things = line.split(" ")
                 .let { it.subList(5, it.size) }
@@ -63,8 +86,8 @@ class Puzzle11 {
                 .toSet()
 
             val floor = Floor(index + 1, things)
-            floor
-        }
+            floor.number to floor
+        }.toMap()
     }
 
     fun solveTwo(puzzleText: String): String {
