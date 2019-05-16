@@ -9,8 +9,8 @@ class Puzzle24Test {
     val puzzle = Puzzle24()
     val puzzleText = this::class.java.getResource("/2016/puzzle24.txt").readText().replace("\r", "")
 
-    @Ignore
     @Test
+    @Ignore("Gave up, created Puzzle24Redo")
     fun `can solve part a`() {
         //42728 too high
         val result = puzzle.solveOne(puzzleText)
@@ -32,6 +32,7 @@ class Puzzle24Test {
     }
 
     @Test
+    @Ignore("Gave up, created Puzzle24Redo")
     fun `can solve part b`() {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(479009308, result)
