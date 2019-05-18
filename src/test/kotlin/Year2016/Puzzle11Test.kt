@@ -71,7 +71,7 @@ class Puzzle11Test {
             4 to Floor(number = 4, things = setOf())
         )
 
-        val state = Puzzle11.State(elevator = Puzzle11.Elevator(floorNumber = 1), floors = floors)
+        val state = State(elevator = Elevator(floorNumber = 1), floors = floors)
 
         val expectedFloors = mapOf(
             1 to Floor(number = 1, things = setOf(Microchip("lithium"))),
