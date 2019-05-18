@@ -25,6 +25,7 @@ class Puzzle11Test {
     @Test
     fun `puzzle part a`() {
         // 195 too high
+        // 133 too high
         val result = puzzle.solveOne(puzzleText)
         assertEquals(12122, result)
     }
