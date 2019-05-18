@@ -1,21 +1,23 @@
 package Year2016
 
+import Year2016.Puzzle11.*
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 
 class Puzzle11Test {
     val puzzle = Puzzle11()
     val puzzleText = Puzzle11Test::class.java.getResource("/2016/puzzle11.txt").readText().replace("\r","")
+    val exampleText = """
+        The first floor contains a hydrogen-compatible microchip, and a lithium-compatible microchip.
+        The second floor contains a hydrogen generator.
+        The third floor contains a lithium generator.
+        The fourth floor contains nothing relevant.
+    """.trimIndent()
+
 
     @Test
     fun `example part a`() {
-        val exampleText = """
-            The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.
-            The second floor contains a hydrogen generator.
-            The third floor contains a lithium generator.
-            The fourth floor contains nothing relevant.
-        """.trimIndent()
-
         val result = puzzle.solveOne(exampleText)
         assertEquals(11, result)
     }
@@ -30,6 +32,35 @@ class Puzzle11Test {
     fun `puzzle part b`() {
         val result: String = puzzle.solveTwo(puzzleText)
         assertEquals("", result)
+    }
+
+    @Test
+    @Ignore
+    fun `should be able to transition from the initial state of the example input`() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    @Test
+    fun `can parse puzzle input`() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    @Test
+    fun `can parse example input`() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    @Test
+    @Ignore()
+    fun `should be able to transition to another floor from this state`() {
+        val horse = mapOf(
+            1 to Floor(number = 1, things = setOf(Puzzle11.Microchip(name = "hydrogen lithium"))),
+            2 to Floor(number = 2, things = setOf(Puzzle11.Generator(name = "hydrogen"))),
+            3 to Floor(number = 3, things = setOf(Puzzle11.Generator(name = "lithium"))),
+            4 to Floor(number = 4, things = setOf())
+        )
+
+        val dog = Puzzle11.State(elevator= Puzzle11.Elevator(floorNumber = 1), floors= horse)
     }
 }
 
@@ -137,17 +168,24 @@ class Puzzle11 {
 
     fun solveOne(puzzleText: String): Int {
         val initialFloors = parseText(puzzleText)
+
+        while (true) {
+            println(randomRandomRANDOM(initialFloors))
+        }
+    }
+
+    private fun randomRandomRANDOM(initialFloors: Map<Int, Floor>): Int {
         val initialElevator = Elevator(1)
-        var currentState  = State(initialElevator, initialFloors)
+        var currentState = State(initialElevator, initialFloors)
         val visitedStates = mutableSetOf(currentState)
         var moves = 0
-
 
         while (!currentState.isGoal()) {
             val nextStates = currentState.nextStates(visitedStates)
 
             if (nextStates.isEmpty()) {
-                println("Oh wowwww")
+                println("currentState = $currentState")
+                return Int.MAX_VALUE
             }
 
             currentState = nextStates.random()
