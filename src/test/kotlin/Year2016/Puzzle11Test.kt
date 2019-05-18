@@ -8,9 +8,22 @@ class Puzzle11Test {
     val puzzleText = Puzzle11Test::class.java.getResource("/2016/puzzle11.txt").readText().replace("\r","")
 
     @Test
+    fun `example part a`() {
+        val exampleText = """
+            The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.
+            The second floor contains a hydrogen generator.
+            The third floor contains a lithium generator.
+            The fourth floor contains nothing relevant.
+        """.trimIndent()
+
+        val result = puzzle.solveOne(exampleText)
+        assertEquals(11, result)
+    }
+
+    @Test
     fun `puzzle part a`() {
-        val result: String = puzzle.solveOne(puzzleText)
-        assertEquals("", result)
+        val result = puzzle.solveOne(puzzleText)
+        assertEquals(12122, result)
     }
 
     @Test
@@ -73,12 +86,17 @@ class Puzzle11 {
 
     data class State(val elevator: Elevator, val floors: Map<Int, Floor>) {
 
+        fun isGoal(): Boolean {
+            val topFloorNotEmpty = floors[4]!!.things.isNotEmpty()
+            val otherFloorsAreEmpty = (1 .. 3).all { floors[it]!!.things.isEmpty() }
+            return topFloorNotEmpty && otherFloorsAreEmpty
+        }
+
         private fun isValid(): Boolean {
             return elevator.isValid() && floors.values.all { floor -> floor.isValid() }
         }
 
-        fun nextStates(): List<State> {
-
+        fun nextStates(visitedStates: MutableSet<State>): List<State> {
             // Elevator can go up or down
             val elevatorStates = listOf(elevator.moveUp(), elevator.moveDown())
             val currentFloor = floors[elevator.floorNumber]!!
@@ -95,7 +113,6 @@ class Puzzle11 {
 
             // Variable name of the year
             val listOfListOfThingsToCarryToAnotherFloor = singlesToCarry.map { listOf(it) } + pairsToCarry.map { listOf(it.first, it.second) }
-            println("listOfListOfThingsToCarryToAnotherFloor = $listOfListOfThingsToCarryToAnotherFloor")
 
             val elevatorAndItsContents = elevatorStates.flatMap { elevator ->
                 listOfListOfThingsToCarryToAnotherFloor.map { contents ->
@@ -114,23 +131,30 @@ class Puzzle11 {
                 State(nextElevator, nextFloors)
             }
 
-            return nextStates.filter { it.isValid() }
+            return nextStates.filter { it.isValid() && !visitedStates.contains(it) }
         }
     }
 
-    fun solveOne(puzzleText: String): String {
+    fun solveOne(puzzleText: String): Int {
         val initialFloors = parseText(puzzleText)
         val initialElevator = Elevator(1)
-        val initialState = State(initialElevator, initialFloors)
-
-        val nextStates = initialState.nextStates()
-
-        // Elevator can move up or down
-        // Elevator must take 1 or 2 items when going up or down
-        // if a chip is ever left in the same area as another RTG, and it's not connected to its own RTG, the chip will be fried.
+        var currentState  = State(initialElevator, initialFloors)
+        val visitedStates = mutableSetOf(currentState)
+        var moves = 0
 
 
-        return "798798798789"
+        while (!currentState.isGoal()) {
+            val nextStates = currentState.nextStates(visitedStates)
+
+            if (nextStates.isEmpty()) {
+                println("Oh wowwww")
+            }
+
+            currentState = nextStates.random()
+            moves++
+        }
+
+        return moves
     }
 
     private fun parseText(puzzleText: String): Map<Int, Floor> {
