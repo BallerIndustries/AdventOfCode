@@ -4,7 +4,6 @@ import Year2016.Puzzle11.*
 import Year2016.Puzzle11.State
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Test
 
 class Puzzle11Test {
@@ -18,27 +17,12 @@ class Puzzle11Test {
     """.trimIndent()
 
     @Test
-    fun `example part a`() {
-        // Runs in 25.9 seconds
-        // After tweaks 14.8
-        val result = puzzle.solveOne(exampleText)
-        assertEquals(11, result)
-    }
-
-    @Test
     fun `example part a using next gen tech`() {
         val result = puzzle.solveOneNextGen(exampleText)
         assertEquals(11, result)
     }
 
-//    @Test
-//    fun `example part b`() {
-//        val result = puzzle.solveTwo(exampleText)
-//        assertEquals(11, result)
-//    }
-
     @Test
-    @Ignore("Takes 12 minutes to run!")
     fun `puzzle part a`() {
         // 195 too high
         // 133 too high
@@ -49,7 +33,7 @@ class Puzzle11Test {
     @Test
     fun `puzzle part b`() {
         val result: Int = puzzle.solveTwo(puzzleText)
-        assertEquals(123123, result)
+        assertEquals(55, result)
     }
 
     @Test
@@ -129,6 +113,15 @@ class Puzzle11 {
         val name: String
     }
 
+    data class GeneratorAndChipPositions(val generatorFloor: Int, val microchipFloor: Int) : Comparable<GeneratorAndChipPositions> {
+        override fun compareTo(other: GeneratorAndChipPositions): Int {
+            return if (generatorFloor != other.generatorFloor)
+                generatorFloor.compareTo(other.generatorFloor)
+            else
+                microchipFloor.compareTo(other.microchipFloor)
+        }
+    }
+
     data class Generator(override val name: String): Thing
 
     data class Microchip(override val name: String): Thing
@@ -174,15 +167,32 @@ class Puzzle11 {
         // (HGen@floor0, HChip@floor1, LGen@floor2, LChip@floor2),
         // (LGen@floor0, LChip@floor1, HGen@floor2, HChip@floor2)
         // - prune any state EQUIVALENT TO (not just exactly equal to) a state you have already seen!
-//        override fun equals(other: Any?): Boolean {
-//            return super.equals(other)
-//        }
-//
-//        override fun hashCode(): Int {
-//            var result = elevator.hashCode()
-//            result = 31 * result + floors.hashCode()
-//            return result
-//        }
+        override fun equals(other: Any?): Boolean {
+            val otherState = other as State
+            val thesePairs: List<GeneratorAndChipPositions> = this.toGeneratorAndChipPositions()
+            val otherPairs: List<GeneratorAndChipPositions> = otherState.toGeneratorAndChipPositions()
+            return elevator.equals(other.elevator) && thesePairs.equals(otherPairs)
+        }
+
+        private fun toGeneratorAndChipPositions(): List<GeneratorAndChipPositions> {
+            val floorNumberToThing = floors.values.flatMap { floor ->
+                floor.things.map { thing -> floor.number to thing }
+            }
+
+            val names = floorNumberToThing.map { it.second.name }.toSet()
+
+            return names.map { name ->
+                val microchipFlor = floorNumberToThing.find { (_, thing) -> (thing as? Microchip)?.name == name }!!.first
+                val generatorFlor = floorNumberToThing.find { (_, thing) -> (thing as? Generator)?.name == name }!!.first
+                GeneratorAndChipPositions(generatorFlor, microchipFlor)
+            }.sorted()
+        }
+
+        override fun hashCode(): Int {
+            var result = elevator.hashCode()
+            result = 31 * result + toGeneratorAndChipPositions().hashCode()
+            return result
+        }
 
         fun nextStates(visitedStates: Set<State>): List<State> {
             // Elevator can go up or down
@@ -245,63 +255,6 @@ class Puzzle11 {
         }
 
         return steps
-    }
-
-    fun solveOne(puzzleText: String): Int {
-        val initialFloors = parseText(puzzleText)
-        val initialState = State(Elevator(1), initialFloors)
-        var min = Int.MAX_VALUE
-        val continues = mutableMapOf(initialState to 0)
-
-        while (continues.isNotEmpty()) {
-            val tmp = continues.entries.first()
-            continues.remove(tmp.key)
-
-            val startState = tmp.key
-            val startSteps = tmp.value
-
-            val (number, newContinues) = randomRandomRANDOM(startState, startSteps, min)
-
-            if (number < min) {
-                min = number
-                println(min)
-            }
-
-            continues.putAll(newContinues)
-        }
-
-        return min
-    }
-
-    private fun randomRandomRANDOM(initialState: State, initialMoveCount: Int, min: Int): Pair<Int, Map<State, Int>> {
-//        val initialElevator = Elevator(1)
-        var currentState = initialState
-        val visitedStates = mutableSetOf(currentState)
-        var moves = initialMoveCount
-
-        val continues = mutableMapOf<State, Int>()
-
-        while (!currentState.isGoal()) {
-            if (moves > min) {
-                return Int.MAX_VALUE to continues
-            }
-
-            val randomNextStates = currentState.nextStates(visitedStates).shuffled()
-
-            if (randomNextStates.isEmpty()) {
-                return Int.MAX_VALUE to continues
-            }
-
-            currentState = randomNextStates.first()
-            moves++
-
-            if (randomNextStates.size > 1) {
-                val freshMeat = randomNextStates.subList(1, randomNextStates.size).associate { it to moves }
-                continues.putAll(freshMeat)
-            }
-        }
-
-        return moves to continues
     }
 
     fun parseText(puzzleText: String): Map<Int, Floor> {
