@@ -49,10 +49,23 @@ class Puzzle11 {
         fun withTheseThings(things: List<Thing>) = this.copy(things = this.things + things)
 
         fun withoutTheseThings(things: List<Thing>) = this.copy(things = this.things - things)
+
+        fun isValid(): Boolean {
+            if (number < 1 || number > 4) return false
+
+            //if a chip is ever left in the same area as another RTG, and it's not connected to its own RTG, the chip will be fried.
+            val chipsOnThisFloor = things.mapNotNull { it as? Microchip }
+            val generatorsOnThisFloor = things.mapNotNull { it as? Generator }
+
+            return chipsOnThisFloor.all { microchip ->
+                generatorsOnThisFloor.find { it.name == microchip.name } != null
+            }
+        }
     }
 
     data class Elevator(val floorNumber: Int) {
         fun moveUp() = this.copy(this.floorNumber + 1)
+
         fun moveDown() = this.copy(this.floorNumber - 1)
 
         fun isValid() = floorNumber in 1..4
@@ -60,7 +73,7 @@ class Puzzle11 {
 
     data class State(val elevator: Elevator, val floors: Map<Int, Floor>) {
 
-        fun isValid(): Boolean {
+        private fun isValid(): Boolean {
             return elevator.isValid() && floors.values.all { floor -> floor.isValid() }
         }
 
@@ -101,9 +114,7 @@ class Puzzle11 {
                 State(nextElevator, nextFloors)
             }
 
-            // Elevator can have 1 item or 2 items
-            throw NotImplementedError("asdasda")
-
+            return nextStates.filter { it.isValid() }
         }
     }
 
@@ -112,7 +123,7 @@ class Puzzle11 {
         val initialElevator = Elevator(1)
         val initialState = State(initialElevator, initialFloors)
 
-        initialState.nextStates()
+        val nextStates = initialState.nextStates()
 
         // Elevator can move up or down
         // Elevator must take 1 or 2 items when going up or down
