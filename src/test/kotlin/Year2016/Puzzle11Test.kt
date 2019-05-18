@@ -3,6 +3,8 @@ package Year2016
 import Year2016.Puzzle11.*
 import Year2016.Puzzle11.State
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 
 class Puzzle11Test {
@@ -15,19 +17,27 @@ class Puzzle11Test {
         The fourth floor contains nothing relevant.
     """.trimIndent()
 
-
     @Test
     fun `example part a`() {
+        // Runs in 25.9 seconds
+        // After tweaks 14.8
         val result = puzzle.solveOne(exampleText)
         assertEquals(11, result)
     }
 
     @Test
+    fun `example part a using next gen tech`() {
+        val result = puzzle.solveOneNextGen(exampleText)
+        assertEquals(11, result)
+    }
+
+    @Test
+    @Ignore("Takes 12 minutes to run!")
     fun `puzzle part a`() {
         // 195 too high
         // 133 too high
-        val result = puzzle.solveOne(puzzleText)
-        assertEquals(12122, result)
+        val result = puzzle.solveOneNextGen(puzzleText)
+        assertEquals(31, result)
     }
 
     @Test
@@ -40,10 +50,10 @@ class Puzzle11Test {
     fun `can parse puzzle input`() {
         val actualFloors = puzzle.parseText(puzzleText)
         val expectedFloors = mapOf(
-                1 to Floor(number = 1, things = setOf(Microchip("thulium"), Generator("thulium"), Generator("plutonium"), Generator("strontium"))),
-                2 to Floor(number = 2, things = setOf(Microchip("plutonium"), Microchip("strontium"))),
-                3 to Floor(number = 3, things = setOf(Generator("promethium"), Microchip("promethium"), Generator("ruthenium"), Microchip("ruthenium"))),
-                4 to Floor(number = 4, things = setOf())
+            1 to Floor(number = 1, things = setOf(Microchip("thulium"), Generator("thulium"), Generator("plutonium"), Generator("strontium"))),
+            2 to Floor(number = 2, things = setOf(Microchip("plutonium"), Microchip("strontium"))),
+            3 to Floor(number = 3, things = setOf(Generator("promethium"), Microchip("promethium"), Generator("ruthenium"), Microchip("ruthenium"))),
+            4 to Floor(number = 4, things = setOf())
         )
 
         assertEquals(expectedFloors, actualFloors)
@@ -65,10 +75,10 @@ class Puzzle11Test {
     @Test
     fun `should be able to transition to another floor from this state`() {
         val floors = mapOf(
-                1 to Floor(number = 1, things = setOf(Microchip(name = "hydrogen"), Microchip("lithium"))),
-                2 to Floor(number = 2, things = setOf(Generator(name = "hydrogen"))),
-                3 to Floor(number = 3, things = setOf(Generator(name = "lithium"))),
-                4 to Floor(number = 4, things = setOf())
+            1 to Floor(number = 1, things = setOf(Microchip(name = "hydrogen"), Microchip("lithium"))),
+            2 to Floor(number = 2, things = setOf(Generator(name = "hydrogen"))),
+            3 to Floor(number = 3, things = setOf(Generator(name = "lithium"))),
+            4 to Floor(number = 4, things = setOf())
         )
 
         val state = Puzzle11.State(elevator = Puzzle11.Elevator(floorNumber = 1), floors = floors)
@@ -88,7 +98,7 @@ class Puzzle11Test {
     @Test
     fun `floor with one microchip on it should be a valid floor`() {
         val floor = Floor(1, setOf(Microchip("lithium")))
-        assertEquals(true, floor.isValid())
+        assertTrue(floor.isValid())
     }
 }
 
@@ -148,20 +158,29 @@ class Puzzle11 {
     }
 
     data class State(val elevator: Elevator, val floors: Map<Int, Floor>) {
-
         fun isGoal(): Boolean {
             val topFloorNotEmpty = floors[4]!!.things.isNotEmpty()
             val otherFloorsAreEmpty = (1 .. 3).all { floors[it]!!.things.isEmpty() }
             return topFloorNotEmpty && otherFloorsAreEmpty
         }
 
-        private fun isValid(): Boolean {
-            return elevator.isValid() && floors.values.all { floor -> floor.isValid() }
-        }
+        // ALL PAIRS ARE INTERCHANGEABLE - The following two states are EQUIVALENT:
+        // (HGen@floor0, HChip@floor1, LGen@floor2, LChip@floor2),
+        // (LGen@floor0, LChip@floor1, HGen@floor2, HChip@floor2)
+        // - prune any state EQUIVALENT TO (not just exactly equal to) a state you have already seen!
+//        override fun equals(other: Any?): Boolean {
+//            return super.equals(other)
+//        }
+//
+//        override fun hashCode(): Int {
+//            var result = elevator.hashCode()
+//            result = 31 * result + floors.hashCode()
+//            return result
+//        }
 
         fun nextStates(visitedStates: Set<State>): List<State> {
             // Elevator can go up or down
-            val elevatorStates = listOf(elevator.moveUp(), elevator.moveDown())
+            val elevatorStates = listOf(elevator.moveUp(), elevator.moveDown()).filter { it.isValid() }
             val currentFloor = floors[elevator.floorNumber]!!
 
             // List of one item lists
@@ -183,56 +202,100 @@ class Puzzle11 {
                 }
             }
 
-            val nextStates = elevatorAndItsContents.map { (nextElevator, contents) ->
+            val nextStates = elevatorAndItsContents.mapNotNull { (nextElevator, contents) ->
 
-                val currentFloor = floors[elevator.floorNumber] ?: Floor(elevator.floorNumber, setOf())
-                val nextFloor = floors[nextElevator.floorNumber] ?: Floor(nextElevator.floorNumber, setOf())
+                val currentFloor = floors[elevator.floorNumber]!!
+                val nextFloor = floors[nextElevator.floorNumber]!!
                 val currentFloorChanged = currentFloor.withoutTheseThings(contents)
                 val nextFloorChanged = nextFloor.withTheseThings(contents)
 
-                val nextFloors = floors + mapOf(currentFloorChanged.number to currentFloorChanged, nextFloorChanged.number to nextFloorChanged)
-                State(nextElevator, nextFloors)
+                if (!currentFloorChanged.isValid() || !nextFloorChanged.isValid()) {
+                    null
+                }
+                else {
+                    val nextFloors = floors + mapOf(currentFloorChanged.number to currentFloorChanged, nextFloorChanged.number to nextFloorChanged)
+                    State(nextElevator, nextFloors)
+                }
             }
 
-            return nextStates.filter { it.isValid() && !visitedStates.contains(it) }
+            return nextStates.filter { !visitedStates.contains(it) }
         }
+    }
+
+    // Breadth first search bay-si-coe-lee
+    fun solveOneNextGen(puzzleText: String): Int {
+        val initialFloors = parseText(puzzleText)
+        val initialState = State(Elevator(1), initialFloors)
+        var frontier = setOf(initialState)
+        var steps = 0
+
+        val previousMoves = mutableSetOf<State>()
+
+        while (frontier.none { it.isGoal() }) {
+            previousMoves.addAll(frontier)
+            frontier = frontier.flatMap { state -> state.nextStates(previousMoves) }.toSet()
+            steps++
+            println("frontier.size = ${frontier.size}")
+        }
+
+        return steps
     }
 
     fun solveOne(puzzleText: String): Int {
         val initialFloors = parseText(puzzleText)
+        val initialState = State(Elevator(1), initialFloors)
         var min = Int.MAX_VALUE
+        val continues = mutableMapOf(initialState to 0)
 
-        (0 .. 100000).forEach {
-            val number = randomRandomRANDOM(initialFloors, min)
-            if (number < min) min = number
-            if (it % 100 == 0) println(min)
+        while (continues.isNotEmpty()) {
+            val tmp = continues.entries.first()
+            continues.remove(tmp.key)
+
+            val startState = tmp.key
+            val startSteps = tmp.value
+
+            val (number, newContinues) = randomRandomRANDOM(startState, startSteps, min)
+
+            if (number < min) {
+                min = number
+                println(min)
+            }
+
+            continues.putAll(newContinues)
         }
 
         return min
     }
 
-    private fun randomRandomRANDOM(initialFloors: Map<Int, Floor>, min: Int): Int {
-        val initialElevator = Elevator(1)
-        var currentState = State(initialElevator, initialFloors)
+    private fun randomRandomRANDOM(initialState: State, initialMoveCount: Int, min: Int): Pair<Int, Map<State, Int>> {
+//        val initialElevator = Elevator(1)
+        var currentState = initialState
         val visitedStates = mutableSetOf(currentState)
-        var moves = 0
+        var moves = initialMoveCount
+
+        val continues = mutableMapOf<State, Int>()
 
         while (!currentState.isGoal()) {
             if (moves > min) {
-                return Int.MAX_VALUE
+                return Int.MAX_VALUE to continues
             }
 
-            val nextStates = currentState.nextStates(visitedStates)
+            val randomNextStates = currentState.nextStates(visitedStates).shuffled()
 
-            if (nextStates.isEmpty()) {
-                return Int.MAX_VALUE
+            if (randomNextStates.isEmpty()) {
+                return Int.MAX_VALUE to continues
             }
 
-            currentState = nextStates.random()
+            currentState = randomNextStates.first()
             moves++
+
+            if (randomNextStates.size > 1) {
+                val freshMeat = randomNextStates.subList(1, randomNextStates.size).associate { it to moves }
+                continues.putAll(freshMeat)
+            }
         }
 
-        return moves
+        return moves to continues
     }
 
     fun parseText(puzzleText: String): Map<Int, Floor> {
