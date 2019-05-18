@@ -2,7 +2,6 @@ package Year2016
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.lang.RuntimeException
 
 class Puzzle11Test {
     val puzzle = Puzzle11()
@@ -46,17 +45,62 @@ class Puzzle11 {
 
     data class Microchip(override val name: String): Thing
 
-    data class Floor(val number: Int, val things: Set<Thing>)
+    data class Floor(val number: Int, val things: Set<Thing>) {
+        fun withTheseThings(things: List<Thing>) = this.copy(things = this.things + things)
+
+        fun withoutTheseThings(things: List<Thing>) = this.copy(things = this.things - things)
+    }
 
     data class Elevator(val floorNumber: Int) {
         fun moveUp() = this.copy(this.floorNumber + 1)
         fun moveDown() = this.copy(this.floorNumber - 1)
+
+        fun isValid() = floorNumber in 1..4
     }
 
     data class State(val elevator: Elevator, val floors: Map<Int, Floor>) {
+
+        fun isValid(): Boolean {
+            return elevator.isValid() && floors.values.all { floor -> floor.isValid() }
+        }
+
         fun nextStates(): List<State> {
 
             // Elevator can go up or down
+            val elevatorStates = listOf(elevator.moveUp(), elevator.moveDown())
+            val currentFloor = floors[elevator.floorNumber]!!
+
+            // List of one item lists
+            val singlesToCarry = currentFloor.things.toList()
+            val pairsToCarry = mutableListOf<Pair<Thing, Thing>>()
+
+            for (index in 0 until singlesToCarry.size) {
+                for (jindex in index + 1 until singlesToCarry.size) {
+                    pairsToCarry.add(singlesToCarry[index] to singlesToCarry[jindex])
+                }
+            }
+
+            // Variable name of the year
+            val listOfListOfThingsToCarryToAnotherFloor = singlesToCarry.map { listOf(it) } + pairsToCarry.map { listOf(it.first, it.second) }
+            println("listOfListOfThingsToCarryToAnotherFloor = $listOfListOfThingsToCarryToAnotherFloor")
+
+            val elevatorAndItsContents = elevatorStates.flatMap { elevator ->
+                listOfListOfThingsToCarryToAnotherFloor.map { contents ->
+                    elevator to contents
+                }
+            }
+
+            val nextStates = elevatorAndItsContents.map { (nextElevator, contents) ->
+
+                val currentFloor = floors[elevator.floorNumber] ?: Floor(elevator.floorNumber, setOf())
+                val nextFloor = floors[nextElevator.floorNumber] ?: Floor(nextElevator.floorNumber, setOf())
+                val currentFloorChanged = currentFloor.withoutTheseThings(contents)
+                val nextFloorChanged = nextFloor.withTheseThings(contents)
+
+                val nextFloors = floors + mapOf(currentFloorChanged.number to currentFloorChanged, nextFloorChanged.number to nextFloorChanged)
+                State(nextElevator, nextFloors)
+            }
+
             // Elevator can have 1 item or 2 items
             throw NotImplementedError("asdasda")
 
@@ -68,12 +112,14 @@ class Puzzle11 {
         val initialElevator = Elevator(1)
         val initialState = State(initialElevator, initialFloors)
 
+        initialState.nextStates()
+
         // Elevator can move up or down
         // Elevator must take 1 or 2 items when going up or down
         // if a chip is ever left in the same area as another RTG, and it's not connected to its own RTG, the chip will be fried.
 
 
-        return ""
+        return "798798798789"
     }
 
     private fun parseText(puzzleText: String): Map<Int, Floor> {
