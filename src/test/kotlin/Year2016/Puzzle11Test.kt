@@ -31,6 +31,12 @@ class Puzzle11Test {
         assertEquals(11, result)
     }
 
+//    @Test
+//    fun `example part b`() {
+//        val result = puzzle.solveTwo(exampleText)
+//        assertEquals(11, result)
+//    }
+
     @Test
     @Ignore("Takes 12 minutes to run!")
     fun `puzzle part a`() {
@@ -42,8 +48,8 @@ class Puzzle11Test {
 
     @Test
     fun `puzzle part b`() {
-        val result: String = puzzle.solveTwo(puzzleText)
-        assertEquals("", result)
+        val result: Int = puzzle.solveTwo(puzzleText)
+        assertEquals(123123, result)
     }
 
     @Test
@@ -312,8 +318,24 @@ class Puzzle11 {
         }.toMap()
     }
 
-    fun solveTwo(puzzleText: String): String {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    fun solveTwo(puzzleText: String): Int {
+        val initialFloors = parseText(puzzleText)
+        val firstFloorWithExtraShizzle = initialFloors[1]!!.withTheseThings(listOf(Generator("elerium"), Microchip("elerium"), Generator("dilithium"), Microchip("dilithium")))
+        val enrichedFloors = initialFloors + (1 to firstFloorWithExtraShizzle)
+        val initialState = State(Elevator(1), enrichedFloors)
+        var frontier = setOf(initialState)
+        var steps = 0
+
+        val previousMoves = mutableSetOf<State>()
+
+        while (frontier.none { it.isGoal() }) {
+            previousMoves.addAll(frontier)
+            frontier = frontier.flatMap { state -> state.nextStates(previousMoves) }.toSet()
+            steps++
+            println("frontier.size = ${frontier.size}")
+        }
+
+        return steps
     }
 }
 
