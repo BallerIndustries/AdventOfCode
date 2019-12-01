@@ -10,23 +10,43 @@ class Puzzle1Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(454, result)
+        assertEquals(3404722, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(566, result)
+        assertEquals(5104215, result)
     }
 }
 
 class Puzzle1 {
-    fun solveOne(puzzleText: String): String {
-        throw NotImplementedError()
+    fun solveOne(puzzleText: String): Int {
+        return puzzleText.split("\n").map { it.toInt() }.sumBy {someNumber ->
+
+            (someNumber / 3) - 2
+
+        }
     }
 
-    fun solveTwo(puzzleText: String): String {
-        throw NotImplementedError()
+    fun solveTwo(puzzleText: String): Int {
+        return puzzleText.split("\n").map { it.toInt() }.sumBy {someNumber ->
+            var sum = 0
+            var lastThing = someNumber
+
+            while (lastThing > 0) {
+                lastThing = (lastThing / 3) - 2
+                println("lastThing = ${lastThing}")
+
+
+                if (lastThing > 0) {
+                    sum += lastThing
+                }
+            }
+
+
+            sum
+        }
     }
 }
 
