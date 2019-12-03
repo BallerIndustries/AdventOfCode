@@ -13,23 +13,20 @@ class Puzzle3Test {
         val text = "R8,U5,L5,D3\nU7,R6,D4,L4"
         val result = puzzle.solveOne(text)
         assertEquals(6, result)
-
-
     }
 
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(454, result)
+        assertEquals(8015, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(566, result)
+        assertEquals(163676, result)
     }
 }
-
 
 
 class Puzzle3 {
@@ -41,19 +38,17 @@ class Puzzle3 {
     }
 
     fun solveOne(puzzleText: String): Int? {
-        throw RuntimeException("iosdfjhsdf")
+        val (wire1Text, wire2Text) = puzzleText.split("\n")
+        val wire1Commands = parseCommands(wire1Text)
+        val wire2Commands = parseCommands(wire2Text)
 
-//        val (wire1Text, wire2Text) = puzzleText.split("\n")
-//        val wire1Commands = parseCommands(wire1Text)
-//        val wire2Commands = parseCommands(wire2Text)
-//
-//        val grid = mutableMapOf<Point, Set<Int>>()
-//
-//        markInWire(grid, wire1Commands, 1)
-//        markInWire(grid, wire2Commands, 2)
-//
-//        val zaza = grid.entries.filter { it.value.size >= 2 && it.key != Point(0, 0) }.map { it.key.manhattanDistance(Point(0, 0)) }
-//        return zaza.min()!!
+        val grid = mutableMapOf<Point, Map<Int, Int>>()
+
+        markInWire(grid, wire1Commands, 1)
+        markInWire(grid, wire2Commands, 2)
+
+        val zaza = grid.entries.filter { it.value.size >= 2 && it.key != Point(0, 0) }.map { it.key.manhattanDistance(Point(0, 0)) }
+        return zaza.min()!!
     }
 
     private fun markInWire(grid: MutableMap<Point, Map<Int, Int>>, commands: List<Pair<Char, Int>>, wireNumber: Int) {
@@ -89,7 +84,7 @@ class Puzzle3 {
     private fun moveVertical(grid: MutableMap<Point, Map<Int, Int>>, startPoint: Point, amount: Int, wireNumber: Int, steps: Int): Point {
         var newPoint = Point(0, 0)
 
-        (0 .. Math.abs(amount)).forEach {
+        (0..Math.abs(amount)).forEach {
             val newY = if (amount > 0) startPoint.y + it else startPoint.y - it
             newPoint = Point(startPoint.x, newY)
             val existingEntry = (grid.get(newPoint) ?: mapOf()).toMutableMap()
@@ -107,7 +102,7 @@ class Puzzle3 {
     fun moveHorizontal(grid: MutableMap<Point, Map<Int, Int>>, startPoint: Point, amount: Int, wireNumber: Int, steps: Int): Point {
         var newPoint = Point(0, 0)
 
-        (0 .. Math.abs(amount)).forEach {
+        (0..Math.abs(amount)).forEach {
             val newX = if (amount > 0) startPoint.x + it else startPoint.x - it
             newPoint = Point(newX, startPoint.y)
             val existingEntry = (grid.get(newPoint) ?: mapOf()).toMutableMap()
@@ -120,9 +115,7 @@ class Puzzle3 {
         }
 
         return newPoint
-   }
-
-
+    }
 
     fun solveTwo(puzzleText: String): Int {
         val (wire1Text, wire2Text) = puzzleText.split("\n")
