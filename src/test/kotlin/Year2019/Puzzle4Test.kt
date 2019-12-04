@@ -29,18 +29,18 @@ class Puzzle4Test {
         // NOT 1058
         // NOT 1099
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(566, result)
+        assertEquals(710, result)
     }
 }
 
 class Puzzle4 {
     fun solveOne(puzzleText: String): Int {
-        val (from, to) = puzzleText.split("-").map { it.toInt() }.let { it[0] to it[1] }
-
-        return (from..to).count { number ->
-            twoAdjacentNumbersTheSame(number) && leftToRightDigitsNeverDecrease(number)
-        }
+        val (from, to) = puzzleText.split("-").map { it.toInt() }
+        return (from..to).count(this::isPartOneCompliant)
     }
+
+    private fun isPartOneCompliant(number: Int) =
+            twoAdjacentNumbersTheSame(number) && leftToRightDigitsNeverDecrease(number)
 
     private fun leftToRightDigitsNeverDecrease(number: Int): Boolean {
         val text = number.toString()
@@ -99,11 +99,8 @@ class Puzzle4 {
     }
 
     fun solveTwo(puzzleText: String): Int {
-        val (from, to) = puzzleText.split("-").map { it.toInt() }.let { it[0] to it[1] }
-
-        return (from..to).count { number ->
-            isPartTwoCompliant(number)
-        }
+        val (from, to) = puzzleText.split("-").map { it.toInt() }
+        return (from..to).count(this::isPartTwoCompliant)
     }
 
     fun isPartTwoCompliant(number: Int) = hasAGroupOfTwo(number) && leftToRightDigitsNeverDecrease(number)
