@@ -16,12 +16,12 @@ class Puzzle5Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(7704130, result)
+        assertEquals("7704130", result)
     }
 }
 
 class Puzzle5 {
-    data class State(val list: List<Long>, val programCounter: Int = 0, val isHalted: Boolean = false, val lastPrintedValue: String? = null, val justJumped: Boolean = false) {
+    data class State(val list: List<Long>, val programCounter: Int = 0, val isHalted: Boolean = false, val lastPrintedValue: String? = null, val justJumped: Boolean = false, val userInput: Int) {
         fun writeToIndex(index: Int, value: Long): State {
             val newList = this.list.mapIndexed { i, it -> if (i == index) value else it }
             return this.copy(list = newList)
@@ -70,11 +70,75 @@ class Puzzle5 {
         val paramModes: List<ParameterMode>
     }
 
+    data class JumpIfTrueInstruction(override val paramModes: List<ParameterMode>, val paramA: Int, val paramB: Int): Instruction {
+        override val size = 3
+
+        override fun execute(state: State): State {
+            val a = Instruction.getParamOrValue(0, paramModes, paramA, state)
+            val b = Instruction.getParamOrValue(1, paramModes, paramB, state)
+
+            if (a != 0) {
+                return state.jump(b)
+            }
+            else {
+                return state
+            }
+        }
+    }
+
+    data class JumpIfFalseInstruction(override val paramModes: List<ParameterMode>, val paramA: Int, val paramB: Int): Instruction {
+        override val size = 3
+
+        override fun execute(state: State): State {
+            val a = Instruction.getParamOrValue(0, paramModes, paramA, state)
+            val b = Instruction.getParamOrValue(1, paramModes, paramB, state)
+
+            if (a == 0) {
+                return state.jump(b)
+            }
+            else {
+                return state
+            }
+        }
+    }
+
+    data class LessThanInstruction(override val paramModes: List<ParameterMode>, val paramA: Int, val paramB: Int, val paramC: Int): Instruction {
+        override val size = 4
+
+        override fun execute(state: State): State {
+            val a = Instruction.getParamOrValue(0, paramModes, paramA, state)
+            val b = Instruction.getParamOrValue(1, paramModes, paramB, state)
+
+            if (a < b) {
+                return state.writeToIndex(paramC, 1)
+            }
+            else {
+                return state.writeToIndex(paramC, 0)
+            }
+        }
+    }
+
+    data class EqualsInstruction(override val paramModes: List<ParameterMode>, val paramA: Int, val paramB: Int, val paramC: Int): Instruction {
+        override val size = 4
+
+        override fun execute(state: State): State {
+            val a = Instruction.getParamOrValue(0, paramModes, paramA, state)
+            val b = Instruction.getParamOrValue(1, paramModes, paramB, state)
+
+            if (a == b) {
+                return state.writeToIndex(paramC, 1)
+            }
+            else {
+                return state.writeToIndex(paramC, 0)
+            }
+        }
+    }
+
     data class ReadInstruction(override val paramModes: List<ParameterMode>, val paramA: Int): Instruction {
         override val size = 2
 
         override fun execute(state: State): State {
-            return state.writeToIndex(paramA, 1)
+            return state.writeToIndex(paramA, state.userInput.toLong())
         }
     }
 
@@ -122,7 +186,7 @@ class Puzzle5 {
 
     fun solveOne(puzzleText: String): String? {
         val list = puzzleText.split(",").map { it.toLong() }
-        var state = State(list, 0, false)
+        var state = State(list, 0, false, userInput = 1)
 
         while (!state.isHalted) {
             val instruction = parseInstruction(state)
@@ -138,7 +202,6 @@ class Puzzle5 {
         val paramModeText = getParamModeText(paramModeAndOpCode)
         val numParams = getParamCountFromOpCode(opcode)
         val parameterModes = ParameterMode.determineParameterMode(paramModeText, numParams)
-
 
         val instruction: Instruction = when (opcode) {
             1 -> {
@@ -162,8 +225,30 @@ class Puzzle5 {
                 val indexA = getParam(state, 1)
                 WriteInstruction(parameterModes, indexA)
             }
+            5 -> {
+                val indexA = getParam(state, 1)
+                val indexB = getParam(state, 2)
+                JumpIfTrueInstruction(parameterModes, indexA, indexB)
+            }
+            6 -> {
+                val indexA = getParam(state, 1)
+                val indexB = getParam(state, 2)
+                JumpIfFalseInstruction(parameterModes, indexA, indexB)
+            }
+            7 -> {
+                val indexA = getParam(state, 1)
+                val indexB = getParam(state, 2)
+                val indexC = getParam(state, 3)
+                LessThanInstruction(parameterModes, indexA, indexB, indexC)
+            }
+            8 -> {
+                val indexA = getParam(state, 1)
+                val indexB = getParam(state, 2)
+                val indexC = getParam(state, 3)
+                EqualsInstruction(parameterModes, indexA, indexB, indexC)
+            }
             99 -> HaltInstruction()
-            else -> throw RuntimeException("Unexpected opcode = ${opcode}")
+            else -> throw RuntimeException("Unexpected opcode = $opcode")
         }
         return instruction
     }
@@ -178,7 +263,7 @@ class Puzzle5 {
             6 -> 2
             7 -> 3
             8 -> 3
-            99 -> 9
+            99 -> 0
             else -> throw RuntimeException("oaisjdaoisjd")
         }
     }
@@ -189,18 +274,23 @@ class Puzzle5 {
 
     private fun getParam(state: State, offset: Int) = state.list[state.programCounter + offset].toInt()
 
-    fun solveTwo(puzzleText: String): Int {
-//        (0..99).forEach { noun ->
-//            (0..99).forEach { verb ->
-//                val result = solveOne(puzzleText, noun.toLong(), verb.toLong())
-//
-//                if (result == 19690720L) {
-//                    return 100 * noun + verb
-//                }
-//            }
-//        }
+    fun solveTwo(puzzleText: String): String? {
+        val list = puzzleText.split(",").map { it.toLong() }
+        var state = State(list, 0, false, userInput = 5)
 
-        throw RuntimeException("sdofijsd")
+        while (!state.isHalted) {
+            val instruction = parseInstruction(state)
+            state = instruction.execute(state)
+
+            if (state.justJumped) {
+                state = state.clearJustJumped()
+            }
+            else {
+                state = state.incrementProgramCounter(instruction.size)
+            }
+        }
+
+        return state.lastPrintedValue
     }
 }
 
