@@ -28,20 +28,21 @@ class Puzzle7Test {
 }
 
 class Puzzle7 {
-
-
     fun solveOne(puzzleText: String): Int? {
         val permutations = getPermutationsForRange(0, 4)
-        val allOutputs = mutableListOf<Int>()
+        val input = puzzleText.split(",").map { it.toLong() }
 
-        permutations.forEach {
+        return permutations.map { phases ->
+            val (first, second, third, fourth, fifth) = phases.map { phase -> State(input, userInput = listOf(phase)) }
 
-        }
+            var result = runAmplifierProgram(first.addUserInput(0))
+            result = runAmplifierProgram(second.addUserInput(result.lastPrintedValue!!.toInt()))
+            result = runAmplifierProgram(third.addUserInput(result.lastPrintedValue!!.toInt()))
+            result = runAmplifierProgram(fourth.addUserInput(result.lastPrintedValue!!.toInt()))
+            result = runAmplifierProgram(fifth.addUserInput(result.lastPrintedValue!!.toInt()))
 
-
-//        return permutations.map { sendItThroughThePipe(puzzleText, it) }.map { it.first }.max()
-
-        throw RuntimeException()
+            result.lastPrintedValue!!.toInt()
+        }.max()
     }
 
     fun solveTwo(puzzleText: String): Int? {
@@ -56,7 +57,7 @@ class Puzzle7 {
 
             while (!amplifiers.last().isHalted) {
                 val state = amplifiers[index]
-                val currentAmplifier: State = runAmplifier(state.copy(userInput = state.userInput + lastOutput))
+                val currentAmplifier: State = runAmplifierProgram(state.copy(userInput = state.userInput + lastOutput))
 
                 if (currentAmplifier.lastPrintedValue != null) {
                     lastOutput = currentAmplifier.lastPrintedValue!!.toInt()
@@ -72,20 +73,14 @@ class Puzzle7 {
         return allOutputs.max()
     }
 
-    private fun runAmplifier(state: State): State {
-        return runAmplifierProgram(state).second
-    }
-
-    enum class TerminationCode { BLOCKED_ON_IO, HALT }
-
-    private fun runAmplifierProgram(initialState: State): Pair<TerminationCode, State> {
+    private fun runAmplifierProgram(initialState: State): State {
         var state = initialState
 
         while (!state.isHalted) {
             val instruction = parseInstruction(state)
 
             if (instruction is ReadInstruction && state.userInput.isEmpty()) {
-                return TerminationCode.BLOCKED_ON_IO to state
+                return state
             }
 
             state = instruction.execute(state)
@@ -98,7 +93,7 @@ class Puzzle7 {
             }
         }
 
-        return TerminationCode.HALT to state
+        return state
     }
 
     private fun getPermutationsForRange(from: Int, to: Int): List<List<Int>> {
@@ -250,6 +245,7 @@ class Puzzle7 {
         fun setLastPrintedValue(value: String) = this.copy(lastPrintedValue = value)
         fun jump(valueB: Int) = this.copy(programCounter = valueB, justJumped = true)
         fun clearJustJumped() = this.copy(justJumped = false)
+        fun addUserInput(input: Int) = this.copy(userInput = this.userInput + input)
 
         fun popOffInput(): Pair<Int, State> {
             return userInput.first() to this.copy(userInput = this.userInput.subList(1, this.userInput.size))
