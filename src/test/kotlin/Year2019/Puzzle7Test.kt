@@ -15,8 +15,15 @@ class Puzzle7Test {
 
     @Test
     fun `puzzle part b`() {
+        // NOT 262086
         val result = puzzle.solveTwo(puzzleText)
         assertEquals("7704130", result)
+    }
+
+    @Test
+    fun `example a`() {
+        val result = puzzle.solveTwo("3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5")
+        assertEquals(139629729, result)
     }
 }
 
@@ -190,36 +197,100 @@ class Puzzle7 {
     }
 
     fun solveOne(puzzleText: String): Int? {
-        val permutations = mutableListOf<List<Int>>()
+        val permutations = getPermutationsForRange(0, 4)
+        return permutations.map { sendItThroughThePipe(puzzleText, it) }.map { it.first }.max()
+    }
 
-        (0 .. 4).forEach { A ->
-            (0 .. 4).forEach { B ->
-                (0 .. 4).forEach { C ->
-                    (0 .. 4).forEach { D ->
-                        (0 .. 4).forEach { E ->
-                            if (setOf(A, B, C, D, E).size == 5) {
-                                permutations.add(listOf(A, B, C, D, E))
-                            }
-                        }
-                    }
-                }
+    fun solveTwo(puzzleText: String): Int? {
+        val permutations = getPermutationsForRange(0, 4)
+        val otherPermyBois = permutations.map { it.map { it + 5 } }
+
+        val signalAndStateAfterFirstPass = permutations.map { phaseSettings ->
+            sendItThroughThePipe(puzzleText, phaseSettings, 0)
+        }
+
+        val amplificationResults = otherPermyBois.flatMap { amplifiedPhaseSettings: List<Int> ->
+            signalAndStateAfterFirstPass.map { (signal, programStates) ->
+                amplifyTheseGuys(signal, programStates, amplifiedPhaseSettings)
             }
         }
 
-        return permutations.map { sendItThroughThePipe(puzzleText, it) }.max()
+        return amplificationResults.max()
     }
 
-    private fun sendItThroughThePipe(puzzleText: String, phaseSettings: List<Int>): Int {
-        var inputSignal = 0
+    private val amplificationCounts = mutableSetOf<Int>()
 
-        phaseSettings.forEach { phaseSetting ->
-            inputSignal = runAmplifierProgram(puzzleText, phaseSetting, inputSignal)
+    private fun amplifyTheseGuys(outputSignal: Int, programStates: List<State>, amplifiedPhaseSettings: List<Int>): Int {
+        var amplifiedSignal = outputSignal
+        var amplifiedProgramStates = programStates
+        var count = 0
+
+        while (amplifiedProgramStates.any { !it.isHalted }) {
+            count++
+            val tmp = sendItThroughThesePipes(amplifiedProgramStates, amplifiedPhaseSettings, amplifiedSignal)
+            amplifiedSignal = tmp.first
+            amplifiedProgramStates = tmp.second
         }
 
-        return inputSignal
+        amplificationCounts.add(count)
+        return amplifiedSignal
     }
 
-    private fun runAmplifierProgram(puzzleText: String, phaseSetting: Int, inputSignal: Int): Int {
+
+    private fun sendItThroughThesePipes(programs: List<State>, phaseSettings: List<Int>, initialInputSignal: Int): Pair<Int, List<State>> {
+        var inputSignal = initialInputSignal
+        val amplifierProgramStates = mutableListOf<State>()
+
+        phaseSettings.forEachIndexed { index, phaseSetting ->
+            val program = programs[index]
+            val tmp = runAmplifierProgram(program, phaseSetting, inputSignal)
+            inputSignal = tmp.first
+            amplifierProgramStates.add(tmp.second)
+        }
+
+        return inputSignal to amplifierProgramStates
+    }
+
+
+    private fun sendItThroughThePipe(puzzleText: String, phaseSettings: List<Int>, initialInputSignal: Int = 0): Pair<Int, List<State>> {
+        var inputSignal = initialInputSignal
+        val amplifierProgramStates = mutableListOf<State>()
+
+        phaseSettings.forEachIndexed { index, phaseSetting ->
+            val tmp = runAmplifierProgram(puzzleText, phaseSetting, inputSignal)
+            inputSignal = tmp.first
+            amplifierProgramStates.add(tmp.second)
+        }
+
+        return inputSignal to amplifierProgramStates
+    }
+
+    private fun runAmplifierProgram(initialState: State, phaseSetting: Int, inputSignal: Int): Pair<Int, State> {
+        var state = initialState.copy(userInput = listOf(phaseSetting, inputSignal))
+
+        while (!state.isHalted) {
+            val instruction = parseInstruction(state)
+            state = instruction.execute(state)
+
+            if (state.justJumped) {
+                state = state.clearJustJumped()
+            } else {
+                state = state.incrementProgramCounter(instruction.size)
+            }
+
+            println(instruction)
+
+            if (state.lastPrintedValue != null) {
+                val dog = state.lastPrintedValue
+                return dog!!.toInt() to state
+            }
+        }
+
+        val dog = state.lastPrintedValue
+        return dog!!.toInt() to state
+    }
+
+    private fun runAmplifierProgram(puzzleText: String, phaseSetting: Int, inputSignal: Int): Pair<Int, State> {
         val list = puzzleText.split(",").map { it.toLong() }
         var state = State(list, 0, false, userInput = listOf(phaseSetting, inputSignal))
 
@@ -227,7 +298,6 @@ class Puzzle7 {
             val instruction = parseInstruction(state)
             state = instruction.execute(state)
 
-            //println(instruction)
 
             if (state.justJumped) {
                 state = state.clearJustJumped()
@@ -237,16 +307,35 @@ class Puzzle7 {
 
             if (state.lastPrintedValue != null) {
                 val dog = state.lastPrintedValue
-                return dog!!.toInt()
+                return dog!!.toInt() to state
             }
         }
 
         throw RuntimeException("Ah okay")
     }
 
-    fun solveTwo(puzzleText: String): String? {
-        throw RuntimeException()
+    private fun getPermutationsForRange(from: Int, to: Int): List<List<Int>> {
+        val permutations = mutableListOf<List<Int>>()
+
+        (from..to).forEach { A ->
+            (from..to).forEach { B ->
+                (from..to).forEach { C ->
+                    (from..to).forEach { D ->
+                        (from..to).forEach { E ->
+                            if (setOf(A, B, C, D, E).size == 5) {
+                                permutations.add(listOf(A, B, C, D, E))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return permutations
     }
+
+
+
 
 
 
