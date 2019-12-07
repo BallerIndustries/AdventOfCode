@@ -17,7 +17,7 @@ class Puzzle7Test {
     fun `puzzle part b`() {
         // NOT 262086
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("7704130", result)
+        assertEquals(5371621, result)
     }
 
     @Test
