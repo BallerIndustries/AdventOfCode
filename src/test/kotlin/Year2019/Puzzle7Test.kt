@@ -10,25 +10,25 @@ class Puzzle7Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(262086, result)
+        assertEquals(262086L, result)
     }
 
     @Test
     fun `puzzle part b`() {
         // NOT 262086
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(5371621, result)
+        assertEquals(5371621L, result)
     }
 
     @Test
     fun `example a`() {
         val result = puzzle.solveTwo("3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5")
-        assertEquals(139629729, result)
+        assertEquals(139629729L, result)
     }
 }
 
 class Puzzle7 {
-    fun solveOne(puzzleText: String): Int? {
+    fun solveOne(puzzleText: String): Long? {
         val virtualMachine = IntCodeVirtualMachine()
         val permutations = getPermutationsForRange(0, 4)
         val input = puzzleText.split(",").map { it.toLong() }
@@ -36,23 +36,23 @@ class Puzzle7 {
         return permutations.map { phases ->
             val (first, second, third, fourth, fifth) = phases.map { phase -> State(input, userInput = listOf(phase)) }
             var result = virtualMachine.runProgram(first.addUserInput(0))
-            result = virtualMachine.runProgram(second.addUserInput(result.lastPrintedValue!!.toInt()))
-            result = virtualMachine.runProgram(third.addUserInput(result.lastPrintedValue!!.toInt()))
-            result = virtualMachine.runProgram(fourth.addUserInput(result.lastPrintedValue!!.toInt()))
-            result = virtualMachine.runProgram(fifth.addUserInput(result.lastPrintedValue!!.toInt()))
-            result.lastPrintedValue!!.toInt()
+            result = virtualMachine.runProgram(second.addUserInput(result.lastPrintedValue!!))
+            result = virtualMachine.runProgram(third.addUserInput(result.lastPrintedValue!!))
+            result = virtualMachine.runProgram(fourth.addUserInput(result.lastPrintedValue!!))
+            result = virtualMachine.runProgram(fifth.addUserInput(result.lastPrintedValue!!))
+            result.lastPrintedValue!!
         }.max()
     }
 
-    fun solveTwo(puzzleText: String): Int? {
+    fun solveTwo(puzzleText: String): Long? {
         val virtualMachine = IntCodeVirtualMachine()
         val permutations = getPermutationsForRange(5, 9)
-        val allOutputs = mutableListOf<Int>()
+        val allOutputs = mutableListOf<Long>()
 
         permutations.forEach {phases ->
             val input = puzzleText.split(",").map { it.toLong() }
             val amplifiers = phases.map { phase -> State(input, userInput = listOf(phase)) }.toMutableList()
-            var lastOutput = 0
+            var lastOutput = 0L
             var index = 0
 
             while (!amplifiers.last().isHalted) {
@@ -60,7 +60,7 @@ class Puzzle7 {
                 val currentAmplifier: State = virtualMachine.runProgram(state.copy(userInput = state.userInput + lastOutput))
 
                 if (currentAmplifier.lastPrintedValue != null) {
-                    lastOutput = currentAmplifier.lastPrintedValue!!.toInt()
+                    lastOutput = currentAmplifier.lastPrintedValue
                 }
 
                 amplifiers[index] = currentAmplifier
@@ -73,8 +73,8 @@ class Puzzle7 {
         return allOutputs.max()
     }
 
-    private fun getPermutationsForRange(from: Int, to: Int): List<List<Int>> {
-        val permutations = mutableListOf<List<Int>>()
+    private fun getPermutationsForRange(from: Long, to: Long): List<List<Long>> {
+        val permutations = mutableListOf<List<Long>>()
 
         (from..to).forEach { A ->
             (from..to).forEach { B ->

@@ -10,18 +10,18 @@ class Puzzle5Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(12896948, result)
+        assertEquals(12896948L, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(7704130, result)
+        assertEquals(7704130L, result)
     }
 }
 
 class Puzzle5 {
-    private fun runProgram(puzzleText: String, userInput: List<Int>): Int? {
+    private fun runProgram(puzzleText: String, userInput: List<Long>): Long? {
         val list = puzzleText.split(",").map { it.toLong() }
         val state = State(list, 0, false, userInput = userInput)
         val virtualMachine = IntCodeVirtualMachine()
@@ -30,11 +30,11 @@ class Puzzle5 {
         return result.lastPrintedValue
     }
 
-    fun solveOne(puzzleText: String): Int? {
+    fun solveOne(puzzleText: String): Long? {
         return runProgram(puzzleText, listOf(1))
     }
 
-    fun solveTwo(puzzleText: String): Int? {
+    fun solveTwo(puzzleText: String): Long? {
         return runProgram(puzzleText, listOf(5))
     }
 }
