@@ -182,50 +182,19 @@ class IntCodeVirtualMachine {
         val numParams = getParamCountFromOpCode(opcode)
         val parameterModes = ParameterMode.determineParameterMode(paramModeText, numParams)
 
-        return when (opcode) {
-            1 -> {
-                val indexA = getParam(state, 1)
-                val indexB = getParam(state, 2)
-                val destinationIndex = getParam(state, 3)
-                AddInstruction(parameterModes, indexA, indexB, destinationIndex)
-            }
-            2 -> {
-                val indexA = getParam(state, 1)
-                val indexB = getParam(state, 2)
-                val destinationIndex = getParam(state, 3)
-                MultiplyInstruction(parameterModes, indexA, indexB, destinationIndex)
-            }
-            3 -> {
-                val indexA = getParam(state, 1)
-                ReadInstruction(parameterModes, indexA)
+        val indexA = getParamOrNull(state, 1)
+        val indexB = getParamOrNull(state, 2)
+        val indexC = getParamOrNull(state, 3)
 
-            }
-            4 -> {
-                val indexA = getParam(state, 1)
-                WriteInstruction(parameterModes, indexA)
-            }
-            5 -> {
-                val indexA = getParam(state, 1)
-                val indexB = getParam(state, 2)
-                JumpIfTrueInstruction(parameterModes, indexA, indexB)
-            }
-            6 -> {
-                val indexA = getParam(state, 1)
-                val indexB = getParam(state, 2)
-                JumpIfFalseInstruction(parameterModes, indexA, indexB)
-            }
-            7 -> {
-                val indexA = getParam(state, 1)
-                val indexB = getParam(state, 2)
-                val indexC = getParam(state, 3)
-                LessThanInstruction(parameterModes, indexA, indexB, indexC)
-            }
-            8 -> {
-                val indexA = getParam(state, 1)
-                val indexB = getParam(state, 2)
-                val indexC = getParam(state, 3)
-                EqualsInstruction(parameterModes, indexA, indexB, indexC)
-            }
+        return when (opcode) {
+            1 -> AddInstruction(parameterModes, indexA!!, indexB!!, indexC!!)
+            2 -> MultiplyInstruction(parameterModes, indexA!!, indexB!!, indexC!!)
+            3 -> ReadInstruction(parameterModes, indexA!!)
+            4 -> WriteInstruction(parameterModes, indexA!!)
+            5 -> JumpIfTrueInstruction(parameterModes, indexA!!, indexB!!)
+            6 -> JumpIfFalseInstruction(parameterModes, indexA!!, indexB!!)
+            7 -> LessThanInstruction(parameterModes, indexA!!, indexB!!, indexC!!)
+            8 -> EqualsInstruction(parameterModes, indexA!!, indexB!!, indexC!!)
             99 -> HaltInstruction()
             else -> throw RuntimeException("Unexpected opcode = $opcode")
         }
@@ -250,7 +219,7 @@ class IntCodeVirtualMachine {
         return if (paramModeAndOpCode.length < 2) "" else paramModeAndOpCode.substring(0, paramModeAndOpCode.length - 2)
     }
 
-    private fun getParam(state: State, offset: Int) = state.list[state.programCounter.toInt() + offset]
+    private fun getParamOrNull(state: State, offset: Int) = state.list.getOrNull(state.programCounter.toInt() + offset)
 
     enum class ParameterMode {
         POSITION, IMMEDIATE;
