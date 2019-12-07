@@ -28,6 +28,285 @@ class Puzzle7Test {
 }
 
 class Puzzle7 {
+
+
+    fun solveOne(puzzleText: String): Int? {
+//        val permutations = getPermutationsForRange(0, 4)
+//        return permutations.map { sendItThroughThePipe(puzzleText, it) }.map { it.first }.max()
+
+        throw java.lang.RuntimeException()
+    }
+
+    fun solveTwo(puzzleText: String): Int? {
+        val permutations = getPermutationsForRange(5, 9)
+
+        val allOutputs = mutableListOf<Int>()
+
+
+        permutations.forEach {phases ->
+            val input = puzzleText.split(",").map { it.toLong() }
+            val amplifiers = phases.map { phase -> State(input, userInput = listOf(phase)) }.toMutableList()
+            var lastOutput = 0
+            var index = 0
+
+            while (!amplifiers.last().isHalted) {
+                val state = amplifiers[index]
+                val currentAmplifier: State = runAmplifier(state.copy(userInput = state.userInput + lastOutput))
+
+                if (currentAmplifier.lastPrintedValue != null) {
+                    lastOutput = currentAmplifier.lastPrintedValue!!.toInt()
+                }
+
+                amplifiers[index] = currentAmplifier
+                index = if (index == amplifiers.lastIndex) 0 else index + 1
+            }
+
+            allOutputs.add(lastOutput)
+        }
+
+        return allOutputs.max()
+
+
+
+
+
+
+//        val amplificationResults = permutations.map { amplifiedPhaseSettings: List<Int> ->
+//            val temp = sendItThroughThePipe(puzzleText, amplifiedPhaseSettings, signal)
+//            signal = temp.first
+//            amplifyTheseGuys(signal, temp.second, amplifiedPhaseSettings)
+//        }
+//
+//        return amplificationResults.max()
+    }
+
+    private fun runAmplifier(state: State): State {
+        //val list = puzzleText.split(",").map { it.toLong() }
+        //var state = State(list, 0, false, userInput = listOf(phaseSetting, inputSignal))
+        return runAmplifierProgram(state).second
+    }
+
+//    private val amplificationCounts = mutableSetOf<Int>()
+
+//    private fun amplifyTheseGuys(outputSignal: Int, programStates: List<State>, amplifiedPhaseSettings: List<Int>): Int {
+//        var amplifiedSignal = outputSignal
+//        var amplifiedProgramStates = programStates
+//        var count = 0
+//        val allSignals = mutableListOf<Int>()
+//
+//
+//        while (!amplifiedProgramStates[4].isHalted) {
+//            count++
+//            val tmp = sendItThroughThesePipes(amplifiedProgramStates, amplifiedPhaseSettings, amplifiedSignal)
+//            amplifiedSignal = tmp.first
+//            amplifiedProgramStates = tmp.second
+//            allSignals += amplifiedSignal
+//        }
+//
+//        amplificationCounts.add(count)
+//        return allSignals.max()!!
+//    }
+//
+//    private fun sendItThroughThesePipes(programs: List<State>, phaseSettings: List<Int>, initialInputSignal: Int): Pair<Int, List<State>> {
+//        var inputSignal = initialInputSignal
+//        val amplifierProgramStates = mutableListOf<State>()
+//
+//        phaseSettings.forEachIndexed { index, phaseSetting ->
+//            val program = programs[index]
+//            val tmp = runAmplifierProgram(program, phaseSetting, inputSignal)
+//            inputSignal = (tmp.second.lastPrintedValue?.toInt() ?: -1)
+//            amplifierProgramStates.add(tmp.second)
+//        }
+//
+//        return inputSignal to amplifierProgramStates
+//    }
+//
+//
+//    private fun sendItThroughThePipe(puzzleText: String, phaseSettings: List<Int>, initialInputSignal: Int = 0): Pair<Int, List<State>> {
+//        var inputSignal = initialInputSignal
+//        val amplifierProgramStates = mutableListOf<State>()
+//
+//        phaseSettings.forEachIndexed { index, phaseSetting ->
+//            val tmp = runAmplifierProgram(puzzleText, phaseSetting, inputSignal)
+//            inputSignal = tmp.first
+//            amplifierProgramStates.add(tmp.second)
+//        }
+//
+//        return inputSignal to amplifierProgramStates
+//    }
+
+    enum class TerminationCode { BLOCKED_ON_IO, HALT }
+
+    private fun runAmplifierProgram(initialState: State, phaseSetting: Int? = null, inputSignal: Int? = null): Pair<TerminationCode, State> {
+        //var state = initialState.copy(userInput = listOfNotNull(phaseSetting, inputSignal))
+        var state = initialState
+
+        while (!state.isHalted) {
+            val instruction = parseInstruction(state)
+            //println(instruction)
+
+            if (instruction is ReadInstruction && state.userInput.isEmpty()) {
+                return TerminationCode.BLOCKED_ON_IO to state
+            }
+
+
+            state = instruction.execute(state)
+
+            if (state.justJumped) {
+                state = state.clearJustJumped()
+            }
+            else {
+                state = state.incrementProgramCounter(instruction.size)
+            }
+        }
+
+        return TerminationCode.HALT to state
+    }
+
+    private fun runAmplifierProgram(puzzleText: String, phaseSetting: Int, inputSignal: Int): Pair<TerminationCode, State> {
+        val list = puzzleText.split(",").map { it.toLong() }
+        var state = State(list, 0, false, userInput = listOf(phaseSetting, inputSignal))
+        return runAmplifierProgram(state, phaseSetting, inputSignal)
+    }
+
+    private fun getPermutationsForRange(from: Int, to: Int): List<List<Int>> {
+        val permutations = mutableListOf<List<Int>>()
+
+        (from..to).forEach { A ->
+            (from..to).forEach { B ->
+                (from..to).forEach { C ->
+                    (from..to).forEach { D ->
+                        (from..to).forEach { E ->
+                            if (setOf(A, B, C, D, E).size == 5) {
+                                permutations.add(listOf(A, B, C, D, E))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return permutations
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private fun parseInstruction(state: State): Instruction {
+        val paramModeAndOpCode = state.list[state.programCounter].toString()
+        val opcode = paramModeAndOpCode.takeLast(2).toInt()
+        val paramModeText = getParamModeText(paramModeAndOpCode)
+        val numParams = getParamCountFromOpCode(opcode)
+        val parameterModes = ParameterMode.determineParameterMode(paramModeText, numParams)
+
+        val instruction: Instruction = when (opcode) {
+            1 -> {
+                val indexA = getParam(state, 1)
+                val indexB = getParam(state, 2)
+                val destinationIndex = getParam(state, 3)
+                AddInstruction(indexA, indexB, destinationIndex, parameterModes)
+            }
+            2 -> {
+                val indexA = getParam(state, 1)
+                val indexB = getParam(state, 2)
+                val destinationIndex = getParam(state, 3)
+                MultiplyInstruction(indexA, indexB, destinationIndex, parameterModes)
+            }
+            3 -> {
+                val indexA = getParam(state, 1)
+                ReadInstruction(parameterModes, indexA)
+
+            }
+            4 -> {
+                val indexA = getParam(state, 1)
+                WriteInstruction(parameterModes, indexA)
+            }
+            5 -> {
+                val indexA = getParam(state, 1)
+                val indexB = getParam(state, 2)
+                JumpIfTrueInstruction(parameterModes, indexA, indexB)
+            }
+            6 -> {
+                val indexA = getParam(state, 1)
+                val indexB = getParam(state, 2)
+                JumpIfFalseInstruction(parameterModes, indexA, indexB)
+            }
+            7 -> {
+                val indexA = getParam(state, 1)
+                val indexB = getParam(state, 2)
+                val indexC = getParam(state, 3)
+                LessThanInstruction(parameterModes, indexA, indexB, indexC)
+            }
+            8 -> {
+                val indexA = getParam(state, 1)
+                val indexB = getParam(state, 2)
+                val indexC = getParam(state, 3)
+                EqualsInstruction(parameterModes, indexA, indexB, indexC)
+            }
+            99 -> HaltInstruction()
+            else -> throw RuntimeException("Unexpected opcode = $opcode")
+        }
+        return instruction
+    }
+
+    private fun getParamCountFromOpCode(opcode: Int): Int {
+        return when (opcode) {
+            1 -> 3
+            2 -> 3
+            3 -> 1
+            4 -> 1
+            5 -> 2
+            6 -> 2
+            7 -> 3
+            8 -> 3
+            99 -> 0
+            else -> throw RuntimeException("oaisjdaoisjd")
+        }
+    }
+
+    private fun getParamModeText(paramModeAndOpCode: String): String {
+        return if (paramModeAndOpCode.length < 2) "" else paramModeAndOpCode.substring(0, paramModeAndOpCode.length - 2)
+    }
+
+    private fun getParam(state: State, offset: Int) = state.list[state.programCounter + offset].toInt()
+
+
+
     data class State(val list: List<Long>, val programCounter: Int = 0, val isHalted: Boolean = false, val lastPrintedValue: String? = null, val justJumped: Boolean = false, val userInput: List<Int>) {
         fun writeToIndex(index: Int, value: Long): State {
             val newList = this.list.mapIndexed { i, it -> if (i == index) value else it }
@@ -195,231 +474,6 @@ class Puzzle7 {
             return state.halt()
         }
     }
-
-    fun solveOne(puzzleText: String): Int? {
-        val permutations = getPermutationsForRange(0, 4)
-        return permutations.map { sendItThroughThePipe(puzzleText, it) }.map { it.first }.max()
-    }
-
-    fun solveTwo(puzzleText: String): Int? {
-        val permutations = getPermutationsForRange(0, 4)
-        val otherPermyBois = permutations.map { it.map { it + 5 } }
-
-        val signalAndStateAfterFirstPass = permutations.map { phaseSettings ->
-            sendItThroughThePipe(puzzleText, phaseSettings, 0)
-        }
-
-        val amplificationResults = otherPermyBois.flatMap { amplifiedPhaseSettings: List<Int> ->
-            signalAndStateAfterFirstPass.map { (signal, programStates) ->
-                amplifyTheseGuys(signal, programStates, amplifiedPhaseSettings)
-            }
-        }
-
-        return amplificationResults.max()
-    }
-
-    private val amplificationCounts = mutableSetOf<Int>()
-
-    private fun amplifyTheseGuys(outputSignal: Int, programStates: List<State>, amplifiedPhaseSettings: List<Int>): Int {
-        var amplifiedSignal = outputSignal
-        var amplifiedProgramStates = programStates
-        var count = 0
-
-        while (amplifiedProgramStates.any { !it.isHalted }) {
-            count++
-            val tmp = sendItThroughThesePipes(amplifiedProgramStates, amplifiedPhaseSettings, amplifiedSignal)
-            amplifiedSignal = tmp.first
-            amplifiedProgramStates = tmp.second
-        }
-
-        amplificationCounts.add(count)
-        return amplifiedSignal
-    }
-
-
-    private fun sendItThroughThesePipes(programs: List<State>, phaseSettings: List<Int>, initialInputSignal: Int): Pair<Int, List<State>> {
-        var inputSignal = initialInputSignal
-        val amplifierProgramStates = mutableListOf<State>()
-
-        phaseSettings.forEachIndexed { index, phaseSetting ->
-            val program = programs[index]
-            val tmp = runAmplifierProgram(program, phaseSetting, inputSignal)
-            inputSignal = tmp.first
-            amplifierProgramStates.add(tmp.second)
-        }
-
-        return inputSignal to amplifierProgramStates
-    }
-
-
-    private fun sendItThroughThePipe(puzzleText: String, phaseSettings: List<Int>, initialInputSignal: Int = 0): Pair<Int, List<State>> {
-        var inputSignal = initialInputSignal
-        val amplifierProgramStates = mutableListOf<State>()
-
-        phaseSettings.forEachIndexed { index, phaseSetting ->
-            val tmp = runAmplifierProgram(puzzleText, phaseSetting, inputSignal)
-            inputSignal = tmp.first
-            amplifierProgramStates.add(tmp.second)
-        }
-
-        return inputSignal to amplifierProgramStates
-    }
-
-    private fun runAmplifierProgram(initialState: State, phaseSetting: Int, inputSignal: Int): Pair<Int, State> {
-        var state = initialState.copy(userInput = listOf(phaseSetting, inputSignal))
-
-        while (!state.isHalted) {
-            val instruction = parseInstruction(state)
-            state = instruction.execute(state)
-
-            if (state.justJumped) {
-                state = state.clearJustJumped()
-            } else {
-                state = state.incrementProgramCounter(instruction.size)
-            }
-
-            println(instruction)
-
-            if (state.lastPrintedValue != null) {
-                val dog = state.lastPrintedValue
-                return dog!!.toInt() to state
-            }
-        }
-
-        val dog = state.lastPrintedValue
-        return dog!!.toInt() to state
-    }
-
-    private fun runAmplifierProgram(puzzleText: String, phaseSetting: Int, inputSignal: Int): Pair<Int, State> {
-        val list = puzzleText.split(",").map { it.toLong() }
-        var state = State(list, 0, false, userInput = listOf(phaseSetting, inputSignal))
-
-        while (!state.isHalted) {
-            val instruction = parseInstruction(state)
-            state = instruction.execute(state)
-
-
-            if (state.justJumped) {
-                state = state.clearJustJumped()
-            } else {
-                state = state.incrementProgramCounter(instruction.size)
-            }
-
-            if (state.lastPrintedValue != null) {
-                val dog = state.lastPrintedValue
-                return dog!!.toInt() to state
-            }
-        }
-
-        throw RuntimeException("Ah okay")
-    }
-
-    private fun getPermutationsForRange(from: Int, to: Int): List<List<Int>> {
-        val permutations = mutableListOf<List<Int>>()
-
-        (from..to).forEach { A ->
-            (from..to).forEach { B ->
-                (from..to).forEach { C ->
-                    (from..to).forEach { D ->
-                        (from..to).forEach { E ->
-                            if (setOf(A, B, C, D, E).size == 5) {
-                                permutations.add(listOf(A, B, C, D, E))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return permutations
-    }
-
-
-
-
-
-
-
-
-
-    private fun parseInstruction(state: State): Instruction {
-        val paramModeAndOpCode = state.list[state.programCounter].toString()
-        val opcode = paramModeAndOpCode.takeLast(2).toInt()
-        val paramModeText = getParamModeText(paramModeAndOpCode)
-        val numParams = getParamCountFromOpCode(opcode)
-        val parameterModes = ParameterMode.determineParameterMode(paramModeText, numParams)
-
-        val instruction: Instruction = when (opcode) {
-            1 -> {
-                val indexA = getParam(state, 1)
-                val indexB = getParam(state, 2)
-                val destinationIndex = getParam(state, 3)
-                AddInstruction(indexA, indexB, destinationIndex, parameterModes)
-            }
-            2 -> {
-                val indexA = getParam(state, 1)
-                val indexB = getParam(state, 2)
-                val destinationIndex = getParam(state, 3)
-                MultiplyInstruction(indexA, indexB, destinationIndex, parameterModes)
-            }
-            3 -> {
-                val indexA = getParam(state, 1)
-                ReadInstruction(parameterModes, indexA)
-
-            }
-            4 -> {
-                val indexA = getParam(state, 1)
-                WriteInstruction(parameterModes, indexA)
-            }
-            5 -> {
-                val indexA = getParam(state, 1)
-                val indexB = getParam(state, 2)
-                JumpIfTrueInstruction(parameterModes, indexA, indexB)
-            }
-            6 -> {
-                val indexA = getParam(state, 1)
-                val indexB = getParam(state, 2)
-                JumpIfFalseInstruction(parameterModes, indexA, indexB)
-            }
-            7 -> {
-                val indexA = getParam(state, 1)
-                val indexB = getParam(state, 2)
-                val indexC = getParam(state, 3)
-                LessThanInstruction(parameterModes, indexA, indexB, indexC)
-            }
-            8 -> {
-                val indexA = getParam(state, 1)
-                val indexB = getParam(state, 2)
-                val indexC = getParam(state, 3)
-                EqualsInstruction(parameterModes, indexA, indexB, indexC)
-            }
-            99 -> HaltInstruction()
-            else -> throw RuntimeException("Unexpected opcode = $opcode")
-        }
-        return instruction
-    }
-
-    private fun getParamCountFromOpCode(opcode: Int): Int {
-        return when (opcode) {
-            1 -> 3
-            2 -> 3
-            3 -> 1
-            4 -> 1
-            5 -> 2
-            6 -> 2
-            7 -> 3
-            8 -> 3
-            99 -> 0
-            else -> throw RuntimeException("oaisjdaoisjd")
-        }
-    }
-
-    private fun getParamModeText(paramModeAndOpCode: String): String {
-        return if (paramModeAndOpCode.length < 2) "" else paramModeAndOpCode.substring(0, paramModeAndOpCode.length - 2)
-    }
-
-    private fun getParam(state: State, offset: Int) = state.list[state.programCounter + offset].toInt()
-
 
 }
 
