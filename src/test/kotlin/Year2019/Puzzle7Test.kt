@@ -31,17 +31,22 @@ class Puzzle7 {
 
 
     fun solveOne(puzzleText: String): Int? {
-//        val permutations = getPermutationsForRange(0, 4)
+        val permutations = getPermutationsForRange(0, 4)
+        val allOutputs = mutableListOf<Int>()
+
+        permutations.forEach {
+
+        }
+
+
 //        return permutations.map { sendItThroughThePipe(puzzleText, it) }.map { it.first }.max()
 
-        throw java.lang.RuntimeException()
+        throw RuntimeException()
     }
 
     fun solveTwo(puzzleText: String): Int? {
         val permutations = getPermutationsForRange(5, 9)
-
         val allOutputs = mutableListOf<Int>()
-
 
         permutations.forEach {phases ->
             val input = puzzleText.split(",").map { it.toLong() }
@@ -65,90 +70,23 @@ class Puzzle7 {
         }
 
         return allOutputs.max()
-
-
-
-
-
-
-//        val amplificationResults = permutations.map { amplifiedPhaseSettings: List<Int> ->
-//            val temp = sendItThroughThePipe(puzzleText, amplifiedPhaseSettings, signal)
-//            signal = temp.first
-//            amplifyTheseGuys(signal, temp.second, amplifiedPhaseSettings)
-//        }
-//
-//        return amplificationResults.max()
     }
 
     private fun runAmplifier(state: State): State {
-        //val list = puzzleText.split(",").map { it.toLong() }
-        //var state = State(list, 0, false, userInput = listOf(phaseSetting, inputSignal))
         return runAmplifierProgram(state).second
     }
 
-//    private val amplificationCounts = mutableSetOf<Int>()
-
-//    private fun amplifyTheseGuys(outputSignal: Int, programStates: List<State>, amplifiedPhaseSettings: List<Int>): Int {
-//        var amplifiedSignal = outputSignal
-//        var amplifiedProgramStates = programStates
-//        var count = 0
-//        val allSignals = mutableListOf<Int>()
-//
-//
-//        while (!amplifiedProgramStates[4].isHalted) {
-//            count++
-//            val tmp = sendItThroughThesePipes(amplifiedProgramStates, amplifiedPhaseSettings, amplifiedSignal)
-//            amplifiedSignal = tmp.first
-//            amplifiedProgramStates = tmp.second
-//            allSignals += amplifiedSignal
-//        }
-//
-//        amplificationCounts.add(count)
-//        return allSignals.max()!!
-//    }
-//
-//    private fun sendItThroughThesePipes(programs: List<State>, phaseSettings: List<Int>, initialInputSignal: Int): Pair<Int, List<State>> {
-//        var inputSignal = initialInputSignal
-//        val amplifierProgramStates = mutableListOf<State>()
-//
-//        phaseSettings.forEachIndexed { index, phaseSetting ->
-//            val program = programs[index]
-//            val tmp = runAmplifierProgram(program, phaseSetting, inputSignal)
-//            inputSignal = (tmp.second.lastPrintedValue?.toInt() ?: -1)
-//            amplifierProgramStates.add(tmp.second)
-//        }
-//
-//        return inputSignal to amplifierProgramStates
-//    }
-//
-//
-//    private fun sendItThroughThePipe(puzzleText: String, phaseSettings: List<Int>, initialInputSignal: Int = 0): Pair<Int, List<State>> {
-//        var inputSignal = initialInputSignal
-//        val amplifierProgramStates = mutableListOf<State>()
-//
-//        phaseSettings.forEachIndexed { index, phaseSetting ->
-//            val tmp = runAmplifierProgram(puzzleText, phaseSetting, inputSignal)
-//            inputSignal = tmp.first
-//            amplifierProgramStates.add(tmp.second)
-//        }
-//
-//        return inputSignal to amplifierProgramStates
-//    }
-
     enum class TerminationCode { BLOCKED_ON_IO, HALT }
 
-    private fun runAmplifierProgram(initialState: State, phaseSetting: Int? = null, inputSignal: Int? = null): Pair<TerminationCode, State> {
-        //var state = initialState.copy(userInput = listOfNotNull(phaseSetting, inputSignal))
+    private fun runAmplifierProgram(initialState: State): Pair<TerminationCode, State> {
         var state = initialState
 
         while (!state.isHalted) {
             val instruction = parseInstruction(state)
-            //println(instruction)
 
             if (instruction is ReadInstruction && state.userInput.isEmpty()) {
                 return TerminationCode.BLOCKED_ON_IO to state
             }
-
 
             state = instruction.execute(state)
 
@@ -161,12 +99,6 @@ class Puzzle7 {
         }
 
         return TerminationCode.HALT to state
-    }
-
-    private fun runAmplifierProgram(puzzleText: String, phaseSetting: Int, inputSignal: Int): Pair<TerminationCode, State> {
-        val list = puzzleText.split(",").map { it.toLong() }
-        var state = State(list, 0, false, userInput = listOf(phaseSetting, inputSignal))
-        return runAmplifierProgram(state, phaseSetting, inputSignal)
     }
 
     private fun getPermutationsForRange(from: Int, to: Int): List<List<Int>> {
@@ -474,6 +406,5 @@ class Puzzle7 {
             return state.halt()
         }
     }
-
 }
 
