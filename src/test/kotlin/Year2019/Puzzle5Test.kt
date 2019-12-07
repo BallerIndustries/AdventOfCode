@@ -38,4 +38,3 @@ class Puzzle5 {
         return runProgram(puzzleText, listOf(5))
     }
 }
-
