@@ -95,7 +95,7 @@ data class WriteInstruction(override val paramModes: List<IntCodeVirtualMachine.
 
     override fun execute(state: State): State {
         val horse = Instruction.getParamOrValue(0, paramModes, paramA, state)
-        return state.setLastPrintedValue(horse.toString())
+        return state.setLastPrintedValue(horse)
     }
 }
 
@@ -132,7 +132,7 @@ class HaltInstruction(): Instruction {
     }
 }
 
-data class State(val list: List<Long>, val programCounter: Int = 0, val isHalted: Boolean = false, val lastPrintedValue: String? = null, val justJumped: Boolean = false, val userInput: List<Int>) {
+data class State(val list: List<Long>, val programCounter: Int = 0, val isHalted: Boolean = false, val lastPrintedValue: Int? = null, val justJumped: Boolean = false, val userInput: List<Int>) {
     fun writeToIndex(index: Int, value: Long): State {
         val newList = this.list.mapIndexed { i, it -> if (i == index) value else it }
         return this.copy(list = newList)
@@ -140,7 +140,7 @@ data class State(val list: List<Long>, val programCounter: Int = 0, val isHalted
 
     fun halt(): State = this.copy(isHalted =  true)
     fun incrementProgramCounter(amount: Int): State = this.copy(programCounter = this.programCounter + amount)
-    fun setLastPrintedValue(value: String) = this.copy(lastPrintedValue = value)
+    fun setLastPrintedValue(value: Int) = this.copy(lastPrintedValue = value)
     fun jump(valueB: Int) = this.copy(programCounter = valueB, justJumped = true)
     fun clearJustJumped() = this.copy(justJumped = false)
     fun addUserInput(input: Int) = this.copy(userInput = this.userInput + input)
