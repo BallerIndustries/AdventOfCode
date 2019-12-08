@@ -1,5 +1,9 @@
 package Year2019
 
+fun<T> List<T>.withoutElementAt(index: Int): List<T> {
+    return this.filterIndexed { anotherIndex, _ -> index != anotherIndex }
+}
+
 fun<T> List<T>.permutations(): List<List<T>> {
     val initialList = this
 
@@ -7,13 +11,9 @@ fun<T> List<T>.permutations(): List<List<T>> {
         return listOf()
     }
 
-    fun listWithoutElementAtIndex(list: List<T>, index: Int): List<T> {
-        return list.filterIndexed { anotherIndex, _ -> index != anotherIndex }
-    }
-
     var wip = this.mapIndexed { index, element ->
         val listInProgress = listOf(element)
-        val remainingList = listWithoutElementAtIndex(initialList, index)
+        val remainingList = initialList.withoutElementAt(index)
         listInProgress to remainingList
     }
 
@@ -21,7 +21,7 @@ fun<T> List<T>.permutations(): List<List<T>> {
         wip = wip.flatMap { (listInProgress, remainingList) ->
             remainingList.mapIndexed { index, element ->
                 val newListInProgress = listInProgress + element
-                val remainingList = listWithoutElementAtIndex(remainingList, index)
+                val remainingList = remainingList.withoutElementAt(index)
                 newListInProgress to remainingList
             }
         }
