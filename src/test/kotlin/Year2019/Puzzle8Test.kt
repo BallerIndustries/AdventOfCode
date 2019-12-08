@@ -18,11 +18,22 @@ class Puzzle8Test {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals("a", result)
     }
+
+    @Test
+    fun `example a`() {
+        val dog = "003456789012"
+        val result = puzzle.solveOne(dog, 3, 2)
+        assertEquals("a", result)
+    }
 }
 
 class Puzzle8 {
-    fun solveOne(puzzleText: String): String {
-        throw NotImplementedError()
+    fun solveOne(puzzleText: String, width: Int = 25, height: Int = 6): Int {
+        val layerSize = width * height
+        val numLayers = puzzleText.length / layerSize
+
+        val layerWithLeastZeros = puzzleText.chunked(layerSize).minBy { layer -> layer.count { char -> char == '0' } }!!
+        return layerWithLeastZeros.count { it == '1' }!! * layerWithLeastZeros.count { it == '2'}!!
     }
 
     fun solveTwo(puzzleText: String): String {
