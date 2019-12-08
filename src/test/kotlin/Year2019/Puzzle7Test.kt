@@ -30,10 +30,9 @@ class Puzzle7Test {
 class Puzzle7 {
     fun solveOne(puzzleText: String): Long? {
         val virtualMachine = IntCodeVirtualMachine()
-        val permutations = getPermutationsForRange(0, 4)
         val input = puzzleText.split(",").map { it.toLong() }
 
-        return permutations.map { phases ->
+        return listOf(0L, 1L, 2L, 3L, 4L).permutations().map { phases ->
             val (first, second, third, fourth, fifth) = phases.map { phase -> State(input, userInput = listOf(phase)) }
             var result = virtualMachine.runProgram(first.addUserInput(0))
             result = virtualMachine.runProgram(second.addUserInput(result.lastPrintedValue!!))
@@ -46,10 +45,9 @@ class Puzzle7 {
 
     fun solveTwo(puzzleText: String): Long? {
         val virtualMachine = IntCodeVirtualMachine()
-        val permutations = getPermutationsForRange(5, 9)
         val allOutputs = mutableListOf<Long>()
 
-        permutations.forEach {phases ->
+        listOf(5L, 6L, 7L, 8L, 9L).permutations().forEach { phases ->
             val input = puzzleText.split(",").map { it.toLong() }
             val amplifiers = phases.map { phase -> State(input, userInput = listOf(phase)) }.toMutableList()
             var lastOutput = 0L
