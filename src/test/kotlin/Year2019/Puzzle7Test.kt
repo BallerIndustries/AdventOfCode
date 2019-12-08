@@ -70,24 +70,4 @@ class Puzzle7 {
 
         return allOutputs.max()
     }
-
-    private fun getPermutationsForRange(from: Long, to: Long): List<List<Long>> {
-        val permutations = mutableListOf<List<Long>>()
-
-        (from..to).forEach { A ->
-            (from..to).forEach { B ->
-                (from..to).forEach { C ->
-                    (from..to).forEach { D ->
-                        (from..to).forEach { E ->
-                            if (setOf(A, B, C, D, E).size == 5) {
-                                permutations.add(listOf(A, B, C, D, E))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return permutations
-    }
 }
