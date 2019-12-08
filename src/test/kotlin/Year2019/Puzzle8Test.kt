@@ -42,47 +42,35 @@ class Puzzle8 {
 
     fun solveOne(puzzleText: String, width: Int = 25, height: Int = 6): Int {
         val layerSize = width * height
-        val numLayers = puzzleText.length / layerSize
-
         val layerWithLeastZeros = puzzleText.chunked(layerSize).minBy { layer -> layer.count { char -> char == '0' } }!!
-        return layerWithLeastZeros.count { it == '1' }!! * layerWithLeastZeros.count { it == '2'}!!
+        return layerWithLeastZeros.count { it == '1' } * layerWithLeastZeros.count { it == '2'}
     }
 
     fun solveTwo(puzzleText: String, width: Int = 25, height: Int = 6): String {
         val layerSize = width * height
-        //val numLayers = puzzleText.length / layerSize
 
-        // We want a Map<Point, Pixel>
-
-        val layers = puzzleText.chunked(layerSize).mapIndexed { layerNumber, layer: String ->
+        val layers = puzzleText.chunked(layerSize).map { layer: String ->
             layer.mapIndexed { index, char ->
                 val x = index % width
                 val y = index / width
                 val point = Point(x, y)
-                //println("$point")
-
                 val pixel = Pixel.values().find { it.value == char }!!
                 point to pixel
             }.toMap()
         }
 
-        val something = (0 until height).map { y ->
+        val picture = (0 until height).map { y ->
             (0 until width).map { x ->
                 val point = Point(x, y)
-                octopusHorseBanana(layers, point)
+                getFirstNonTransparentPixel(layers, point)
             }.joinToString("")
         }.joinToString("\n")
 
-        println(something)
-
-
-
-
-
-        return something
+        println(picture)
+        return picture
     }
 
-    private fun octopusHorseBanana(layers: List<Map<Point, Pixel>>, point: Point): Char {
+    private fun getFirstNonTransparentPixel(layers: List<Map<Point, Pixel>>, point: Point): Char {
         layers.forEach { layer ->
             if (layer[point] != Pixel.TRANSPARENT) {
                 return layer[point]!!.output
@@ -92,4 +80,3 @@ class Puzzle8 {
         return layers.last()[point]!!.output
     }
 }
-
