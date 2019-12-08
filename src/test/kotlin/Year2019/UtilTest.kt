@@ -28,4 +28,11 @@ class UtilTest {
 
         assertEquals(expected, permutations)
     }
+
+    @Test
+    fun `should be able to get permutations of an empty list`() {
+        val permutations = listOf<Double>().permutations().toSet()
+        val expected = setOf<Double>()
+        assertEquals(expected, permutations)
+    }
 }

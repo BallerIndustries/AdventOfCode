@@ -3,6 +3,10 @@ package Year2019
 fun<T> List<T>.permutations(): List<List<T>> {
     val initialList = this
 
+    if (initialList.isEmpty()) {
+        return listOf()
+    }
+
     fun listWithoutElementAtIndex(list: List<T>, index: Int): List<T> {
         return list.filterIndexed { anotherIndex, _ -> index != anotherIndex }
     }
