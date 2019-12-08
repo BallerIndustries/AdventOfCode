@@ -227,15 +227,15 @@ class IntCodeVirtualMachine {
         companion object {
             fun determineParameterMode(paramModeText: String, paramCount: Int): List<ParameterMode> {
                 val paramModes = paramModeText.reversed().mapIndexed { index, c ->
-                    if (c == '0') POSITION
-                    else if (c == '1') IMMEDIATE
-                    else throw RuntimeException()
-                }.toMutableList()
+                    when (c) {
+                        '0' -> POSITION
+                        '1' -> IMMEDIATE
+                        else -> throw RuntimeException()
+                    }
+                }
 
                 val paramsMissing = paramCount - paramModes.size
-                (0 until paramsMissing).forEach { paramModes.add(POSITION) }
-
-                return paramModes
+                return paramModes + (0 until paramsMissing).map { POSITION }
             }
         }
     }
