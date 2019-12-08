@@ -10,24 +10,36 @@ class Puzzle8Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals("a", result)
+        assertEquals(2480, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("a", result)
+        val expected = """
+#### #   ####  #    #  # 
+   # #   ##  # #    #  # 
+  #   # # ###  #    #### 
+ #     #  #  # #    #  # 
+#      #  #  # #    #  # 
+####   #  ###  #### #  # """.trimIndent()
+
+        assertEquals(expected, result)
     }
 
     @Test
     fun `example a`() {
         val dog = "003456789012"
         val result = puzzle.solveOne(dog, 3, 2)
-        assertEquals("a", result)
+        assertEquals(1, result)
     }
 }
 
 class Puzzle8 {
+    enum class Pixel(val value: Char, val output: Char) { BLACK('0', ' '), WHITE('1', '#'), TRANSPARENT('2', ' ') }
+
+    data class Point(val x: Int, val y: Int)
+
     fun solveOne(puzzleText: String, width: Int = 25, height: Int = 6): Int {
         val layerSize = width * height
         val numLayers = puzzleText.length / layerSize
@@ -36,8 +48,48 @@ class Puzzle8 {
         return layerWithLeastZeros.count { it == '1' }!! * layerWithLeastZeros.count { it == '2'}!!
     }
 
-    fun solveTwo(puzzleText: String): String {
-        throw NotImplementedError()
+    fun solveTwo(puzzleText: String, width: Int = 25, height: Int = 6): String {
+        val layerSize = width * height
+        //val numLayers = puzzleText.length / layerSize
+
+        // We want a Map<Point, Pixel>
+
+        val layers = puzzleText.chunked(layerSize).mapIndexed { layerNumber, layer: String ->
+            layer.mapIndexed { index, char ->
+                val x = index % width
+                val y = index / width
+                val point = Point(x, y)
+                //println("$point")
+
+                val pixel = Pixel.values().find { it.value == char }!!
+                point to pixel
+            }.toMap()
+        }
+
+        val something = (0 until height).map { y ->
+            (0 until width).map { x ->
+                val point = Point(x, y)
+                octopusHorseBanana(layers, point)
+            }.joinToString("")
+        }.joinToString("\n")
+
+        println(something)
+
+
+
+
+
+        return something
+    }
+
+    private fun octopusHorseBanana(layers: List<Map<Point, Pixel>>, point: Point): Char {
+        layers.forEach { layer ->
+            if (layer[point] != Pixel.TRANSPARENT) {
+                return layer[point]!!.output
+            }
+        }
+
+        return layers.last()[point]!!.output
     }
 }
 
