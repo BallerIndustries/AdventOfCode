@@ -23,7 +23,7 @@ class Puzzle9Test {
 class Puzzle9 {
     fun solveOne(puzzleText: String): Long? {
         val split = puzzleText.split(",")
-        val program = split.map { it.toLong() } + (0 until split.size * 10).map { 0L }
+        val program = split.map { it.toLong() } + (0 until split.size * 2).map { 0L }
         val state = State(program, userInput = listOf(1))
         val virtualMachine = IntCodeVirtualMachine()
         val result = virtualMachine.runProgram(state)
@@ -32,11 +32,10 @@ class Puzzle9 {
 
     fun solveTwo(puzzleText: String): Long? {
         val split = puzzleText.split(",")
-        val program = split.map { it.toLong() } + (0 until split.size * 10).map { 0L }
+        val program = split.map { it.toLong() } + (0 until split.size * 2).map { 0L }
         val state = State(program, userInput = listOf(2))
         val virtualMachine = IntCodeVirtualMachine()
         val result = virtualMachine.runProgram(state)
         return result.lastPrintedValue
     }
 }
-
