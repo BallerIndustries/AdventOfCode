@@ -10,23 +10,33 @@ class Puzzle9Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals("a", result)
+        assertEquals(2457252183L, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("a", result)
+        assertEquals(70634L, result)
     }
 }
 
 class Puzzle9 {
-    fun solveOne(puzzleText: String): String {
-        throw NotImplementedError()
+    fun solveOne(puzzleText: String): Long? {
+        val split = puzzleText.split(",")
+        val program = split.map { it.toLong() } + (0 until split.size * 10).map { 0L }
+        val state = State(program, userInput = listOf(1))
+        val virtualMachine = IntCodeVirtualMachine()
+        val result = virtualMachine.runProgram(state)
+        return result.lastPrintedValue
     }
 
-    fun solveTwo(puzzleText: String): String {
-        throw NotImplementedError()
+    fun solveTwo(puzzleText: String): Long? {
+        val split = puzzleText.split(",")
+        val program = split.map { it.toLong() } + (0 until split.size * 10).map { 0L }
+        val state = State(program, userInput = listOf(2))
+        val virtualMachine = IntCodeVirtualMachine()
+        val result = virtualMachine.runProgram(state)
+        return result.lastPrintedValue
     }
 }
 

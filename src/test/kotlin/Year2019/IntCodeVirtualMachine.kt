@@ -2,12 +2,23 @@ package Year2019
 
 interface Instruction {
     companion object {
+        fun getIndexValue(paramNumber: Int, paramModes: List<IntCodeVirtualMachine.ParameterMode>, valueOrIndex: Long, state: State): Int {
+            val paramMode = paramModes[paramNumber]
+
+            return when (paramMode) {
+                IntCodeVirtualMachine.ParameterMode.RELATIVE -> (state.relativeBaseOffset + valueOrIndex).toInt()
+                else -> valueOrIndex.toInt()
+            }
+        }
+
         fun getParamOrValue(paramNumber: Int, paramModes: List<IntCodeVirtualMachine.ParameterMode>, valueOrIndex: Long, state: State): Long {
             val paramMode = paramModes[paramNumber]
 
-            return if (paramMode == IntCodeVirtualMachine.ParameterMode.IMMEDIATE) valueOrIndex
-            else if (paramMode == IntCodeVirtualMachine.ParameterMode.POSITION) state.list[valueOrIndex.toInt()]
-            else throw RuntimeException()
+            return when (paramMode) {
+                IntCodeVirtualMachine.ParameterMode.IMMEDIATE -> valueOrIndex
+                IntCodeVirtualMachine.ParameterMode.POSITION -> state.list[valueOrIndex.toInt()]
+                IntCodeVirtualMachine.ParameterMode.RELATIVE -> state.list[valueOrIndex.toInt() + state.relativeBaseOffset.toInt()]
+            }
         }
     }
 
@@ -55,13 +66,23 @@ data class LessThanInstruction(override val paramModes: List<IntCodeVirtualMachi
     override fun execute(state: State): State {
         val a = Instruction.getParamOrValue(0, paramModes, paramA, state)
         val b = Instruction.getParamOrValue(1, paramModes, paramB, state)
+        val index = Instruction.getIndexValue(2, paramModes, paramC, state)
 
         if (a < b) {
-            return state.writeToIndex(paramC.toInt(), 1)
+            return state.writeToIndex(index, 1)
         }
         else {
-            return state.writeToIndex(paramC.toInt(), 0)
+            return state.writeToIndex(index, 0)
         }
+    }
+}
+
+data class AdjustRelativeBase(override val paramModes: List<IntCodeVirtualMachine.ParameterMode>, val paramA: Long): Instruction {
+    override val size = 2
+
+    override fun execute(state: State): State {
+        val a = Instruction.getParamOrValue(0, paramModes, paramA, state)
+        return state.adjustRelativeBase(a)
     }
 }
 
@@ -71,12 +92,13 @@ data class EqualsInstruction(override val paramModes: List<IntCodeVirtualMachine
     override fun execute(state: State): State {
         val a = Instruction.getParamOrValue(0, paramModes, paramA, state)
         val b = Instruction.getParamOrValue(1, paramModes, paramB, state)
+        val index = Instruction.getIndexValue(2, paramModes, paramC, state)
 
         if (a == b) {
-            return state.writeToIndex(paramC.toInt(), 1)
+            return state.writeToIndex(index, 1)
         }
         else {
-            return state.writeToIndex(paramC.toInt(), 0)
+            return state.writeToIndex(index, 0)
         }
     }
 }
@@ -86,7 +108,8 @@ data class ReadInstruction(override val paramModes: List<IntCodeVirtualMachine.P
 
     override fun execute(state: State): State {
         val (userInput, newState) = state.popOffInput()
-        return newState.writeToIndex(paramA.toInt(), userInput)
+        val index = Instruction.getIndexValue(0, paramModes, paramA, state)
+        return newState.writeToIndex(index, userInput)
     }
 }
 
@@ -95,6 +118,7 @@ data class WriteInstruction(override val paramModes: List<IntCodeVirtualMachine.
 
     override fun execute(state: State): State {
         val horse = Instruction.getParamOrValue(0, paramModes, paramA, state)
+        println(horse)
         return state.setLastPrintedValue(horse)
     }
 }
@@ -106,8 +130,10 @@ data class AddInstruction(override val paramModes: List<IntCodeVirtualMachine.Pa
     override fun execute(state: State): State {
         val a = Instruction.getParamOrValue(0, paramModes, indexA, state)
         val b = Instruction.getParamOrValue(1, paramModes, indexB, state)
+        val c = Instruction.getIndexValue(2, paramModes, destinationIndex, state)
+
         val result = a + b
-        return state.writeToIndex(destinationIndex.toInt(), result)
+        return state.writeToIndex(c, result)
     }
 }
 
@@ -117,9 +143,10 @@ data class MultiplyInstruction(override val paramModes: List<IntCodeVirtualMachi
     override fun execute(state: State): State {
         val a = Instruction.getParamOrValue(0, paramModes, indexA, state)
         val b = Instruction.getParamOrValue(1, paramModes, indexB, state)
+        val c = Instruction.getIndexValue(2, paramModes, destinationIndex, state)
 
         val result = a * b
-        return state.writeToIndex(destinationIndex.toInt(), result)
+        return state.writeToIndex(c, result)
     }
 }
 
@@ -132,7 +159,7 @@ class HaltInstruction : Instruction {
     }
 }
 
-data class State(val list: List<Long>, val programCounter: Long = 0, val isHalted: Boolean = false, val lastPrintedValue: Long? = null, val justJumped: Boolean = false, val userInput: List<Long>) {
+data class State(val list: List<Long>, val programCounter: Long = 0, val isHalted: Boolean = false, val lastPrintedValue: Long? = null, val justJumped: Boolean = false, val userInput: List<Long>, val relativeBaseOffset: Long = 0) {
     fun writeToIndex(index: Int, value: Long): State {
         val newList = this.list.mapIndexed { i, it -> if (i == index) value else it }
         return this.copy(list = newList)
@@ -147,6 +174,10 @@ data class State(val list: List<Long>, val programCounter: Long = 0, val isHalte
 
     fun popOffInput(): Pair<Long, State> {
         return userInput.first() to this.copy(userInput = this.userInput.subList(1, this.userInput.size))
+    }
+
+    fun adjustRelativeBase(relativeBaseDelta: Long): State {
+        return this.copy(relativeBaseOffset = this.relativeBaseOffset + relativeBaseDelta)
     }
 }
 
@@ -195,6 +226,7 @@ class IntCodeVirtualMachine {
             6 -> JumpIfFalseInstruction(parameterModes, indexA!!, indexB!!)
             7 -> LessThanInstruction(parameterModes, indexA!!, indexB!!, indexC!!)
             8 -> EqualsInstruction(parameterModes, indexA!!, indexB!!, indexC!!)
+            9 -> AdjustRelativeBase(parameterModes, indexA!!)
             99 -> HaltInstruction()
             else -> throw RuntimeException("Unexpected opcode = $opcode")
         }
@@ -210,8 +242,9 @@ class IntCodeVirtualMachine {
             6 -> 2
             7 -> 3
             8 -> 3
+            9 -> 1
             99 -> 0
-            else -> throw RuntimeException("oaisjdaoisjd")
+            else -> throw RuntimeException("Unexpected opcode = $opcode")
         }
     }
 
@@ -222,7 +255,7 @@ class IntCodeVirtualMachine {
     private fun getParamOrNull(state: State, offset: Int) = state.list.getOrNull(state.programCounter.toInt() + offset)
 
     enum class ParameterMode {
-        POSITION, IMMEDIATE;
+        POSITION, IMMEDIATE, RELATIVE;
 
         companion object {
             fun determineParameterMode(paramModeText: String, paramCount: Int): List<ParameterMode> {
@@ -230,6 +263,7 @@ class IntCodeVirtualMachine {
                     when (c) {
                         '0' -> POSITION
                         '1' -> IMMEDIATE
+                        '2' -> RELATIVE
                         else -> throw RuntimeException()
                     }
                 }
