@@ -50,7 +50,6 @@ class Puzzle10Test {
 }
 
 class Puzzle10 {
-
     data class Point(val x: Int, val y: Int) {
         fun rotationTo(other: Point): Double {
             return Math.atan2(this.y.toDouble() - other.y.toDouble(), this.x.toDouble() - other.x.toDouble()) * (180.0 / Math.PI)
@@ -93,7 +92,6 @@ class Puzzle10 {
     fun solveTwo(puzzleText: String): Int {
         val asteroids = getAsteroids(puzzleText)
         val distinctRotationsToAsteroid = getRotationCountPerAsteroid(asteroids)
-
         val positionOfLaser = distinctRotationsToAsteroid.maxBy { it.first }!!.second
 
         val pointRotationAndDistance = asteroids.filter {
@@ -103,14 +101,10 @@ class Puzzle10 {
         }.sortedWith(compareBy({ it.second }, { it.third })).toMutableList()
 
         var zappedAsteroids = 0
-        var lastZappedAsteroid: Triple<Point, Double, Int>? = null
+        var lastZappedAsteroid: Triple<Point, Double, Int>
         var index = pointRotationAndDistance.indexOfFirst { it.second >= 90.0 }
 
         do {
-            if (index == -1) {
-                index = 0
-            }
-
             lastZappedAsteroid = pointRotationAndDistance[index]
             pointRotationAndDistance.removeAt(index)
             zappedAsteroids++
@@ -120,11 +114,9 @@ class Puzzle10 {
             if (index == -1) {
                 index = 0
             }
-
-            println("$zappedAsteroids vaporised at ${lastZappedAsteroid.first}")
         } while (zappedAsteroids < 200)
 
-        return lastZappedAsteroid!!.first.x * 100 + lastZappedAsteroid.first.y
+        return lastZappedAsteroid.first.x * 100 + lastZappedAsteroid.first.y
     }
 }
 
