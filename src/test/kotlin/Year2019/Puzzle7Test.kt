@@ -35,11 +35,11 @@ class Puzzle7 {
         return listOf(0L, 1L, 2L, 3L, 4L).permutations().map { phases ->
             val (first, second, third, fourth, fifth) = phases.map { phase -> State(input, userInput = listOf(phase)) }
             var result = virtualMachine.runProgram(first.addUserInput(0))
-            result = virtualMachine.runProgram(second.addUserInput(result.lastPrintedValue!!))
-            result = virtualMachine.runProgram(third.addUserInput(result.lastPrintedValue!!))
-            result = virtualMachine.runProgram(fourth.addUserInput(result.lastPrintedValue!!))
-            result = virtualMachine.runProgram(fifth.addUserInput(result.lastPrintedValue!!))
-            result.lastPrintedValue!!
+            result = virtualMachine.runProgram(second.addUserInput(result.outputList.first()))
+            result = virtualMachine.runProgram(third.addUserInput(result.outputList.first()))
+            result = virtualMachine.runProgram(fourth.addUserInput(result.outputList.first()))
+            result = virtualMachine.runProgram(fifth.addUserInput(result.outputList.first()))
+            result.outputList.first()
         }.max()
     }
 
@@ -57,8 +57,8 @@ class Puzzle7 {
                 val state = amplifiers[index]
                 val currentAmplifier: State = virtualMachine.runProgram(state.copy(userInput = state.userInput + lastOutput))
 
-                if (currentAmplifier.lastPrintedValue != null) {
-                    lastOutput = currentAmplifier.lastPrintedValue
+                if (currentAmplifier.outputList != null) {
+                    lastOutput = currentAmplifier.outputList.first()
                 }
 
                 amplifiers[index] = currentAmplifier

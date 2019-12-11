@@ -27,7 +27,7 @@ class Puzzle9 {
         val state = State(program, userInput = listOf(1))
         val virtualMachine = IntCodeVirtualMachine()
         val result = virtualMachine.runProgram(state)
-        return result.lastPrintedValue
+        return result.outputList.first()
     }
 
     fun solveTwo(puzzleText: String): Long? {
@@ -36,6 +36,6 @@ class Puzzle9 {
         val state = State(program, userInput = listOf(2))
         val virtualMachine = IntCodeVirtualMachine()
         val result = virtualMachine.runProgram(state)
-        return result.lastPrintedValue
+        return result.outputList.first()
     }
 }

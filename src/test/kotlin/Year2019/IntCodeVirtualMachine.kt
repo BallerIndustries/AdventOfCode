@@ -118,7 +118,7 @@ data class WriteInstruction(override val paramModes: List<IntCodeVirtualMachine.
 
     override fun execute(state: State): State {
         val horse = Instruction.getParamOrValue(0, paramModes, paramA, state)
-        println(horse)
+//        println(horse)
         return state.setLastPrintedValue(horse)
     }
 }
@@ -159,7 +159,7 @@ class HaltInstruction : Instruction {
     }
 }
 
-data class State(val list: List<Long>, val programCounter: Long = 0, val isHalted: Boolean = false, val lastPrintedValue: Long? = null, val justJumped: Boolean = false, val userInput: List<Long>, val relativeBaseOffset: Long = 0) {
+data class State(val list: List<Long>, val programCounter: Long = 0, val isHalted: Boolean = false, val outputList: List<Long> = listOf(), val justJumped: Boolean = false, val userInput: List<Long>, val relativeBaseOffset: Long = 0) {
     fun writeToIndex(index: Int, value: Long): State {
         val newList = this.list.mapIndexed { i, it -> if (i == index) value else it }
         return this.copy(list = newList)
@@ -167,7 +167,7 @@ data class State(val list: List<Long>, val programCounter: Long = 0, val isHalte
 
     fun halt(): State = this.copy(isHalted =  true)
     fun incrementProgramCounter(amount: Int): State = this.copy(programCounter = this.programCounter + amount)
-    fun setLastPrintedValue(value: Long) = this.copy(lastPrintedValue = value)
+    fun setLastPrintedValue(value: Long) = this.copy(outputList = this.outputList + value)
     fun jump(valueB: Long) = this.copy(programCounter = valueB, justJumped = true)
     fun clearJustJumped() = this.copy(justJumped = false)
     fun addUserInput(input: Long) = this.copy(userInput = this.userInput + input)
@@ -178,6 +178,11 @@ data class State(val list: List<Long>, val programCounter: Long = 0, val isHalte
 
     fun adjustRelativeBase(relativeBaseDelta: Long): State {
         return this.copy(relativeBaseOffset = this.relativeBaseOffset + relativeBaseDelta)
+    }
+
+    fun popOffOutput(): Pair<List<Long>, State> {
+        val list = this.outputList
+        return list to this.copy(outputList = listOf())
     }
 }
 
