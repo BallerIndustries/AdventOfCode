@@ -27,7 +27,7 @@ class Puzzle5 {
         val virtualMachine = IntCodeVirtualMachine()
 
         val result = virtualMachine.runProgram(state)
-        return result.outputList.first()
+        return result.outputList.last()
     }
 
     fun solveOne(puzzleText: String): Long? {

@@ -58,7 +58,7 @@ class Puzzle7 {
                 val currentAmplifier: State = virtualMachine.runProgram(state.copy(userInput = state.userInput + lastOutput))
 
                 if (currentAmplifier.outputList != null) {
-                    lastOutput = currentAmplifier.outputList.first()
+                    lastOutput = currentAmplifier.outputList.last()
                 }
 
                 amplifiers[index] = currentAmplifier
