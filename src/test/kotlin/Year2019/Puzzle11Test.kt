@@ -16,7 +16,16 @@ class Puzzle11Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("a", result)
+        val expected = """
+            .###..####.####.###...##..####.####.###....
+            .#..#.#....#....#..#.#..#.#....#....#..#...
+            .#..#.###..###..#..#.#....###..###..###....
+            .###..#....#....###..#....#....#....#..#...
+            .#.#..#....#....#....#..#.#....#....#..#...
+            .#..#.#....####.#.....##..#....####.###....
+        """.trimIndent()
+
+        assertEquals(expected, result)
     }
 }
 
@@ -33,8 +42,8 @@ class Puzzle11 {
         }
     }
 
-    enum class Tile(val value: Long) {
-        BLACK(0L), WHITE(1L);
+    enum class Tile(val value: Long, val char: Char) {
+        BLACK(0L, '.'), WHITE(1L, '#');
     }
 
     enum class Direction {
@@ -60,9 +69,14 @@ class Puzzle11 {
     }
 
     fun solveOne(puzzleText: String): Int {
+        val grid = drawTheGriddyGrid(puzzleText, 0)
+        return grid.count()
+    }
+
+    private fun drawTheGriddyGrid(puzzleText: String, initialUserInput: Long): MutableMap<Point, Tile> {
         val split = puzzleText.split(",")
         val program = split.map { it.toLong() } + split.map { 0L } + split.map { 0L }
-        var currentState = State(program, userInput = listOf(0))
+        var currentState = State(program, userInput = listOf(initialUserInput))
 
         val virtualMachine = IntCodeVirtualMachine()
         val grid = mutableMapOf<Point, Tile>()
@@ -90,7 +104,7 @@ class Puzzle11 {
             grid[currentPosition] = tile
 
             // Turn left or right
-            currentDirection = when(direction) {
+            currentDirection = when (direction) {
                 0L -> currentDirection.turnLeft()
                 1L -> currentDirection.turnRight()
                 else -> throw RuntimeException()
@@ -100,23 +114,24 @@ class Puzzle11 {
 
             // Set the current tile thingy
             val currentTileNumber: Long = grid[currentPosition]?.value ?: 0L
-
-//            val tileCode = when (grid[currentPosition]) {
-//                Tile.BLACK -> 1L
-//                else -> 0L
-//            }
-
             currentState = currentState.addUserInput(currentTileNumber)
         }
-
-
-        return grid.count()
-
-        //throw NotImplementedError()
+        return grid
     }
 
     fun solveTwo(puzzleText: String): String {
-        throw NotImplementedError()
+        val grid = drawTheGriddyGrid(puzzleText, 1)
+        val maxY = grid.keys.maxBy { it.y }!!.y
+        val maxX = grid.keys.maxBy { it.x }!!.x
+
+        val horsey = (0 .. maxY).map { y ->
+            (0 .. maxX).map { x ->
+                val point = Point(x, y)
+                grid[point]?.char ?: '.'
+            }.joinToString("")
+        }.joinToString("\n")
+
+        return horsey
     }
 }
 
