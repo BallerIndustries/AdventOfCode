@@ -2,6 +2,7 @@ package Year2019
 
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
+import kotlin.math.abs
 
 class Puzzle12Test {
     val puzzleText = this::class.java.getResource("/2019/puzzle12.txt").readText().replace("\r", "")
@@ -40,7 +41,7 @@ class Puzzle12 {
         }
 
         fun sumOfAbsoluteValues(): Long {
-            return Math.abs(x) + Math.abs(y) + Math.abs(z)
+            return abs(x) + abs(y) + abs(z)
         }
 
         override fun toString(): String {
@@ -82,12 +83,10 @@ class Puzzle12 {
         var moons = parseMoons(puzzleText)
 
         // Move the moons along for 1000 steps
-        val energies = (1..1000).map { step ->
+        val energies = (1..1000).map {
             // Figure out the new velocity of each moon pased on the gravity
             moons = moveMoonsAlong(moons)
-
             val totalEnergy = moons.sumByDouble { moon -> moon.totalEnergy().toDouble()  }
-
             totalEnergy
         }
 
@@ -97,7 +96,6 @@ class Puzzle12 {
     private fun moveMoonsAlong(moons: List<Moon>): List<Moon> {
         var moons1 = moons
         moons1 = moons1.map { currentMoon ->
-
             val otherMoons = moons1.filter { it != currentMoon }
 
             val velocityDelta = otherMoons.map { otherMoon ->
@@ -118,7 +116,7 @@ class Puzzle12 {
     }
 
     private fun parseMoons(puzzleText: String): List<Moon> {
-        var moons = puzzleText
+        return puzzleText
             .replace("x=", "")
             .replace("y=", "")
             .replace("z=", "")
@@ -131,7 +129,6 @@ class Puzzle12 {
                 val velocity = Vector3(0, 0, 0)
                 Moon(position, velocity)
             }
-        return moons
     }
 
     fun solveTwo(puzzleText: String): String {
@@ -152,14 +149,14 @@ class Puzzle12 {
             val yPoints = moons.map { it.yOnly() }
             val zPoints = moons.map { it.zOnly() }
 
-            if (xPositionsAndVelocity.contains(xPoints)) {
-                if (xCycle == -1L) xCycle = step
+            if (xPositionsAndVelocity.contains(xPoints) && xCycle == -1L) {
+                xCycle = step
             }
-            if (yPositionsAndVelocity.contains(yPoints)) {
-                if (yCycle == -1L) yCycle = step
+            if (yPositionsAndVelocity.contains(yPoints) && yCycle == -1L) {
+                yCycle = step
             }
-            if (zPositionsAndVelocity.contains(zPoints)) {
-                if (zCycle == -1L) zCycle = step
+            if (zPositionsAndVelocity.contains(zPoints) && zCycle == -1L) {
+                zCycle = step
             }
 
             zPositionsAndVelocity.add(zPoints)
