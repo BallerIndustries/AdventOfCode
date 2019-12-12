@@ -29,13 +29,11 @@ class Puzzle12Test {
         """.trimIndent()
 
         val result = puzzle.solveOne(text)
-        assertEquals("a", result)
+        assertEquals(183.0, result)
     }
 }
 
 class Puzzle12 {
-    //data class PositionAndVelocity(val x: Long, val y: Long, val z: Long) {
-
     data class Vector3(val x: Long, val y: Long, val z: Long) {
         operator fun plus(vector3: Vector3): Vector3 {
             return Vector3(this.x + vector3.x, this.y + vector3.y, this.z + vector3.z)
@@ -48,10 +46,6 @@ class Puzzle12 {
         override fun toString(): String {
             return "<x=$x, y=$y, z=$z>"
         }
-
-        fun xOnly(): Vector3 = this.copy(y = 0, z = 0)
-        fun yOnly(): Vector3 = this.copy(x = 0, z = 0)
-        fun zOnly(): Vector3 = this.copy(x = 0, y = 0)
     }
 
     data class Moon(val position: Vector3, val velocity: Vector3) {
@@ -87,20 +81,13 @@ class Puzzle12 {
     fun solveOne(puzzleText: String): Double {
         var moons = parseMoons(puzzleText)
 
-//        println("After 0 steps:")
-//        moons.forEach { println(it) }
-//        println()
-
         // Move the moons along for 1000 steps
-        val energies = (1 .. 4_686_774_924).map { step ->
+        val energies = (1..1000).map { step ->
             // Figure out the new velocity of each moon pased on the gravity
             moons = moveMoonsAlong(moons)
 
             val totalEnergy = moons.sumByDouble { moon -> moon.totalEnergy().toDouble()  }
 
-//            println("After $step steps:")
-//            moons.forEach { println(it) }
-//            println(totalEnergy)
             totalEnergy
         }
 
@@ -132,24 +119,23 @@ class Puzzle12 {
 
     private fun parseMoons(puzzleText: String): List<Moon> {
         var moons = puzzleText
-                .replace("x=", "")
-                .replace("y=", "")
-                .replace("z=", "")
-                .replace("<", "")
-                .replace(">", "")
-                .split("\n")
-                .mapIndexed { index, line ->
-                    val (x, y, z) = line.split(", ").map { it.toLong() }
-                    val position = Vector3(x, y, z)
-                    val velocity = Vector3(0, 0, 0)
-                    Moon(position, velocity)
-                }
+            .replace("x=", "")
+            .replace("y=", "")
+            .replace("z=", "")
+            .replace("<", "")
+            .replace(">", "")
+            .split("\n")
+            .mapIndexed { index, line ->
+                val (x, y, z) = line.split(", ").map { it.toLong() }
+                val position = Vector3(x, y, z)
+                val velocity = Vector3(0, 0, 0)
+                Moon(position, velocity)
+            }
         return moons
     }
 
     fun solveTwo(puzzleText: String): String {
         var moons = parseMoons(puzzleText)
-
         val xPositionsAndVelocity = mutableSetOf(moons.map { it.xOnly() })
         val yPositionsAndVelocity = mutableSetOf(moons.map { it.yOnly() })
         val zPositionsAndVelocity = mutableSetOf(moons.map { it.zOnly() })
@@ -158,47 +144,36 @@ class Puzzle12 {
         var yCycle = -1L
         var zCycle = -1L
 
-        //(1 .. 4_686_774_924).forEach { step ->
-
-
-        for (step in 1 .. 4_686_774_924) {
+        for (step in 1 .. Long.MAX_VALUE) {
             // Figure out the new velocity of each moon pased on the gravity
             moons = moveMoonsAlong(moons)
 
-//            moons.forEachIndexed { index, moon ->
-                val xPoints = moons.map { it.xOnly() }
-                val yPoints = moons.map { it.yOnly() }
-                val zPoints = moons.map { it.zOnly() }
+            val xPoints = moons.map { it.xOnly() }
+            val yPoints = moons.map { it.yOnly() }
+            val zPoints = moons.map { it.zOnly() }
 
-                if (xPositionsAndVelocity.contains(xPoints)) {
-                    if (xCycle == -1L) xCycle = step
+            if (xPositionsAndVelocity.contains(xPoints)) {
+                if (xCycle == -1L) xCycle = step
+            }
+            if (yPositionsAndVelocity.contains(yPoints)) {
+                if (yCycle == -1L) yCycle = step
+            }
+            if (zPositionsAndVelocity.contains(zPoints)) {
+                if (zCycle == -1L) zCycle = step
+            }
 
-                    println("X Cycle at step = $step")
-                }
-                if (yPositionsAndVelocity.contains(yPoints)) {
-
-                    if (yCycle == -1L) yCycle = step
-
-                    println("Y Cycle at step = $step")
-                }
-                if (zPositionsAndVelocity.contains(zPoints)) {
-
-                    if (zCycle == -1L) zCycle = step
-
-                    println("Z Cycle at step = $step")
-                }
-
-                zPositionsAndVelocity.add(zPoints)
-                xPositionsAndVelocity.add(xPoints)
-                yPositionsAndVelocity.add(yPoints)
-//            }
+            zPositionsAndVelocity.add(zPoints)
+            xPositionsAndVelocity.add(xPoints)
+            yPositionsAndVelocity.add(yPoints)
 
             if (zCycle > 0 && yCycle > 0 && xCycle > 0) {
                 break
             }
         }
 
-
+        println(xCycle)
+        println(yCycle)
+        println(zCycle)
 
         throw RuntimeException()
     }
