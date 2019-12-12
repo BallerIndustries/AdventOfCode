@@ -17,7 +17,7 @@ class Puzzle12Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("a", result)
+        assertEquals(312992287193064, result)
     }
 
     @Test
@@ -131,7 +131,7 @@ class Puzzle12 {
             }
     }
 
-    fun solveTwo(puzzleText: String): String {
+    fun solveTwo(puzzleText: String): Long {
         var moons = parseMoons(puzzleText)
         val xPositionsAndVelocity = mutableSetOf(moons.map { it.xOnly() })
         val yPositionsAndVelocity = mutableSetOf(moons.map { it.yOnly() })
@@ -168,11 +168,31 @@ class Puzzle12 {
             }
         }
 
-        println(xCycle)
-        println(yCycle)
-        println(zCycle)
-
-        throw RuntimeException()
+        return lcm(listOf(xCycle, yCycle, zCycle))
     }
+
+
+    private fun lcm(a: Long, b: Long): Long {
+        return a * (b / gcd(a, b))
+    }
+
+    private fun lcm(input: List<Long>): Long {
+        var result = input[0]
+        for (i in 1 until input.size) result = lcm(result, input[i])
+        return result
+    }
+
+    private fun gcd(a: Long, b: Long): Long {
+        var a = a
+        var b = b
+        while (b > 0) {
+            val temp = b
+            b = a % b // % is remainder
+            a = temp
+        }
+        return a
+    }
+
+
 }
 
