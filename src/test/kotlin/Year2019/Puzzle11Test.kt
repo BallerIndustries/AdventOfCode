@@ -52,9 +52,9 @@ class Puzzle11 {
         fun turnLeft(): Direction {
             return when (this) {
                 UP -> LEFT
-                RIGHT -> UP
-                DOWN -> RIGHT
                 LEFT -> DOWN
+                DOWN -> RIGHT
+                RIGHT -> UP
             }
         }
 
