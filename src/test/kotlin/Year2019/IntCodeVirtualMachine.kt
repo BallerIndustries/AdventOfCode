@@ -193,7 +193,7 @@ class IntCodeVirtualMachine {
 
         while (!state.isHalted) {
             val instruction = parseInstruction(state)
-
+//            println(instruction)
             if (instruction is ReadInstruction && state.userInput.isEmpty()) {
                 return state
             }
