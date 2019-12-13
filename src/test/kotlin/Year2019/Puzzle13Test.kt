@@ -16,7 +16,7 @@ class Puzzle13Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("a", result)
+        assertEquals(16309, result)
     }
 }
 
@@ -28,21 +28,20 @@ class Puzzle13 {
     }
 
     fun solveOne(puzzleText: String): Int {
-        return 2
-//        val vm = IntCodeVirtualMachine()
-//        val program = puzzleText.split(",").map { it.toLong() } + puzzleText.map { 0L }
-//        val state = State(program, userInput = listOf())
-//        val result = vm.runProgram(state)
-//
-//        val map = readOutputIntoPixelBuffer(result)
-//        return map.values.count { it == Tile.BLOCK }
+        val vm = IntCodeVirtualMachine()
+        val program = puzzleText.split(",").map { it.toLong() } + puzzleText.map { 0L }
+        val state = State(program, userInput = listOf())
+        val result = vm.runProgram(state)
+
+        val (_, map) = parseOutput(result)
+        return map.values.count { it == Tile.BLOCK }
     }
 
-    val outputs = mutableListOf<List<Long>>()
+
+    var score = -1
 
     private fun parseOutput(state: State): Pair<State, Map<Point, Tile>> {
         val (commandsFromZaza, newState) = state.popOffOutput()
-        outputs.add(commandsFromZaza)
         var index = 0
 
         val map = mutableMapOf<Point, Tile>()
@@ -54,6 +53,7 @@ class Puzzle13 {
 
             if (x == -1L && y == 0L) {
                 println("score = $scoreOrTileId")
+                score = scoreOrTileId
                 index += 3
                 continue
             }
@@ -68,7 +68,7 @@ class Puzzle13 {
         return newState to map
     }
 
-    fun solveTwo(puzzleText: String): String {
+    fun solveTwo(puzzleText: String): Int {
         val vm = IntCodeVirtualMachine()
         val program = puzzleText.split(",").map { it.toLong() } + (0 until puzzleText.length * 2).map { 0L }
         var state = State(program, userInput = listOf(0))
@@ -78,24 +78,13 @@ class Puzzle13 {
         state = tmp.first
         val pixelBuffer = tmp.second.toMutableMap()
 
-        val text = renderScreen(pixelBuffer)
-        println(text)
-        println()
-        var previousBallPosition = -1
-
-        while (state.isHalted == false) {
-//            Thread.sleep(500)
-
+        while (!state.isHalted) {
             val ballPosition = pixelBuffer.entries.find { it.value == Tile.BALL }!!.key
             val paddlePosition = pixelBuffer.entries.find { it.value == Tile.HORIZONTAL_PADDLE }!!.key.x
-
-//            println("ball $ballPosition paddle $paddlePosition")
 
             val userInput = when {
                 (ballPosition.x < paddlePosition) -> -1L
                 (ballPosition.x > paddlePosition) -> 1L
-//                (ballPosition.x == paddlePosition && previousBallPosition < paddlePosition) -> -1L
-//                (ballPosition.x == paddlePosition && previousBallPosition > paddlePosition) -> 1L
                 else -> 0L
             }
 
@@ -103,42 +92,22 @@ class Puzzle13 {
             val tmp = parseOutput(state)
             state = tmp.first
             mergePixelBuffer(pixelBuffer, tmp.second)
-
-//            val text = renderScreen(pixelBuffer)
-//            println(text)
-//            println()
-
-            previousBallPosition = ballPosition.x
         }
 
-        throw NotImplementedError()
+        return score
     }
 
-    private fun mergePixelBuffer(pixelBuffer: MutableMap<Point, Tile>, deltas: Map<Point, Tile>) {
-        deltas.forEach { (key, tile) ->
-
-            if (tile == Tile.BALL) {
-                val previousBall = pixelBuffer.entries.find { it.value == Tile.BALL }?.key
-
-                if (previousBall != null) {
-                    pixelBuffer.remove(previousBall)
-                }
-            }
-
-            pixelBuffer[key] = tile
-        }
-    }
+    private fun mergePixelBuffer(pixelBuffer: MutableMap<Point, Tile>, deltas: Map<Point, Tile>) = pixelBuffer.putAll(deltas)
 
     private fun renderScreen(map: Map<Point, Tile>): String {
         val maxX = map.keys.maxBy { it.x }!!.x
         val maxY = map.keys.maxBy { it.y }!!.y
 
-        val text = (0..maxY).map { y ->
+        return (0..maxY).map { y ->
             (0..maxX).map { x ->
-                map[Point(x, y)]?.char ?: ' '
+                map[Point(x, y)]?.char ?: throw RuntimeException("Unable to find pixel at point = ($x, $y)")
             }.joinToString("")
         }.joinToString("\n")
-        return text
     }
 }
 
