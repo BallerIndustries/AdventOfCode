@@ -23,6 +23,16 @@ class Puzzle14Test {
 class Puzzle14 {
 
     data class NameAndAmount(val name: String, val amount: Int, val oreAmount: Int? = null) {
+
+        companion object {
+            fun parse(text: String): NameAndAmount {
+                val split = text.split(" ")
+                val name = split[1]
+                val amount = split[0].toInt()
+                return if (name == "ORE") NameAndAmount(name, amount, oreAmount = amount) else NameAndAmount(name, amount)
+            }
+        }
+
         override fun toString(): String {
             return if (oreAmount == null) "$amount $name" else "$oreAmount ORE"
         }
@@ -98,6 +108,8 @@ class Puzzle14 {
         // while we have unknown ore amounts
         while (!recipes.all { it.allOreAmountsAreKnown() }) {
             val understoodRecipes = recipes.filter { it.allOreAmountsAreKnown() }
+            val misunderstoodRecipes = recipes.filter { !it.allOreAmountsAreKnown() }
+
 
             val changedRecipes = understoodRecipes.flatMap { recipeToCreateMineral ->
                 val mineral = recipeToCreateMineral.mineral.name
@@ -111,6 +123,10 @@ class Puzzle14 {
             }
 
             mergeUpdatesIntoRecipeList(changedRecipes, recipes)
+
+
+
+            println(misunderstoodRecipes.joinToString("\n"))
 
             println("JIZZLORD")
         }
@@ -192,8 +208,8 @@ class Puzzle14 {
     private fun parseRecipes(puzzleText: String): List<Recipe> {
         val recipes = puzzleText.split("\n").mapIndexed { index, line ->
             val (fromText, toText) = line.split(" => ")
-            val from = fromText.split(", ").map { it.split(" ").let { NameAndAmount(it[1], it[0].toInt()) } }
-            val to = toText.split(" ").let { NameAndAmount(it[1], it[0].toInt()) }
+            val from = fromText.split(", ").map(NameAndAmount.Companion::parse)
+            val to = NameAndAmount.parse(toText)
             Recipe(index, from, to)
         }
         return recipes
