@@ -43,6 +43,18 @@ class Puzzle14 {
             return this.ingredients.size == 1 && this.ingredients[0].name == name
         }
 
+        fun allOreAmountsAreKnown(): Boolean {
+            return this.ingredients.all { it.oreAmount != null }
+        }
+
+        fun oreRequired(): Int? {
+            if (!allOreAmountsAreKnown()) {
+                return null
+            }
+
+            return ingredients.sumBy { it.oreAmount!! }
+        }
+
         fun setOreAmount(name: String, amount: Int): Recipe {
             val ingredientsWithOreAmount = this.ingredients.map {
                 if (it.name == name) {
@@ -65,8 +77,11 @@ class Puzzle14 {
         val recipes = parseRecipes(puzzleText).toMutableList()
         val oreOnlyRecipes = recipes.filter { it.onlyHasOneIngredientNamed("ORE") }
 
+        // Are there any minerals that have two recipes?
+        //recipes.map { it.mineral.name }.sorted()
+
         // Set the
-        val dogs = oreOnlyRecipes.flatMap { recipeToCreateMineral ->
+        val changedRecipes = oreOnlyRecipes.flatMap { recipeToCreateMineral ->
             val mineral = recipeToCreateMineral.mineral.name
             val recipesThatUseMineralAsIngredient = recipes.filter { it.containsIngredient(mineral) }
 
@@ -78,19 +93,38 @@ class Puzzle14 {
         }
 
         // Merge the updated recipes back into the recipe list.
-        dogs.forEach { updatedRecipe ->
-            val index = recipes.indexOfFirst { it.recipeId == updatedRecipe.recipeId }
-            if (index == -1) throw RuntimeException()
-            recipes[index] = updatedRecipe
-        }
+        mergeUpdatesIntoRecipeList(changedRecipes, recipes)
 
+        // while we have unknown ore amounts
+        while (!recipes.all { it.allOreAmountsAreKnown() }) {
+            val understoodRecipes = recipes.filter { it.allOreAmountsAreKnown() }
 
+            val changedRecipes = understoodRecipes.flatMap { recipeToCreateMineral ->
+                val mineral = recipeToCreateMineral.mineral.name
+                val recipesThatUseMineralAsIngredient = recipes.filter { it.containsIngredient(mineral) }
 
-        val frontier = dogs.flatMap {
-            it.ingredients.filter {
-                it.oreAmount == null
+                recipesThatUseMineralAsIngredient.map { recipeThatUsesMineral ->
+                    val ingredientInRecipe = recipeThatUsesMineral.getIngredient(recipeToCreateMineral.mineral.name)
+                    val multiple = Math.ceil(ingredientInRecipe.amount.toDouble() / recipeToCreateMineral.oreRequired()!!.toDouble()).toInt()
+                    recipeThatUsesMineral.setOreAmount(ingredientInRecipe.name, ingredientInRecipe.amount * multiple)
+                }
             }
+
+            mergeUpdatesIntoRecipeList(changedRecipes, recipes)
+
+            println("JIZZLORD")
         }
+
+
+
+//        val frontier = changedRecipes.flatMap {
+//            it.ingredients.filter {
+//                it.oreAmount == null
+//            }
+//        }
+
+
+
 
 
 
@@ -100,6 +134,14 @@ class Puzzle14 {
 
 
         throw RuntimeException()
+    }
+
+    private fun mergeUpdatesIntoRecipeList(dogs: List<Recipe>, recipes: MutableList<Recipe>) {
+        dogs.forEach { updatedRecipe ->
+            val index = recipes.indexOfFirst { it.recipeId == updatedRecipe.recipeId }
+            if (index == -1) throw RuntimeException()
+            recipes[index] = updatedRecipe
+        }
     }
 
     fun solveOne(puzzleText: String): String {
