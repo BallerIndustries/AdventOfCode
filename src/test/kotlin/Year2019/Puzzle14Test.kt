@@ -106,13 +106,17 @@ class Puzzle14 {
         }
     }
 
+    fun solveOneNextNextGen(puzzleText: String): Int? {
+        throw java.lang.RuntimeException()
+    }
+
     fun solveOneNextGen(puzzleText: String): Int? {
         val recipes = parseRecipes(puzzleText).toMutableList()
+        val surplus = mutableMapOf<String, Int>()
 
         // while we have unknown ore amounts
         while (!recipes.all { it.allOreAmountsAreKnown() }) {
             val understoodRecipes = recipes.filter { it.allOreAmountsAreKnown() }
-            val misunderstoodRecipes = recipes.filter { !it.allOreAmountsAreKnown() }
 
             val changedRecipes = understoodRecipes.flatMap { recipeToCreateMineral ->
                 val mineral = recipeToCreateMineral.mineral.name
@@ -120,19 +124,32 @@ class Puzzle14 {
 
                 recipesThatUseMineralAsIngredient.map { recipeThatUsesMineral ->
                     val ingredientInRecipe = recipeThatUsesMineral.getIngredient(recipeToCreateMineral.mineral.name)
-                    val multiple = Math.ceil(ingredientInRecipe.amount.toDouble() / recipeToCreateMineral.oreRequired()!!.toDouble()).toInt()
-                    recipeThatUsesMineral.setOreAmount(ingredientInRecipe.name, recipeToCreateMineral.oreRequired()!! * multiple)
+                    val ingredientAmount = ingredientInRecipe.amount
+                    val multiple = Math.ceil(ingredientAmount.toDouble() / recipeToCreateMineral.oreRequired()!!.toDouble()).toInt()
+                    val amount = recipeToCreateMineral.oreRequired()!! * multiple
+                    val surplus = amount - ingredientAmount
+
+                    recipeThatUsesMineral.setOreAmount(ingredientInRecipe.name, amount)
                 }
             }
 
             mergeUpdatesIntoRecipeList(changedRecipes, recipes)
-            println(misunderstoodRecipes.joinToString("\n"))
-            println("JIZZLORD")
+        }
+
+        val fuelRecipe = recipes.find { it.mineral.name == "FUEL" } ?: throw RuntimeException()
+
+
+        fuelRecipe.ingredients.forEach { ingredient: NameAndAmount ->
+
+
+
+
+
+
         }
 
 
-        val aaaa = recipes.find { it.mineral.name == "FUEL" }
-        return aaaa?.oreRequired()
+        return fuelRecipe.oreRequired()
     }
 
     private fun mergeUpdatesIntoRecipeList(dogs: List<Recipe>, recipes: MutableList<Recipe>) {
