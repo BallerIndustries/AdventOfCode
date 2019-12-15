@@ -16,7 +16,7 @@ class Puzzle15Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("a", result)
+        assertEquals(358, result)
     }
 }
 
@@ -57,18 +57,21 @@ class Puzzle15 {
     }
 
     fun solveOne(puzzleText: String): String {
+        val grid = resolveGrid(puzzleText)
+        throw NotImplementedError()
+    }
+
+    private fun resolveGrid(puzzleText: String): Map<Point, Char> {
         val virtualMachine = IntCodeVirtualMachine()
         val program = puzzleText.split(",").map { it.toLong() } + puzzleText.map { 0L }
         var currentState = State(program, userInput = listOf())
         var currentPoint = Point(0, 0)
         val frontier = Direction.values().map { RobotState(currentPoint, it, currentState, 1) }.toMutableList()
         val grid = mutableMapOf(currentPoint to '.')
-
         val history = mutableSetOf<Pair<Point, Direction>>()
 
         while (frontier.isNotEmpty()) {
             val robotState = frontier.removeAt(0)
-
             currentState = robotState.programState.addUserInput(robotState.direction.value)
             currentState = virtualMachine.runProgram(currentState)
 
@@ -86,7 +89,7 @@ class Puzzle15 {
                 RepairDroidRespond.MOVED_INTO_EMPTY_TILE -> {
                     markPointAsOpen(grid, robotState.position, robotState.direction)
                     currentPoint = robotState.position.handleMove(robotState.direction)
-                    //println("Was at ${robotState.position} tried to move ${robotState.direction} MOVED_INTO_EMPTY_TILE now at $currentPoint")
+                    println("Was at ${robotState.position} tried to move ${robotState.direction} MOVED_INTO_EMPTY_TILE now at $currentPoint. Steps taken = ${robotState.stepCount}")
                 }
                 RepairDroidRespond.MOVED_INTO_OXYGEN_SYSTEM -> {
                     markPointAsOxygenSystem(grid, robotState.position, robotState.direction)
@@ -102,29 +105,9 @@ class Puzzle15 {
             }
 
             frontier.addAll(nextMoves)
-
-//            if (counter++ % 1000 == 0) {
-//                renderGrid(grid, currentPoint)
-//                println()
-//                println(counter)
-//            }
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        throw NotImplementedError()
+        return grid
     }
 
     private fun createNextMoves(currentPoint: Point, state: State, lastStepCount: Int): List<RobotState> {
@@ -132,18 +115,6 @@ class Puzzle15 {
             RobotState(currentPoint, it, state, lastStepCount + 1)
         }
     }
-
-//    private fun createRobotStateForCurrentPosition(grid: Map<Point, Char>, currentPoint: Point, programState: State, frontier: List<RobotState>): List<RobotState> {
-//        val allDirections = Direction.values()
-//        val directionToPoint = allDirections.map { it to currentPoint.handleMove(it) }
-//        val unvisitedPointsToDirections = directionToPoint.filter { (_, position) ->
-//            !grid.contains(position) /*&& frontier.none { it.position == position }*/
-//        }
-//
-//        return unvisitedPointsToDirections.map { (direction, point) ->
-//            RobotState(point, direction, programState)
-//        }
-//    }
 
     private fun renderGrid(grid: Map<Point, Char>, currentPoint: Point) {
         val maxX = grid.keys.maxBy { it.x }!!.x
@@ -179,8 +150,26 @@ class Puzzle15 {
         grid[position.handleMove(nextMove)] = '#'
     }
 
-    fun solveTwo(puzzleText: String): String {
-        throw NotImplementedError()
+    fun solveTwo(puzzleText: String): Int {
+        val grid = resolveGrid(puzzleText).toMutableMap()
+        var minutesTaken = 0
+
+        while (grid.values.any { it == '.' }) {
+            val zonesToFillUp = grid.entries
+                .filter { it.value == 'O' }
+                .flatMap { it.key.neighbours() }
+                .toSet()
+                .filter { grid[it] == '.' }
+
+            zonesToFillUp.forEach {
+                grid[it] = 'O'
+            }
+
+            renderGrid(grid, Point(Int.MAX_VALUE, Int.MAX_VALUE))
+            minutesTaken++
+        }
+
+        return minutesTaken
     }
 }
 
