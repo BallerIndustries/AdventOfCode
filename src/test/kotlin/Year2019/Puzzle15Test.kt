@@ -95,7 +95,7 @@ class Puzzle15 {
                 RepairDroidRespond.MOVED_INTO_OXYGEN_SYSTEM -> {
                     markPointAsOxygenSystem(grid, robotState.position, robotState.direction)
                     currentPoint = robotState.position.handleMove(robotState.direction)
-                    println("Was at ${robotState.position} tried to move ${robotState.direction} MOVED_INTO_OXYGEN_SYSTEM now at $currentPoint. Steps taken = ${robotState.stepCount}")
+                    //println("Was at ${robotState.position} tried to move ${robotState.direction} MOVED_INTO_OXYGEN_SYSTEM now at $currentPoint. Steps taken = ${robotState.stepCount}")
                     minStepsToOxygen = robotState.stepCount
                 }
             }
@@ -167,7 +167,6 @@ class Puzzle15 {
                 grid[it] = 'O'
             }
 
-            renderGrid(grid, Point(Int.MAX_VALUE, Int.MAX_VALUE))
             minutesTaken++
         }
 
