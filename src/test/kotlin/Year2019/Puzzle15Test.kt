@@ -50,7 +50,7 @@ class Puzzle15 {
         }
     }
 
-    data class RobotState(val position: Point,  val nextMove: Direction, val programState: State)
+    data class RobotState(val position: Point, val direction: Direction, val programState: State)
 
     fun solveOne(puzzleText: String): String {
         val virtualMachine = IntCodeVirtualMachine()
@@ -60,31 +60,67 @@ class Puzzle15 {
         val frontier = Direction.values().map { RobotState(currentPoint, it, currentState) }.toMutableList()
         val grid = mutableMapOf(currentPoint to '.')
 
+        var counter = 0
+        val history = mutableSetOf<Pair<Point, Direction>>()
+
         while (frontier.isNotEmpty()) {
             val robotState = frontier.removeAt(0)
-            currentState = robotState.programState.addUserInput(robotState.nextMove.value)
+
+//            if (grid[robotState.position] != '.') {
+//                println("Not an open tile. How dare you!")
+//                continue
+//            }
+
+            currentState = robotState.programState.addUserInput(robotState.direction.value)
             currentState = virtualMachine.runProgram(currentState)
 
-            val response = RepairDroidRespond.parse(currentState.outputList.first())
+            val tmp = currentState.popOffOutput()
+            val output = tmp.first
+            currentState = tmp.second
+            val response = RepairDroidRespond.parse(output.first())
 
             when (response) {
                 RepairDroidRespond.HIT_A_WALL -> {
-                    markPointAsWall(grid, robotState.position, robotState.nextMove)
+                    markPointAsWall(grid, robotState.position, robotState.direction)
                     currentPoint = robotState.position
+                    println("Was at ${robotState.position} tried to move ${robotState.direction} HIT_A_WALL now at $currentPoint")
                 }
                 RepairDroidRespond.MOVED_INTO_EMPTY_TILE -> {
-                    markPointAsOpen(grid, robotState.position, robotState.nextMove)
-                    currentPoint = robotState.position.handleMove(robotState.nextMove)
+                    markPointAsOpen(grid, robotState.position, robotState.direction)
+                    currentPoint = robotState.position.handleMove(robotState.direction)
+                    println("Was at ${robotState.position} tried to move ${robotState.direction} MOVED_INTO_EMPTY_TILE now at $currentPoint")
                 }
                 RepairDroidRespond.MOVED_INTO_OXYGEN_SYSTEM -> {
-                    markPointAsOxygenSystem(grid, robotState.position, robotState.nextMove)
-                    currentPoint = robotState.position.handleMove(robotState.nextMove)
+                    markPointAsOxygenSystem(grid, robotState.position, robotState.direction)
+                    currentPoint = robotState.position.handleMove(robotState.direction)
+                    println("Was at ${robotState.position} tried to move ${robotState.direction} MOVED_INTO_OXYGEN_SYSTEM now at $currentPoint")
                 }
             }
 
-            println()
-            renderGrid(grid)
+            history.add(robotState.position to robotState.direction)
+
+            // Add neighbours of the current point to our frontier
+            //val unvisitedNeighbours = createRobotStateForCurrentPosition(grid, currentPoint, currentState, frontier)
+            //frontier.addAll(unvisitedNeighbours)
+
+            val nextMoves = createNextMoves(currentPoint, currentState).filter { nextMove ->
+                !history.contains(nextMove.position to nextMove.direction) && frontier.none { it.position == nextMove.position && it.direction == nextMove.direction }
+            }
+
+            frontier.addAll(nextMoves)
+
+
+
+
+
+//            if (counter++ % 1000 == 0) {
+                renderGrid(grid, currentPoint)
+                println()
+//                println(counter)
+//            }
         }
+
+
 
 
 
@@ -101,17 +137,40 @@ class Puzzle15 {
         throw NotImplementedError()
     }
 
-    private fun renderGrid(grid: Map<Point, Char>) {
+    private fun createNextMoves(currentPoint: Point, state: State): List<RobotState> {
+        return Direction.values().map {
+            RobotState(currentPoint, it, state)
+        }
+    }
+
+    private fun createRobotStateForCurrentPosition(grid: Map<Point, Char>, currentPoint: Point, programState: State, frontier: List<RobotState>): List<RobotState> {
+        val allDirections = Direction.values()
+        val directionToPoint = allDirections.map { it to currentPoint.handleMove(it) }
+        val unvisitedPointsToDirections = directionToPoint.filter { (_, position) ->
+            !grid.contains(position) /*&& frontier.none { it.position == position }*/
+        }
+
+        return unvisitedPointsToDirections.map { (direction, point) ->
+            RobotState(point, direction, programState)
+        }
+    }
+
+    private fun renderGrid(grid: Map<Point, Char>, currentPoint: Point) {
         val maxX = grid.keys.maxBy { it.x }!!.x
         val maxY = grid.keys.maxBy { it.y }!!.y
         val minX = grid.keys.minBy { it.x }!!.x
         val minY = grid.keys.minBy { it.y }!!.y
 
-
-
         val buffer = (minY .. maxY).map { y ->
             (minX .. maxX).map { x ->
-                grid[Point(x, y)] ?: ' '
+
+                if (currentPoint.x == x && currentPoint.y == y) {
+                    'R'
+                }
+                else {
+                    grid[Point(x, y)] ?: '?'
+                }
+
             }.joinToString("")
         }.joinToString("\n")
 
