@@ -10,7 +10,7 @@ class Puzzle15Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals("a", result)
+        assertEquals(212, result)
     }
 
     @Test
@@ -45,7 +45,7 @@ class Puzzle15 {
 
         companion object {
             fun parse(value: Long): RepairDroidRespond {
-                return RepairDroidRespond.values().find { it.value == value } ?: throw RuntimeException()
+                return values().find { it.value == value } ?: throw RuntimeException()
             }
         }
     }
@@ -56,12 +56,12 @@ class Puzzle15 {
         }
     }
 
-    fun solveOne(puzzleText: String): String {
-        val grid = resolveGrid(puzzleText)
-        throw NotImplementedError()
+    fun solveOne(puzzleText: String): Int {
+        val (_, steps) = resolveGrid(puzzleText)
+        return steps
     }
 
-    private fun resolveGrid(puzzleText: String): Map<Point, Char> {
+    private fun resolveGrid(puzzleText: String): Pair<Map<Point, Char>, Int> {
         val virtualMachine = IntCodeVirtualMachine()
         val program = puzzleText.split(",").map { it.toLong() } + puzzleText.map { 0L }
         var currentState = State(program, userInput = listOf())
@@ -69,6 +69,7 @@ class Puzzle15 {
         val frontier = Direction.values().map { RobotState(currentPoint, it, currentState, 1) }.toMutableList()
         val grid = mutableMapOf(currentPoint to '.')
         val history = mutableSetOf<Pair<Point, Direction>>()
+        var minStepsToOxygen = Int.MAX_VALUE
 
         while (frontier.isNotEmpty()) {
             val robotState = frontier.removeAt(0)
@@ -89,12 +90,13 @@ class Puzzle15 {
                 RepairDroidRespond.MOVED_INTO_EMPTY_TILE -> {
                     markPointAsOpen(grid, robotState.position, robotState.direction)
                     currentPoint = robotState.position.handleMove(robotState.direction)
-                    println("Was at ${robotState.position} tried to move ${robotState.direction} MOVED_INTO_EMPTY_TILE now at $currentPoint. Steps taken = ${robotState.stepCount}")
+                    //println("Was at ${robotState.position} tried to move ${robotState.direction} MOVED_INTO_EMPTY_TILE now at $currentPoint. Steps taken = ${robotState.stepCount}")
                 }
                 RepairDroidRespond.MOVED_INTO_OXYGEN_SYSTEM -> {
                     markPointAsOxygenSystem(grid, robotState.position, robotState.direction)
                     currentPoint = robotState.position.handleMove(robotState.direction)
                     println("Was at ${robotState.position} tried to move ${robotState.direction} MOVED_INTO_OXYGEN_SYSTEM now at $currentPoint. Steps taken = ${robotState.stepCount}")
+                    minStepsToOxygen = robotState.stepCount
                 }
             }
 
@@ -107,7 +109,7 @@ class Puzzle15 {
             frontier.addAll(nextMoves)
         }
 
-        return grid
+        return grid to minStepsToOxygen
     }
 
     private fun createNextMoves(currentPoint: Point, state: State, lastStepCount: Int): List<RobotState> {
@@ -151,7 +153,7 @@ class Puzzle15 {
     }
 
     fun solveTwo(puzzleText: String): Int {
-        val grid = resolveGrid(puzzleText).toMutableMap()
+        val grid = resolveGrid(puzzleText).first.toMutableMap()
         var minutesTaken = 0
 
         while (grid.values.any { it == '.' }) {
