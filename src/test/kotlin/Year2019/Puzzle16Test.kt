@@ -10,7 +10,7 @@ class Puzzle16Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals("a", result)
+        assertEquals("29795507", result)
     }
 
     @Test
@@ -23,17 +23,101 @@ class Puzzle16Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals("a", result)
+        assertEquals(89568529, result)
+    }
+
+    @Test
+    fun `example b`() {
+        val text = "03036732577212944063491565474664"
+        val result = puzzle.solveTwo(text)
+        assertEquals(84462026, result)
+    }
+
+    @Test
+    fun `patternMultiplicand when repeat amount = 1`() {
+        val basePattern = listOf(0, 1, 0, -1)
+        val repeatAmount = 1
+        assertEquals(1, puzzle.getMultiplicand(basePattern, repeatAmount, 0))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 1))
+        assertEquals(-1, puzzle.getMultiplicand(basePattern, repeatAmount, 2))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 3))
+
+        assertEquals(1, puzzle.getMultiplicand(basePattern, repeatAmount, 4))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 5))
+        assertEquals(-1, puzzle.getMultiplicand(basePattern, repeatAmount, 6))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 7))
+
+        assertEquals(1, puzzle.getMultiplicand(basePattern, repeatAmount, 8))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 9))
+        assertEquals(-1, puzzle.getMultiplicand(basePattern, repeatAmount, 10))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 11))
+    }
+
+    @Test
+    fun `patternMultiplicand when repeat amount = 2`() {
+        val basePattern = listOf(0, 1, 0, -1)
+        // 0 1 1 0 0 -1 -1 0
+        val repeatAmount = 2
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 0))
+        assertEquals(1, puzzle.getMultiplicand(basePattern, repeatAmount, 1))
+        assertEquals(1, puzzle.getMultiplicand(basePattern, repeatAmount, 2))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 3))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 4))
+        assertEquals(-1, puzzle.getMultiplicand(basePattern, repeatAmount, 5))
+        assertEquals(-1, puzzle.getMultiplicand(basePattern, repeatAmount, 6))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 7))
+
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 8))
+        assertEquals(1, puzzle.getMultiplicand(basePattern, repeatAmount, 9))
+        assertEquals(1, puzzle.getMultiplicand(basePattern, repeatAmount, 10))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 11))
+    }
+
+    @Test
+    fun `patternMultiplicand when repeat amount = 3`() {
+        val basePattern = listOf(0, 1, 0, -1)
+        // 0 0 1 1 1 0 0 0 -1 -1 -1 0
+
+        val repeatAmount = 3
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 0))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 1))
+        assertEquals(1, puzzle.getMultiplicand(basePattern, repeatAmount, 2))
+        assertEquals(1, puzzle.getMultiplicand(basePattern, repeatAmount, 3))
+        assertEquals(1, puzzle.getMultiplicand(basePattern, repeatAmount, 4))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 5))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 6))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 7))
+        assertEquals(-1, puzzle.getMultiplicand(basePattern, repeatAmount, 8))
+        assertEquals(-1, puzzle.getMultiplicand(basePattern, repeatAmount, 9))
+        assertEquals(-1, puzzle.getMultiplicand(basePattern, repeatAmount, 10))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 11))
+
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 12))
+        assertEquals(0, puzzle.getMultiplicand(basePattern, repeatAmount, 13))
+        assertEquals(1, puzzle.getMultiplicand(basePattern, repeatAmount, 14))
     }
 }
 
 class Puzzle16 {
+
+    fun getMultiplicand(basePattern: List<Int>, repeatAmount: Int, index: Int): Int {
+        if (repeatAmount == 1) {
+            val octopus = index + 1
+            return basePattern[octopus % basePattern.size]
+        }
+        else {
+            val octopus = (index + 1) / repeatAmount
+            return basePattern[octopus % basePattern.size]
+        }
+    }
+
     fun solveOne(puzzleText: String): String {
         var list = puzzleText.map { it.toString().toInt() }
         val basePattern = listOf(0, 1, 0, -1)
 
         (0 until 100).forEach {
             list = goThroughAPhase(list, basePattern)
+            println(it)
         }
 
         return list.subList(0, 8).joinToString("")
@@ -42,48 +126,48 @@ class Puzzle16 {
     private fun goThroughAPhase(list: List<Int>, basePattern: List<Int>): List<Int> {
         val phaseTwo = list.mapIndexed { index, _ ->
             val repeatAmount = index + 1
-            val pattern = multiplyAndOffset(basePattern, repeatAmount)
+            //val pattern = multiplyAndOffset(basePattern, repeatAmount)
             var sum = 0
 
             list.forEachIndexed { index, number ->
-                val patternMultiplicand = pattern[index % pattern.size]
+                val patternMultiplicand = getMultiplicand(basePattern, repeatAmount, index)
+
 
                 //println("$number * $patternMultiplicand")
                 sum += number * patternMultiplicand
             }
 
-            sum.toString().last().toString().toInt()
+            Math.abs(sum) % 10
         }
         return phaseTwo
     }
 
-    val memo = mutableMapOf<Int, List<Int>>()
+    fun solveTwo(puzzleText: String): Int {
+        val skipAmount = puzzleText.take(7).toInt()
 
-    private fun multiplyAndOffset(basePattern: List<Int>, repeatAmount: Int): List<Int> {
-        return memo.getOrPut(repeatAmount) {
-            val newList = mutableListOf<Int>()
+        if (skipAmount < (puzzleText.length / 2)) {
+            throw RuntimeException("Didn't think that would happen!")
+        }
 
-            basePattern.forEach { number ->
-                (0 until repeatAmount).forEach {
-                    newList.add(number)
-                }
+        val jur = puzzleText.map { it.toInt() }
+        var nums = mutableListOf<Int>()
+        (0 until 10_000).forEach { nums.addAll(jur) }
+
+        nums = nums.subList(skipAmount, nums.size)
+
+        val length = nums.size
+
+        (0 until 100).forEach { step ->
+            var i = length - 2
+
+            while (i > -1) {
+                nums[i] += nums[i+1]
+                nums[i] %= 10
+                i--
             }
-
-            newList.add(newList[0])
-            newList.removeAt(0)
-            newList
-        }
-    }
-
-    fun solveTwo(puzzleText: String): String {
-        var list = puzzleText.map { it.toString().toInt() }
-        val basePattern = listOf(0, 1, 0, -1)
-
-        (0 until 10_000).forEach {
-            list = goThroughAPhase(list, basePattern)
         }
 
-        return list.subList(0, 8).joinToString("")
+        return nums.take(8).joinToString("").toInt()
     }
 }
 
