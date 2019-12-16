@@ -163,14 +163,10 @@ class Puzzle15 {
                 .toSet()
                 .filter { grid[it] == '.' }
 
-            zonesToFillUp.forEach {
-                grid[it] = 'O'
-            }
-
+            zonesToFillUp.forEach { grid[it] = 'O' }
             minutesTaken++
         }
 
         return minutesTaken
     }
 }
-
