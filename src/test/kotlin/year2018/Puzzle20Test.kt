@@ -1,9 +1,8 @@
-package Year2018
+package year2018
 
-import junit.framework.Assert.assertEquals
-import org.junit.Ignore
-import org.junit.Test
-import java.lang.RuntimeException
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import java.util.*
 
 class Puzzle20Test {
@@ -101,7 +100,7 @@ class Puzzle20Test {
     }
 
     @Test
-    @Ignore
+    @Disabled
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
         // 235 is too low
@@ -166,7 +165,7 @@ class Puzzle20Test {
     }
 
     @Test
-    @Ignore
+    @Disabled
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(8407, result)

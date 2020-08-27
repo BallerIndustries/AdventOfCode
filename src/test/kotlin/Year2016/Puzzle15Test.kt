@@ -1,9 +1,8 @@
 package Year2016
 
 import Year2016.Puzzle15.Disc
-import org.junit.Assert.assertEquals
-import org.junit.Test
-import java.lang.RuntimeException
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class Puzzle15Test {
     val puzzle = Puzzle15()

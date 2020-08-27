@@ -1,9 +1,8 @@
-package Year2018
+package year2018
 
-import junit.framework.Assert.assertEquals
-import org.junit.Ignore
-import org.junit.Test
-import java.lang.RuntimeException
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 
 class Puzzle19Test {
     val puzzleText = this::class.java.getResource("/2018/puzzle19.txt").readText().replace("\r", "")
@@ -33,7 +32,7 @@ class Puzzle19Test {
     }
 
     @Test
-    @Ignore("Too slow")
+    @Disabled("Too slow")
     fun `puzzle part b`() {
        val result = puzzle.solveTwo(puzzleText)
         assertEquals(213057, result)

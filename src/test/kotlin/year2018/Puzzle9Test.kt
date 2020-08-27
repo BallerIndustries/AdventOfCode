@@ -1,8 +1,8 @@
-package Year2018
+package year2018
 
-import junit.framework.Assert.assertEquals
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import java.util.*
 
 class Puzzle9Test {
@@ -112,7 +112,7 @@ class Puzzle9Test {
         assertEquals(375465, result)
     }
 
-    @Ignore("Too fucking slow, runs in 75 minutes on my fast PC")
+    @Disabled("Too fucking slow, runs in 75 minutes on my fast PC")
     @Test
     fun `puzzle part b slow`() {
         val result = puzzle.solveTwo(puzzleText)

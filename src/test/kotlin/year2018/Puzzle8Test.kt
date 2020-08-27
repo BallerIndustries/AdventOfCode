@@ -1,9 +1,8 @@
-package Year2018
+package year2018
 
-import junit.framework.Assert.assertEquals
-import org.junit.Assert
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 
 class Puzzle8Test {
     val puzzleText = this::class.java.getResource(
@@ -50,7 +49,7 @@ class Puzzle8Test {
     }
 
     @Test
-    @Ignore
+    @Disabled
     fun `example`() {
         val nodes = puzzle.solveOne("2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2")
         val assertableNodes = nodes.map { it.toAssertable() }
@@ -75,14 +74,14 @@ class Puzzle8Test {
     }
 
     @Test
-    @Ignore
+    @Disabled
     fun `one node no children two meta datas`() {
         val nodes = puzzle.solveOne("0 2 100 101")
         assertEquals(listOf(Node("A", 0, 2)), nodes)
     }
 
     @Test
-    @Ignore
+    @Disabled
     fun `two nodes no children one meta data each`() {
         val nodes = puzzle.solveOne("0 1 100 0 1 101")
         val expected = listOf(
@@ -93,7 +92,7 @@ class Puzzle8Test {
     }
 
     @Test
-    @Ignore
+    @Disabled
     fun `two nodes one is a child of the other`() {
         val nodes = puzzle.solveOne("1 1 0 1 100 101")
         val expected = listOf(
@@ -104,7 +103,7 @@ class Puzzle8Test {
     }
 
     @Test
-    @Ignore
+    @Disabled
     fun `three nodes one is a child of the other`() {
         val nodes = puzzle.solveOne("1 1 1 1 0 1 100 101 100")
         val expected = listOf(
@@ -117,7 +116,7 @@ class Puzzle8Test {
     }
 
     @Test
-    @Ignore
+    @Disabled
     fun `createChildren can find two leafy children`() {
         val children = puzzle.createChildren('A', 2, listOf(0, 1, 100, 0, 1, 100)).first
         val expected = listOf(
@@ -129,7 +128,7 @@ class Puzzle8Test {
     }
 
     @Test
-    @Ignore
+    @Disabled
     fun `createChildren can find one leafy child`() {
         val children = puzzle.createChildren('A', 1, listOf(0, 1, 100, 0, 1, 100)).first
         val expected = listOf(
@@ -140,7 +139,7 @@ class Puzzle8Test {
     }
 
     @Test
-    @Ignore
+    @Disabled
     fun `createChildren can find leafy and non leafy children`() {
         val children = puzzle.createChildren('A', 1, listOf(1, 1, 0, 1, 100, 100)).first
         val expected = listOf(
@@ -152,7 +151,7 @@ class Puzzle8Test {
     }
 
     @Test
-    @Ignore
+    @Disabled
     fun `createChildren can find three nodes in a line`() {
         val children = puzzle.createChildren('A', 1, listOf(1, 1, 1, 1, 0, 1, 99, 100, 101)).first
         val expected = listOf(
@@ -165,7 +164,7 @@ class Puzzle8Test {
     }
 
     @Test
-    @Ignore
+    @Disabled
     fun `example using createChildren`() {
         val input = listOf(2, 3, 0, 3, 10, 11, 12, 1, 1, 0, 1, 99, 2, 1, 1, 2)
         val actual = puzzle.createChildren('@', 1, input).first

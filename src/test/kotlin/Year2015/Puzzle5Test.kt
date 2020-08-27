@@ -1,7 +1,7 @@
 package Year2015
 
-import junit.framework.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 class Puzzle5Test {
     val puzzleText = this::class.java.getResource(

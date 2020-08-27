@@ -1,10 +1,8 @@
 package Year2016
 
 import org.apache.commons.codec.digest.DigestUtils
-import org.junit.Assert.assertEquals
-import org.junit.Assert.fail
-import org.junit.Test
-import java.lang.RuntimeException
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class Puzzle17Test {
     val puzzle = Puzzle17()
@@ -26,7 +24,7 @@ class Puzzle17Test {
     fun `error there are no paths`() {
         try {
             puzzle.solveOne("hijkl")
-            fail("This fucker was supposed to throw!")
+            throw AssertionError("This fucker was supposed to throw!")
         }
         catch (rte: RuntimeException) {
             assertEquals(rte.message, "I failed you sensei. There are no paths to the vault :(")

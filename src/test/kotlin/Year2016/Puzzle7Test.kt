@@ -1,8 +1,7 @@
 package Year2016
 
-import org.junit.Assert
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 class Puzzle7Test {
 
@@ -62,7 +61,7 @@ class Puzzle7Test {
     fun `puzzle part a`() {
         val input = Puzzle1Test::class.java.getResource("/2016/puzzle7.txt").readText()
         val count = puzzle.countTLSIpAddresses(input)
-        Assert.assertEquals(count, 110)
+        assertEquals(count, 110)
     }
 
     @Test
@@ -94,7 +93,7 @@ class Puzzle7Test {
     fun `puzzle part b`() {
         val input = Puzzle1Test::class.java.getResource("/2016/puzzle7.txt").readText().replace("\r\n", "\n")
         val count = puzzle.countSSLIpAddresses(input)
-        Assert.assertEquals(count, 242)
+        assertEquals(count, 242)
     }
 }
 

@@ -1,8 +1,8 @@
 package Year2015
 
 import generateGrid
-import junit.framework.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class Puzzle6Test {
     val puzzle = Puzzle6()

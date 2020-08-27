@@ -1,9 +1,10 @@
 package Year2015
 
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertTrue
-import org.junit.Ignore
-import org.junit.Test
+//import jdk.nashorn.internal.ir.annotations.Ignore
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 
 typealias GameStateChange = (Puzzle22.Boss, Puzzle22.Player) -> Pair<Puzzle22.Boss, Puzzle22.Player>
 
@@ -169,7 +170,7 @@ class Puzzle22Test {
     }
 
     @Test
-    @Ignore
+    @Disabled
     fun `puzzle part a`() {
         // 992 too high
         // 973 too high

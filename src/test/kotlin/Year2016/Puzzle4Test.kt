@@ -1,8 +1,7 @@
 package Year2016
 
-import org.junit.Assert
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 class Puzzle4Test {
     val puzzle = Puzzle4()
@@ -35,7 +34,7 @@ class Puzzle4Test {
     fun `puzzle part a`() {
         val input = Puzzle1Test::class.java.getResource("/2016/puzzle4.txt").readText().replace("\r","")
         val result = puzzle.sumRealRoomNumbers(input)
-        Assert.assertEquals(result, 158835)
+        assertEquals(result, 158835)
     }
 
     @Test

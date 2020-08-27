@@ -1,10 +1,7 @@
 package Year2016
 
-import org.apache.commons.codec.digest.DigestUtils
-import org.junit.Assert.assertEquals
-import org.junit.Assert.fail
-import org.junit.Test
-import java.lang.RuntimeException
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class Puzzle18Test {
     val puzzle = Puzzle18()

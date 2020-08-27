@@ -1,10 +1,9 @@
-package Year2018
+package year2018
 
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertTrue
-import org.junit.Ignore
-import org.junit.Test
-import java.lang.RuntimeException
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import java.util.*
 
 class Puzzle15Test {
@@ -24,7 +23,7 @@ class Puzzle15Test {
         """.trimIndent()
 
     @Test
-    //@Ignore("This case is failling, and I do not care to fix it")
+    //@Disabled("This case is failling, and I do not care to fix it")
     fun `summary number 1`() {
         val initial = """
             #######
@@ -86,7 +85,7 @@ class Puzzle15Test {
     }
 
     @Test
-    @Ignore("Runs too slowly")
+    @Disabled("Runs too slowly")
     fun `puzzle part b`() {
         // Not 23
         // Not Attack = 23 48864

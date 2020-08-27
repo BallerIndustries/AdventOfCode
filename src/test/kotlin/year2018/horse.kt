@@ -1,4 +1,3 @@
-import java.io.File
 import java.lang.Math.abs
 import java.lang.Math.max
 

@@ -2,9 +2,9 @@ package Year2016
 
 import Year2016.Puzzle11.*
 import Year2016.Puzzle11.State
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 
 class Puzzle11Test {
     val puzzle = Puzzle11()

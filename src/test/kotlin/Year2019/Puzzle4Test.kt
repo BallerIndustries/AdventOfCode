@@ -1,9 +1,8 @@
 package Year2019
 
-import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
+
 
 class Puzzle4Test {
     val puzzleText = this::class.java.getResource("/2019/puzzle4.txt").readText().replace("\r", "")

@@ -1,7 +1,5 @@
-package Year2018
-
-import junit.framework.TestCase.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import java.io.BufferedReader
 import java.io.File
 import java.util.*

@@ -1,8 +1,7 @@
 package Year2015
 
-import junit.framework.Assert.assertEquals
-import org.junit.Test
-import java.lang.RuntimeException
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class Puzzle23Test {
     val puzzle = Puzzle23()

@@ -1,8 +1,8 @@
 package Year2016
 
-import org.junit.Assert.assertEquals
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import kotlin.random.Random
 
 class Puzzle24Test {
@@ -10,7 +10,7 @@ class Puzzle24Test {
     val puzzleText = this::class.java.getResource("/2016/puzzle24.txt").readText().replace("\r", "")
 
     @Test
-    @Ignore("Gave up, created Puzzle24Redo")
+    @Disabled("Gave up, created Puzzle24Redo")
     fun `can solve part a`() {
         //42728 too high
         val result = puzzle.solveOne(puzzleText)
@@ -32,7 +32,7 @@ class Puzzle24Test {
     }
 
     @Test
-    @Ignore("Gave up, created Puzzle24Redo")
+    @Disabled("Gave up, created Puzzle24Redo")
     fun `can solve part b`() {
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(479009308, result)

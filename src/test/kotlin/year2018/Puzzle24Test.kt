@@ -1,8 +1,7 @@
-package Year2018
+package year2018
 
-import junit.framework.Assert.assertEquals
-import org.junit.Test
-import java.lang.RuntimeException
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class Puzzle24Test {
     val puzzleText = this::class.java.getResource("/2018/puzzle24.txt").readText().replace("\r", "")

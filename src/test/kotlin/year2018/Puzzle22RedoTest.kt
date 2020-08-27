@@ -1,9 +1,8 @@
-package Year2018
+package year2018
 
-import Year2018.Puzzle22RedoTest.Tool.*
-import junit.framework.Assert.assertEquals
-import org.junit.Test
-import java.lang.RuntimeException
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+import year2018.Puzzle22RedoTest.Tool.*
 
 class Puzzle22RedoTest {
     val puzzleText = this::class.java.getResource("/2018/puzzle22.txt").readText().replace("\r", "")

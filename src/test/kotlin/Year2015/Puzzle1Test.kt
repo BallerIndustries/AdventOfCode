@@ -1,8 +1,7 @@
 package Year2015
 
-import junit.framework.Assert
-import junit.framework.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class Puzzle1Test {
 

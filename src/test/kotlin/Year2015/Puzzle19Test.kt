@@ -1,9 +1,7 @@
 package Year2015
 
-import junit.framework.Assert.assertEquals
-import org.junit.Test
-import java.util.*
-import kotlin.random.Random
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class Puzzle19Test {
     val puzzle = Puzzle19()

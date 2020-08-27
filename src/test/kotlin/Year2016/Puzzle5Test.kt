@@ -1,8 +1,8 @@
 package Year2016
 
 import org.apache.commons.codec.digest.DigestUtils
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class Puzzle5Test {
     val utils = DigestUtils("MD5")

@@ -1,9 +1,6 @@
 package Year2016
 
-import org.junit.Assert.assertEquals
-import org.junit.Ignore
-import org.junit.Test
-import kotlin.random.Random
+import org.junit.jupiter.api.Test
 
 class Puzzle25Test {
     val puzzle = Puzzle25()
