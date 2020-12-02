@@ -13,26 +13,19 @@ class Puzzle2Test {
                 "1-3 b: cdefg\n" +
                 "2-9 c: ccccccccc"
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(514579, result)
-    }
-
-    @Test
-    fun `example part b`() {
-        val puzzleText = ""
-        val result = puzzle.solveTwo(puzzleText)
-        assertEquals(241861950, result)
+        assertEquals(2, result)
     }
 
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(964875, result)
+        assertEquals(569, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(158661360, result)
+        assertEquals(346, result)
     }
 }
 
@@ -55,17 +48,7 @@ class Puzzle2 {
 
             val posAlEtter = password[indexA]
             val posBLetter = password[indexB]
-
-            if (posAlEtter == letter && posBLetter == letter) {
-                false
-            }
-            else {
-                posAlEtter == letter || posBLetter == letter
-            }
-
-
-
-//            password.count { it == letter } in indexA..indexB
+            (posAlEtter == letter) xor (posBLetter == letter)
         }
     }
 }
