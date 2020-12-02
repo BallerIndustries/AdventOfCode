@@ -9,7 +9,9 @@ class Puzzle2Test {
 
     @Test
     fun `example part a`() {
-        val puzzleText = ""
+        val puzzleText = "1-3 a: abcde\n" +
+                "1-3 b: cdefg\n" +
+                "2-9 c: ccccccccc"
         val result = puzzle.solveOne(puzzleText)
         assertEquals(514579, result)
     }
@@ -36,11 +38,35 @@ class Puzzle2Test {
 
 class Puzzle2 {
     fun solveOne(puzzleText: String): Int {
-        return 1
+        return puzzleText.split("\n").count { text ->
+            val (range, letterComponent, password) = text.split(" ")
+            val (min, max) = range.split("-").map { it.toInt() }
+            val letter = letterComponent[0]
+
+            password.count { it == letter } in min..max
+        }
     }
 
     fun solveTwo(puzzleText: String): Int {
-        return 1
+        return puzzleText.split("\n").count { text ->
+            val (range, letterComponent, password) = text.split(" ")
+            val (indexA, indexB) = range.split("-").map { it.toInt() - 1 }
+            val letter = letterComponent[0]
+
+            val posAlEtter = password[indexA]
+            val posBLetter = password[indexB]
+
+            if (posAlEtter == letter && posBLetter == letter) {
+                false
+            }
+            else {
+                posAlEtter == letter || posBLetter == letter
+            }
+
+
+
+//            password.count { it == letter } in indexA..indexB
+        }
     }
 }
 
