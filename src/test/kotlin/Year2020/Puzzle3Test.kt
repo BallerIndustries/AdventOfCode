@@ -1,6 +1,5 @@
 package Year2020
 
-import Year2017.Puzzle22
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -87,7 +86,7 @@ class Puzzle3 {
         solveOne(puzzleText, 1, 2)
     }
 
-    private fun parseGrid(puzzleText: String): Map<Point, Char?> {
+    private fun parseGrid(puzzleText: String): Map<Point, Char> {
         val lines = puzzleText.split("\n")
         val height = lines.count()
         val width = lines.first().count()
@@ -104,16 +103,6 @@ class Puzzle3 {
         return grid
     }
 
-    data class Point(val x: Int, val y: Int) {
-        fun move(direction: Puzzle22.Direction): Point {
-            return when (direction) {
-                Puzzle22.Direction.UP -> this.copy(y = y - 1)
-                Puzzle22.Direction.DOWN -> this.copy(y = y + 1)
-                Puzzle22.Direction.LEFT -> this.copy(x = x - 1)
-                Puzzle22.Direction.RIGHT -> this.copy(x = x + 1)
-            }
-        }
-    }
-
+    data class Point(val x: Int, val y: Int)
 }
 
