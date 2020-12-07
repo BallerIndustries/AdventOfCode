@@ -8,6 +8,18 @@ class Puzzle7Test {
     val puzzle = Puzzle7()
 
     @Test
+    fun `puzzle part a`() {
+        val result = puzzle.solveOne(puzzleText)
+        assertEquals(964875, result)
+    }
+
+    @Test
+    fun `puzzle part b`() {
+        val result = puzzle.solveTwo(puzzleText)
+        assertEquals(158661360, result)
+    }
+
+    @Test
     fun `example part a`() {
         val puzzleText = ""
         val result = puzzle.solveOne(puzzleText)
@@ -19,18 +31,6 @@ class Puzzle7Test {
         val puzzleText = ""
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(241861950, result)
-    }
-
-    @Test
-    fun `puzzle part a`() {
-        val result = puzzle.solveOne(puzzleText)
-        assertEquals(964875, result)
-    }
-
-    @Test
-    fun `puzzle part b`() {
-        val result = puzzle.solveTwo(puzzleText)
-        assertEquals(158661360, result)
     }
 }
 

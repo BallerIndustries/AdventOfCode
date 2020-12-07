@@ -3,9 +3,9 @@ package Year2020
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class PuzzleZZZZZTest {
-    val puzzleText = this::class.java.getResource("/2020/puzzleZZZZZ.txt").readText().replace("\r", "")
-    val puzzle = PuzzleZZZZZ()
+class Puzzle9Test {
+    val puzzleText = this::class.java.getResource("/2020/puzzle9.txt").readText().replace("\r", "")
+    val puzzle = Puzzle9()
 
     @Test
     fun `puzzle part a`() {
@@ -34,7 +34,7 @@ class PuzzleZZZZZTest {
     }
 }
 
-class PuzzleZZZZZ {
+class Puzzle9 {
     fun solveOne(puzzleText: String): Int {
         return 1
     }
