@@ -10,13 +10,13 @@ class Puzzle8Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(964875, result)
+        assertEquals(1420, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(158661360, result)
+        assertEquals(1245, result)
     }
 
     @Test
@@ -131,26 +131,31 @@ class Puzzle8 {
 
             if (instruction is Nop) {
                 instructions[index] = instruction.toJmp()
+                val result = loopsForever(instructions)
 
-                if (loopsForever(instructions)) {
-                    instructions[index] = instruction
+                if (result != null) {
+                    return result
                 }
+
+
+                instructions[index] = instruction
             }
             else if (instruction is Jmp) {
                 instructions[index] = instruction.toNop()
+                val result = loopsForever(instructions)
 
-                if (loopsForever(instructions)) {
-                    instructions[index] = instruction
+                if (result != null) {
+                    return result
                 }
+
+                instructions[index] = instruction
             }
         }
 
-        return 1337
-
-
+        throw RuntimeException()
     }
 
-    fun loopsForever(instructions: List<Instruction>): Boolean {
+    fun loopsForever(instructions: List<Instruction>): Int? {
         val visitedIndexes = mutableSetOf<Int>()
         var state = State.INITIAL
         var currentInstruction: Instruction? = instructions[0]
@@ -160,12 +165,12 @@ class Puzzle8 {
             currentInstruction = instructions.getOrNull(state.programCounter)
 
             if (!visitedIndexes.add(state.programCounter)) {
-                return true
+                return null
             }
         }
 
-        println(state.accumulator)
-        return false
+        //println(state.accumulator)
+        return state.accumulator
     }
 }
 
