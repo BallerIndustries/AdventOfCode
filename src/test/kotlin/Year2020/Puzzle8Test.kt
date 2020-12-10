@@ -20,13 +20,6 @@ class Puzzle8Test {
     }
 
     @Test
-    fun `example part a`() {
-        val puzzleText = ""
-        val result = puzzle.solveOne(puzzleText)
-        assertEquals(514579, result)
-    }
-
-    @Test
     fun `example part b`() {
         val puzzleText = "nop +0\n" +
                 "acc +1\n" +

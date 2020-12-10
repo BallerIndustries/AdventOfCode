@@ -129,12 +129,11 @@ class Puzzle10 {
     fun solveTwo(puzzleText: String): Long {
         val joltages = ((puzzleText.split("\n").map { it.toInt() }) + 0).sorted()
 
-        val graph = joltages.associate { joltage ->
-            joltage to joltages.filter { it in (joltage+1 .. joltage + 3) }
+        val graph = joltages.associateWith {
+            joltage -> joltages.filter { it in (joltage + 1 .. joltage + 3) }
         }
 
-        val memo = mutableMapOf<Int, Long>()
-        return countPaths(graph, 0, joltages.max()!! + 3, memo)
+        return countPaths(graph, 0, joltages.max()!! + 3, mutableMapOf())
     }
 
     private fun countPaths(graph: Map<Int, List<Int>>, current: Int, target: Int, memo: MutableMap<Int, Long>): Long {
