@@ -10,13 +10,13 @@ class Puzzle10Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(964875, result)
+        assertEquals(2201, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(158661360, result)
+        assertEquals(169255295254528, result)
     }
 
     @Test
@@ -53,7 +53,7 @@ class Puzzle10Test {
                 "10\n" +
                 "3"
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(514579, result)
+        assertEquals(220, result)
     }
 
     @Test
@@ -126,90 +126,33 @@ class Puzzle10 {
         return deltas.count { it == 1 } * (deltas.count { it == 3 } + 1)
     }
 
-    fun solveTwo(puzzleText: String): Int {
+    fun solveTwo(puzzleText: String): Long {
         val joltages = ((puzzleText.split("\n").map { it.toInt() }) + 0).sorted()
-        val graph = mutableMapOf<Int, Int>()
-        val jurs = mutableListOf<Int>()
 
-        joltages.forEach { joltage ->
-            val count = joltages.count { it in (joltage + 1 .. joltage + 3) }
-            graph[joltage] = count
-            jurs.add(count)
+        val graph = joltages.associate { joltage ->
+            joltage to joltages.filter { it in (joltage+1 .. joltage + 3) }
         }
 
-        // Find the subgraphs, and figure out the permutations in the subgraphs
-        val aList = mutableListOf<Int>()
-        val bigList = mutableListOf<List<Int>>()
-        var index = 1
-        var prev = graph[joltages[0]]!!
-
-        if (prev > 1) {
-            aList.add(prev)
-        }
-
-        while (index < joltages.size) {
-            var current = graph[joltages[index]]!!
-
-            if (current > 1) {
-                aList.add(joltages[index])
-            }
-            else if ((current == 1 || current == 0) && aList.isNotEmpty()) {
-                println(aList)
-                bigList.add(aList.map { it })
-                aList.clear()
-            }
-
-            prev = current
-            index++
-        }
-
-//        joltages.forEachIndexed { index, i ->
-//
-//
-//
-//        }
-
-        val dog = bigList.map { list ->
-            val number: Int = findPathsBeyondLast(graph, list.first(), list.last())
-            number
-        }
-
-        var product = 1
-        dog.forEach { product *= it }
-        return product
-
-//        return dog.reduce { 1, i -> it * i }
-//
-//        return 22
+        val memo = mutableMapOf<Int, Long>()
+        return countPaths(graph, 0, joltages.max()!! + 3, memo)
     }
 
-    private fun findPathsBeyondLast(graph: Map<Int, Int>, current: Int, last: Int): Int {
-        val joltages = graph.keys.sorted()
-
-        if (current > last) {
+    private fun countPaths(graph: Map<Int, List<Int>>, current: Int, target: Int, memo: MutableMap<Int, Long>): Long {
+        if (current == target) {
             return 1
         }
-        if (current == last) {
-            return graph[current]!!
+
+        val children = graph[current]!!
+
+        if (children.isEmpty()) {
+            return 1
         }
 
-        val aaa: List<Int> =  joltages.filter { it in (current + 1 .. current + 3)  }
+        if (!memo.containsKey(current)) {
+            memo[current] = children.sumByDouble { countPaths(graph, it, target, memo).toDouble() }.toLong()
+        }
 
-        return aaa.sumBy { findPathsBeyondLast(graph, it, last) }
-
-
-
-        // 4 -> 5 -> 6
-        // 4 -> 5 -> 7
-        // 4 -> 6
-        // 4 -> 7
-
-
-
-
-
-//        println()
-//        TODO("Not yet implemented")
+        return memo[current]!!
     }
 }
 
