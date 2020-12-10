@@ -15,7 +15,7 @@ class Puzzle10Test {
 
     @Test
     fun `puzzle part b`() {
-        val result = puzzle.solveTwo(puzzleText)
+        val result = puzzle.solveTwoImperative(puzzleText)
         assertEquals(169255295254528, result)
     }
 
@@ -69,7 +69,7 @@ class Puzzle10Test {
                 "6\n" +
                 "12\n" +
                 "4"
-        val result = puzzle.solveTwo(puzzleText)
+        val result = puzzle.solveTwoImperative(puzzleText)
         assertEquals(8, result)
     }
 
@@ -106,7 +106,7 @@ class Puzzle10Test {
                 "34\n" +
                 "10\n" +
                 "3"
-        val result = puzzle.solveTwo(puzzleText)
+        val result = puzzle.solveTwoImperative(puzzleText)
         assertEquals(19208, result)
     }
 }
@@ -134,6 +134,18 @@ class Puzzle10 {
         }
 
         return countPaths(graph, 0, joltages.max()!! + 3, mutableMapOf())
+    }
+
+    fun solveTwoImperative(puzzleText: String): Long {
+        val adaptors = ((puzzleText.split("\n").map { it.toInt() })).sorted()
+        val max = adaptors.last()
+        val dp = mutableMapOf(0 to 1L)
+
+        adaptors.forEach { i ->
+            dp[i] = (dp[i-1] ?: 0) + (dp[i-2] ?: 0) + (dp[i-3] ?: 0)
+        }
+
+        return dp[max] ?: throw RuntimeException()
     }
 
     private fun countPaths(graph: Map<Int, List<Int>>, current: Int, target: Int, memo: MutableMap<Int, Long>): Long {
