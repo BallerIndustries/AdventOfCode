@@ -127,7 +127,7 @@ class Puzzle10 {
     }
 
     fun solveTwo(puzzleText: String): Int {
-        val joltages = puzzleText.split("\n").map { it.toInt() }.sorted()
+        val joltages = ((puzzleText.split("\n").map { it.toInt() }) + 0).sorted()
         val graph = mutableMapOf<Int, Int>()
         val jurs = mutableListOf<Int>()
 
@@ -138,36 +138,78 @@ class Puzzle10 {
         }
 
         // Find the subgraphs, and figure out the permutations in the subgraphs
-
-
+        val aList = mutableListOf<Int>()
+        val bigList = mutableListOf<List<Int>>()
         var index = 1
-        var product = jurs[0]
-        val horses = mutableListOf<Int>()
+        var prev = graph[joltages[0]]!!
 
-        while (index < jurs.size) {
+        if (prev > 1) {
+            aList.add(prev)
+        }
 
-            val curr = jurs[index]
-            val prev = jurs[index - 1]
+        while (index < joltages.size) {
+            var current = graph[joltages[index]]!!
 
-            if (prev == 1 && curr > 1) {
-                product = curr
+            if (current > 1) {
+                aList.add(joltages[index])
             }
-            else if (prev > 1 && curr > 1) {
-                product = product * curr
-            }
-            else if (curr == 1 && prev > 1) {
-                horses.add(product)
-                product = 1
+            else if ((current == 1 || current == 0) && aList.isNotEmpty()) {
+                println(aList)
+                bigList.add(aList.map { it })
+                aList.clear()
             }
 
-
-
+            prev = current
             index++
         }
 
-        return horses.sum()
-        //return product
+//        joltages.forEachIndexed { index, i ->
+//
+//
+//
+//        }
 
+        val dog = bigList.map { list ->
+            val number: Int = findPathsBeyondLast(graph, list.first(), list.last())
+            number
+        }
+
+        var product = 1
+        dog.forEach { product *= it }
+        return product
+
+//        return dog.reduce { 1, i -> it * i }
+//
+//        return 22
+    }
+
+    private fun findPathsBeyondLast(graph: Map<Int, Int>, current: Int, last: Int): Int {
+        val joltages = graph.keys.sorted()
+
+        if (current > last) {
+            return 1
+        }
+        if (current == last) {
+            return graph[current]!!
+        }
+
+        val aaa: List<Int> =  joltages.filter { it in (current + 1 .. current + 3)  }
+
+        return aaa.sumBy { findPathsBeyondLast(graph, it, last) }
+
+
+
+        // 4 -> 5 -> 6
+        // 4 -> 5 -> 7
+        // 4 -> 6
+        // 4 -> 7
+
+
+
+
+
+//        println()
+//        TODO("Not yet implemented")
     }
 }
 
