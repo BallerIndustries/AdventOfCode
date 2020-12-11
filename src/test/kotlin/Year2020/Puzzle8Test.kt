@@ -35,6 +35,17 @@ class Puzzle8Test {
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
 data class State(val accumulator: Int, val programCounter: Int) {
     companion object {
         val INITIAL = State(0, 0)
@@ -75,6 +86,23 @@ class Jmp(val delta: Int) : Instruction {
         return Nop(delta)
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class Puzzle8 {
