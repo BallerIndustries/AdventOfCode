@@ -42,7 +42,7 @@ class Puzzle12Test {
     }
 
     @Test
-    fun aaa() {
+    fun `rotating a point 90 degrees and -270 degrees should produce the same result`() {
         val point = Puzzle12.Point(12, -5)
         assertEquals(point.rotate(90), point.rotate(-270))
     }
@@ -58,8 +58,6 @@ class Puzzle12 {
                 WEST -> SOUTH
                 SOUTH -> EAST
                 EAST -> NORTH
-
-
             }
         }
 
@@ -144,9 +142,7 @@ class Puzzle12 {
                 'W' -> pos = pos.move(units, Direction.WEST)
                 'L' -> facing = facing.left(units)
                 'R' -> facing = facing.right(units)
-                'F' -> {
-                    pos = pos.move(units, facing)
-                }
+                'F' -> pos = pos.move(units, facing)
                 else -> throw RuntimeException()
             }
 
