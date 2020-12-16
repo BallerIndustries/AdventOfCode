@@ -117,9 +117,13 @@ class Puzzle16 {
         val yourTicket = yourTicketText.split("\n")[1].split(",").map { it.toInt() }
         val validNearbyTickets = nearbyTickets.filter { nearbyTicket -> ticketIsValid(nearbyTicket, rules) }
         val ruleToIndex = mutableMapOf<String, Int>()
+        var iterations = 0
 
         while (ruleToIndex.size < rules.size) {
-            (0 .. yourTicket.lastIndex).forEach { index ->
+            for (index in 0 .. yourTicket.lastIndex) {
+                if (ruleToIndex.values.contains(index)) {
+                    continue
+                }
 
                 val rulesForIndex = validNearbyTickets.map { validNearbyTicket ->
                     matchingRulesForTicketIndex(index, validNearbyTicket, rules)
@@ -130,8 +134,12 @@ class Puzzle16 {
                 if (common.size == 1) {
                     ruleToIndex[common.first()] = index
                 }
+
+                iterations++
             }
         }
+
+        println(iterations)
 
         return rules.associate { rule ->
             val index = ruleToIndex[rule.name]!!
