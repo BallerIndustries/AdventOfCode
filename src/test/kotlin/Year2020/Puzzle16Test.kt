@@ -51,20 +51,19 @@ class Puzzle16Test {
                 "15,1,5\n" +
                 "5,14,9"
 
-        val exepcted = mapOf(
+        val expected = mapOf(
             "class" to 12,
             "row" to 11,
             "seat" to 13
         )
 
         val result = puzzle.resolveTicket(puzzleText)
-        assertEquals(exepcted, result)
+        assertEquals(expected, result)
     }
 }
 
 class Puzzle16 {
     data class Rule(val name: String, val range1: IntRange, val range2: IntRange) {
-
         fun validValue(value: Int): Boolean {
             return value in range1 || value in range2
         }
@@ -73,8 +72,7 @@ class Puzzle16 {
     }
 
     fun solveOne(puzzleText: String): Int {
-        val (rulesText, yourTicket, nearbyTicketsText) = puzzleText.split("\n\n")
-
+        val (rulesText, _, nearbyTicketsText) = puzzleText.split("\n\n")
         val rules = parseRules(rulesText)
         val split = nearbyTicketsText.split("\n")
         val nearbyTickets = split.subList(1, split.size).map { it.split(",").map { it.toInt() } }
@@ -91,8 +89,8 @@ class Puzzle16 {
         }
     }
 
-    fun parseRules(rulesText: String): List<Rule> {
-        val rules = rulesText.split("\n").map { text ->
+    private fun parseRules(rulesText: String): List<Rule> {
+        return rulesText.split("\n").map { text ->
             val name = text.split(":")[0]
             val (range1, range2) = text.split(": ")[1].split(" or ").map {
                 val (start, end) = it.split("-").map { it.toInt() }
@@ -101,24 +99,18 @@ class Puzzle16 {
 
             Rule(name, range1, range2)
         }
-
-        return rules
     }
 
     fun solveTwo(puzzleText: String): Long {
         val ticket = resolveTicket(puzzleText)
-        var product = 1L
-
-        ticket.filter { it.key.startsWith("departure") }.forEach { it: Map.Entry<String, Int> ->
-            product *= it.value
-        }
-
-        return product
+        return ticket
+            .filter { it.key.startsWith("departure") }
+            .values
+            .fold(1L) { acc, i -> acc * i }
     }
 
     fun resolveTicket(puzzleText: String): Map<String, Int> {
         val (rulesText, yourTicketText, nearbyTicketsText) = puzzleText.split("\n\n")
-
         val rules = parseRules(rulesText)
         val split = nearbyTicketsText.split("\n")
         val nearbyTickets = split.subList(1, split.size).map { it.split(",").map { it.toInt() } }
@@ -126,18 +118,14 @@ class Puzzle16 {
         val validNearbyTickets = nearbyTickets.filter { nearbyTicket -> ticketIsValid(nearbyTicket, rules) }
         val ruleToIndex = mutableMapOf<String, Int>()
 
-
         while (ruleToIndex.size < rules.size) {
             (0 .. yourTicket.lastIndex).forEach { index ->
-                //println(index)
 
-                val aList = validNearbyTickets.map { validNearbyTicket ->
-                    val matchingRUles = matchingRulesForTicketIndex(index, validNearbyTicket, rules)
-                    //println(matchingRUles)
-                    matchingRUles
+                val rulesForIndex = validNearbyTickets.map { validNearbyTicket ->
+                    matchingRulesForTicketIndex(index, validNearbyTicket, rules)
                 }
 
-                val common: Set<String> = aList.reduce { acc, set -> acc.intersect(set) } - ruleToIndex.keys.toSet()
+                val common: Set<String> = rulesForIndex.reduce { acc, set -> acc.intersect(set) } - ruleToIndex.keys.toSet()
 
                 if (common.size == 1) {
                     ruleToIndex[common.first()] = index
