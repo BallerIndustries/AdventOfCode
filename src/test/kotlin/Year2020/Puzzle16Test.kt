@@ -10,13 +10,13 @@ class Puzzle16Test {
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(964875, result)
+        assertEquals(32842, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(158661360, result)
+        assertEquals(2628667251989, result)
     }
 
     @Test
@@ -39,9 +39,26 @@ class Puzzle16Test {
 
     @Test
     fun `example part b`() {
-        val puzzleText = ""
-        val result = puzzle.solveTwo(puzzleText)
-        assertEquals(241861950, result)
+        val puzzleText = "class: 0-1 or 4-19\n" +
+                "row: 0-5 or 8-19\n" +
+                "seat: 0-13 or 16-19\n" +
+                "\n" +
+                "your ticket:\n" +
+                "11,12,13\n" +
+                "\n" +
+                "nearby tickets:\n" +
+                "3,9,18\n" +
+                "15,1,5\n" +
+                "5,14,9"
+
+        val exepcted = mapOf(
+            "class" to 12,
+            "row" to 11,
+            "seat" to 13
+        )
+
+        val result = puzzle.resolveTicket(puzzleText)
+        assertEquals(exepcted, result)
     }
 }
 
@@ -72,10 +89,6 @@ class Puzzle16 {
                 }
             }
         }
-
-
-
-//        return 1
     }
 
     fun parseRules(rulesText: String): List<Rule> {
@@ -92,8 +105,61 @@ class Puzzle16 {
         return rules
     }
 
-    fun solveTwo(puzzleText: String): Int {
-        return 1
+    fun solveTwo(puzzleText: String): Long {
+        val ticket = resolveTicket(puzzleText)
+        var product = 1L
+
+        ticket.filter { it.key.startsWith("departure") }.forEach { it: Map.Entry<String, Int> ->
+            product *= it.value
+        }
+
+        return product
+    }
+
+    fun resolveTicket(puzzleText: String): Map<String, Int> {
+        val (rulesText, yourTicketText, nearbyTicketsText) = puzzleText.split("\n\n")
+
+        val rules = parseRules(rulesText)
+        val split = nearbyTicketsText.split("\n")
+        val nearbyTickets = split.subList(1, split.size).map { it.split(",").map { it.toInt() } }
+        val yourTicket = yourTicketText.split("\n")[1].split(",").map { it.toInt() }
+        val validNearbyTickets = nearbyTickets.filter { nearbyTicket -> ticketIsValid(nearbyTicket, rules) }
+        val ruleToIndex = mutableMapOf<String, Int>()
+
+
+        while (ruleToIndex.size < rules.size) {
+            (0 .. yourTicket.lastIndex).forEach { index ->
+                //println(index)
+
+                val aList = validNearbyTickets.map { validNearbyTicket ->
+                    val matchingRUles = matchingRulesForTicketIndex(index, validNearbyTicket, rules)
+                    //println(matchingRUles)
+                    matchingRUles
+                }
+
+                val common: Set<String> = aList.reduce { acc, set -> acc.intersect(set) } - ruleToIndex.keys.toSet()
+
+                if (common.size == 1) {
+                    ruleToIndex[common.first()] = index
+                }
+            }
+        }
+
+        return rules.associate { rule ->
+            val index = ruleToIndex[rule.name]!!
+            rule.name to yourTicket[index]
+        }
+    }
+
+    private fun matchingRulesForTicketIndex(index: Int, ticket: List<Int>, rules: List<Rule>): Set<String> {
+        return rules.filter { rule ->
+            val value = ticket[index]
+            rule.validValue(value)
+        }.map { it.name }.toSet()
+    }
+
+    private fun ticketIsValid(ticket: List<Int>, rules: List<Rule>): Boolean {
+        return ticket.all { value -> rules.any { rule -> rule.validValue(value) } }
     }
 }
 
