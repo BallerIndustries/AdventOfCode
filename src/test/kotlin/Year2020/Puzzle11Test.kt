@@ -203,7 +203,6 @@ class Puzzle11 {
         fun downRight() = down().right()
 
         fun neighbours() = listOf(up(), down(), left(), right(), upLeft(), upRight(), downLeft(), downRight())
-
     }
 }
 
