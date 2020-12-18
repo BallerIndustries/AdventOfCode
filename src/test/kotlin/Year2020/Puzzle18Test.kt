@@ -1,6 +1,7 @@
 package Year2020
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.util.*
 
@@ -10,6 +11,7 @@ class Puzzle18Test {
 
     @Test
     fun `puzzle part a`() {
+        //11004703763405 too high
         val result = puzzle.solveOne(puzzleText)
         assertEquals(964875, result)
     }
@@ -21,21 +23,67 @@ class Puzzle18Test {
     }
 
     @Test
-    fun `example part a`() {
-        assertEquals(71, puzzle.evaluateV2("1 + 2 * 3 + 4 * 5 + 6"))
-//        assertEquals(7, puzzle.evaluateV2("1 + (2 * 3)"))
-        assertEquals(51, puzzle.evaluateV2("1 + (2 * 3) + (4 * (5 + 6))"))
+    fun `example part a1`() {
+        assertEquals(71, puzzle.evaluate("1 + 2 * 3 + 4 * 5 + 6"))
+        assertEquals(51, puzzle.evaluate("1 + (2 * 3) + (4 * (5 + 6))"))
     }
 
     @Test
     fun `example part a2`() {
-        //assertEquals(51, puzzle.evaluateV2("1 + (2 * 3) + (4 * (5 + 6))"))
-        assertEquals(13632, puzzle.evaluateV2("((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"))
-
-//        assertEquals(7, puzzle.evaluateV2("1 + (2 * 3)"))
-//        assertEquals(51, puzzle.evaluateV2("1 + (2 * 3) + (4 * (5 + 6))"))
+        assertEquals(13632, puzzle.evaluate("((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"))
     }
 
+    @Test
+    fun `example part a3`() {
+        assertEquals(126, puzzle.evaluate("(6 + 9 * 8 + 6)"))
+    }
+
+    @Test
+    fun `example part a4`() {
+        assertEquals(54, puzzle.evaluate("(2 + 4 * 9)"))
+    }
+
+    @Test
+    fun `example part a5`() {
+        assertEquals(132, puzzle.evaluate("(6 + 9 * 8 + 6) + 6)"))
+    }
+
+    @Test
+    fun `example part a6`() {
+        assertEquals(12, puzzle.evaluate("2 + 4 * 2"))
+    }
+
+    @Test
+    fun `example part a7`() {
+        val line = "2 * 3 + (4 * 5)\n" +
+                "5 + (8 * 3 + 9 + 3 * 4 * 3)\n" +
+                "5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))\n" +
+                "((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"
+
+        assertEquals(26 + 437 + 12240 + 13632, puzzle.solveOne(line))
+    }
+
+    @Test
+    fun `example part b1`() {
+        assertEquals(51, puzzle.evaluateWithPrecedence("1 + (2 * 3) + (4 * (5 + 6))"))
+    }
+
+    @Test
+    fun `example part b2`() {
+        assertEquals(46, puzzle.evaluateWithPrecedence("2 * 3 + (4 * 5)"))
+    }
+
+    @Test
+    fun `example part b3`() {
+        assertEquals(1445, puzzle.evaluateWithPrecedence("5 + (8 * 3 + 9 + 3 * 4 * 3)"))
+    }
+
+    @Test
+    fun `example part b4`() {
+        assertEquals(576, puzzle.evaluateWithPrecedence("12 * 5 + 2 + 9 * 3"))
+    }
+
+    @Disabled
     @Test
     fun `example part b`() {
         val puzzleText = ""
@@ -45,131 +93,133 @@ class Puzzle18Test {
 }
 
 class Puzzle18 {
-    fun solveOne(puzzleText: String): Int {
-        return 1;
+    fun solveOne(puzzleText: String): Long {
+        return puzzleText.split("\n").map {
+            evaluate(it)
+        }.reduce { acc, it -> acc + it}
     }
 
-    fun evaluateV3(line: String): Long {
+    fun evaluate(line: String): Long {
         val tokens = parseLine(line)
 
-        var total = 0L
+        if (tokens.size != line.replace(" ", "").length) {
+            throw RuntimeException()
+        }
 
-        // 11 + 2 * 3 + 4 * 5 + 6
-
-        // 11 2 + = 13
-        // 13 3 * = 39
-        // 39 4
-
-        return resolve(0, tokens)
-    }
-
-    fun evaluateV2(line: String): Long {
-        val tokens = parseLine(line)
         val stack = Stack<String>()
 
         tokens.forEach { token ->
             when (token) {
-                ")" -> {
-                    do {
-                        val b = stack.pop().toLong()
-                        val operation = stack.pop()
-                        val a = stack.pop().toLong()
-                        println("$a $operation $b")
-
-                        val result = when (operation) {
-                            "+" -> (a + b).toString()
-                            "-" -> (a - b).toString()
-                            "*" -> (a * b).toString()
-                            else -> throw RuntimeException()
-                        }
-
-                        if (stack.peek() == "(") {
-                            stack.pop()
-                            stack.push(result)
-                            break
-                        }
-
-                        stack.push(result)
-
-                    } while (stack.isNotEmpty())
-                }
+                ")" -> stack.push(resolveUntilSentinel(stack).toString())
                 else -> stack.push(token)
             }
-
-            println("token = $token stack = $stack")
         }
 
-        while (stack.size > 1) {
-            val b = stack.pop().toLong()
-            val operation = stack.pop()
-            val a = stack.pop().toLong()
-            println("$a $operation $b")
-
-            val result = when (operation) {
-                "+" -> (a + b).toString()
-                "-" -> (a - b).toString()
-                "*" -> (a * b).toString()
-                else -> throw RuntimeException()
-            }
-
-            stack.push(result)
-        }
-
-        return stack.pop().toLong()
+        return resolveUntilSentinel(stack)
     }
 
-    // 1 + (2 * 3)
+    private fun resolveUntilSentinel(stack: Stack<String>): Long {
+        val jur = mutableListOf<String>()
 
-    private fun resolve(index: Int, tokens: List<String>): Long {
-        var index1 = index
-        val stack = Stack<String>()
-
-        while (index1 < tokens.size) {
-            val token = tokens[index1]
-
-            when (token) {
-                "+", "-", "*" -> stack.add(token)
-                "(" -> stack.add(token)
-                ")" -> stack.pop()
-                else -> {
-                    val head: String? = if (stack.isEmpty()) null else stack.peek()
-
-                    when (head) {
-                        "+" -> {
-                            val result = stack.pop().toLong() + token.toLong()
-                            stack.add(result.toString())
-                        }
-                        "-" -> {
-                            val result = stack.pop().toLong() - token.toLong()
-                            stack.add(result.toString())
-                        }
-                        "*" -> {
-                            val result = stack.pop().toLong() * token.toLong()
-                            stack.add(result.toString())
-                        }
-                        else -> {
-                            stack.add(token)
-                        }
-                    }
-                }
+        while (stack.isNotEmpty()) {
+            if (stack.peek() == "(") {
+                stack.pop()
+                break
             }
 
-            println("token = $token stack = $stack")
-
-            index1++
+            jur.add(stack.pop())
         }
 
-        return stack.pop().toLong()
+        var total = 0L
+        var index = 0
+        jur.reverse()
+
+        while (index < jur.size) {
+            when (jur[index]) {
+                "+" -> {
+                    total += jur[++index].toLong()
+                    index++
+                }
+                "*" -> {
+                    total *= jur[++index].toLong()
+                    index++
+                }
+                else -> total += jur[index++].toLong()
+            }
+        }
+
+        return total
+    }
+
+    private fun resolveUntilSentinelWithPrecedence(stack: Stack<String>): Long {
+        val tokens = mutableListOf<String>()
+
+        while (stack.isNotEmpty()) {
+            if (stack.peek() == "(") {
+                stack.pop()
+                break
+            }
+
+            tokens.add(stack.pop())
+        }
+
+        tokens.reverse()
+
+        // [ 12 * 5 + 2 + 9 * 3 ]
+        // [ 12 * 7 + 9 * 3 ]
+        // [ 12 * 16 * 3 ]
+
+        // Resolve addition
+        val withoutAddition = mutableListOf<String>()
+        var index = 0
+
+        while (index < tokens.size) {
+            val token = tokens[index]
+
+            if (token == "+") {
+                val a = withoutAddition.last().toLong()
+                val b = tokens[index+1].toLong()
+                val result = (a + b).toString()
+                withoutAddition.removeAt(withoutAddition.lastIndex)
+                withoutAddition.add(result)
+                index += 2
+            }
+            else {
+                withoutAddition.add(token)
+                index++
+            }
+        }
+
+        return withoutAddition.filterNot { it == "*" }.map { it.toLong() }.reduce { acc, elem -> acc * elem}
+
+
+        // Resolve multiplication
+
+
+//        while (index < jur.size) {
+//            when (jur[index]) {
+//                "+" -> {
+//                    total += jur[++index].toLong()
+//                    index++
+//                }
+//                "*" -> {
+//                    total *= jur[++index].toLong()
+//                    index++
+//                }
+//                else -> total += jur[index++].toLong()
+//            }
+//        }
+
     }
 
     private fun parseLine(line: String): List<String> {
-        var index = 0;
+        var index = 0
         val tokens = mutableListOf<String>()
         val scrunchedUpLine = line.replace(" ", "")
 
         while (index < scrunchedUpLine.length) {
             when (scrunchedUpLine[index]) {
-                '+', '-', '*', '(', ')' -> {
+                '+', '*', '(', ')' -> {
                     tokens.add(scrunchedUpLine[index].toString())
                     index += 1
                 }
@@ -200,51 +250,30 @@ class Puzzle18 {
         return buffer.toString()
     }
 
-    fun evaluate(line: String): Long {
-        val tokens = line.split(" ")
-        var index = 0
-        var result = 0L
-
-        // Example 1
-        // 1 + (2 * 3)
-        // 1 + 6
-
-        // Example 2
-        // 1 + (2 * 3) + (4 * (5 + 6))
-        // 1 + (2 * 3) + (4 * 11)
-        // 1 + (2 * 3) + 44
-        // 1 + 6 + 44
-
-        // 1. Pull out the brackets
-        //2 * 3, 5 + 6 and (4 * (5 + 6))
-
-
-
-        while (index < tokens.size) {
-            val token = tokens[index]
-
-            when (token) {
-                "+" -> result += tokens[++index].toLong()
-                "-" -> result -= tokens[++index].toLong()
-                "*" -> result *= tokens[++index].toLong()
-                "/" -> result /= tokens[++index].toLong()
-                "(" -> { }
-                ")" -> { }
-                else -> {
-                    result = token.toLong()
-                }
-            }
-
-            index++
-        }
-
-        return result
+    fun solveTwo(puzzleText: String): Long {
+        return puzzleText.split("\n").map {
+            evaluateWithPrecedence(it)
+        }.reduce { acc, it -> acc + it}
     }
 
-    fun solveTwo(puzzleText: String): Int {
+    fun evaluateWithPrecedence(line: String): Long {
+        val tokens = parseLine(line)
+        val lineWithoutWhiteSpace = line.replace(" ", "")
 
+        println("lineWithoutWhiteSpace = $lineWithoutWhiteSpace")
+        println("tokens = $tokens")
 
-        return 1
+        val stack = Stack<String>()
+
+        tokens.forEach { token ->
+            when (token) {
+                ")" -> stack.push(resolveUntilSentinelWithPrecedence(stack).toString())
+                else -> stack.push(token)
+            }
+        }
+
+        return resolveUntilSentinelWithPrecedence(stack)
+
     }
 }
 
