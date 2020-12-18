@@ -1,7 +1,6 @@
 package Year2020
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.util.*
 
@@ -11,15 +10,14 @@ class Puzzle18Test {
 
     @Test
     fun `puzzle part a`() {
-        //11004703763405 too high
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(964875, result)
+        assertEquals(11004703763391, result)
     }
 
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(158661360, result)
+        assertEquals(290726428573651, result)
     }
 
     @Test
@@ -55,12 +53,12 @@ class Puzzle18Test {
 
     @Test
     fun `example part a7`() {
-        val line = "2 * 3 + (4 * 5)\n" +
-                "5 + (8 * 3 + 9 + 3 * 4 * 3)\n" +
-                "5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))\n" +
-                "((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"
-
-        assertEquals(26 + 437 + 12240 + 13632, puzzle.solveOne(line))
+        assertEquals(26 + 437 + 12240 + 13632, puzzle.solveOne(
+            "2 * 3 + (4 * 5)\n" +
+                    "5 + (8 * 3 + 9 + 3 * 4 * 3)\n" +
+                    "5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))\n" +
+                    "((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"
+        ))
     }
 
     @Test
@@ -81,14 +79,6 @@ class Puzzle18Test {
     @Test
     fun `example part b4`() {
         assertEquals(576, puzzle.evaluateWithPrecedence("12 * 5 + 2 + 9 * 3"))
-    }
-
-    @Disabled
-    @Test
-    fun `example part b`() {
-        val puzzleText = ""
-        val result = puzzle.solveTwo(puzzleText)
-        assertEquals(241861950, result)
     }
 }
 
@@ -163,12 +153,6 @@ class Puzzle18 {
             tokens.add(stack.pop())
         }
 
-        tokens.reverse()
-
-        // [ 12 * 5 + 2 + 9 * 3 ]
-        // [ 12 * 7 + 9 * 3 ]
-        // [ 12 * 16 * 3 ]
-
         // Resolve addition
         val withoutAddition = mutableListOf<String>()
         var index = 0
@@ -190,26 +174,13 @@ class Puzzle18 {
             }
         }
 
-        return withoutAddition.filterNot { it == "*" }.map { it.toLong() }.reduce { acc, elem -> acc * elem}
-
-
-        // Resolve multiplication
-
-
-//        while (index < jur.size) {
-//            when (jur[index]) {
-//                "+" -> {
-//                    total += jur[++index].toLong()
-//                    index++
-//                }
-//                "*" -> {
-//                    total *= jur[++index].toLong()
-//                    index++
-//                }
-//                else -> total += jur[index++].toLong()
-//            }
-//        }
-
+        return withoutAddition.filterNot {
+            it == "*"
+        }.map {
+            it.toLong()
+        }.reduce { acc, elem ->
+            acc * elem
+        }
     }
 
     private fun parseLine(line: String): List<String> {
@@ -253,16 +224,13 @@ class Puzzle18 {
     fun solveTwo(puzzleText: String): Long {
         return puzzleText.split("\n").map {
             evaluateWithPrecedence(it)
-        }.reduce { acc, it -> acc + it}
+        }.reduce { acc, it ->
+            acc + it
+        }
     }
 
     fun evaluateWithPrecedence(line: String): Long {
         val tokens = parseLine(line)
-        val lineWithoutWhiteSpace = line.replace(" ", "")
-
-        println("lineWithoutWhiteSpace = $lineWithoutWhiteSpace")
-        println("tokens = $tokens")
-
         val stack = Stack<String>()
 
         tokens.forEach { token ->
@@ -273,7 +241,6 @@ class Puzzle18 {
         }
 
         return resolveUntilSentinelWithPrecedence(stack)
-
     }
 }
 
