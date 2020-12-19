@@ -20,7 +20,7 @@ class Puzzle19Test {
         // 176 not right
         // 175 not right
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(158661360, result)
+        assertEquals(260, result)
     }
 
     @Test
@@ -393,7 +393,8 @@ class Puzzle19Test {
     @Test
     fun `examples one by one`() {
         val rules = puzzle.parseRulesTwo(exampleTwo.split("\n\n")[0])
-        puzzle.setCombos(rules)
+        val rule42Combos: Set<String> = puzzle.combos(rules, rules[42]!!, mutableMapOf())
+        val rule31Combos: Set<String> = puzzle.combos(rules, rules[31]!!, mutableMapOf())
 
         val messages = ("bbabbbbaabaabba\n" +
                 "babbbbaabbbbbabbbbbbaabaaabaaa\n" +
@@ -409,26 +410,22 @@ class Puzzle19Test {
                 "aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba").split("\n")
 
 
-        val errors = messages.filter {
-            val result = puzzle.matchesRuleZero(rules, it)
-            !result
-        }
-
-        println(errors)
+        val errors = messages.filter { !puzzle.matchesPartTwo(rule42Combos, rule31Combos, it) }
         assertEquals(listOf<String>(), errors)
     }
 
     @Test
     fun `should match rule zero`() {
         val rules = puzzle.parseRulesTwo(exampleTwo.split("\n\n")[0])
-        puzzle.setCombos(rules)
+        val rule42Combos: Set<String> = puzzle.combos(rules, rules[42]!!, mutableMapOf())
+        val rule31Combos: Set<String> = puzzle.combos(rules, rules[31]!!, mutableMapOf())
 
-        assertEquals(true, puzzle.matchesRuleZero(rules, "babbbbaabbbbbabbbbbbaabaaabaaa"))
-        assertEquals(true, puzzle.matchesRuleZero(rules, "bbbbbbbaaaabbbbaaabbabaaa"))
-        assertEquals(true, puzzle.matchesRuleZero(rules, "bbbababbbbaaaaaaaabbababaaababaabab"))
-        assertEquals(true, puzzle.matchesRuleZero(rules, "abbbbabbbbaaaababbbbbbaaaababb"))
-        assertEquals(true, puzzle.matchesRuleZero(rules, "aaaaabbaabaaaaababaa"))
-        assertEquals(true, puzzle.matchesRuleZero(rules, "aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba"))
+        assertEquals(true, puzzle.matchesPartTwo(rule42Combos, rule31Combos, "babbbbaabbbbbabbbbbbaabaaabaaa"))
+        assertEquals(true, puzzle.matchesPartTwo(rule42Combos, rule31Combos, "bbbbbbbaaaabbbbaaabbabaaa"))
+        assertEquals(true, puzzle.matchesPartTwo(rule42Combos, rule31Combos, "bbbababbbbaaaaaaaabbababaaababaabab"))
+        assertEquals(true, puzzle.matchesPartTwo(rule42Combos, rule31Combos, "abbbbabbbbaaaababbbbbbaaaababb"))
+        assertEquals(true, puzzle.matchesPartTwo(rule42Combos, rule31Combos, "aaaaabbaabaaaaababaa"))
+        assertEquals(true, puzzle.matchesPartTwo(rule42Combos, rule31Combos, "aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba"))
     }
 }
 
@@ -503,18 +500,6 @@ class Puzzle19 {
 
     data class Rule(val name: Int, val subRules: List<SubRule>) {
         fun matches(puzzle: Puzzle19, rules: Map<Int, Rule>, text: String, startIndex: Int): Int {
-            // Rule 8: 42 | 42 8, aka one or more repetitions of rule #42
-            if (name == 8 && puzzle.rule42Combos != null) {
-                println("Encountered Rule #8")
-                return matchRuleEight(puzzle.rule42Combos!!, text, startIndex)
-            }
-            // Rule 11: 42 31 | 42 11 31, aka one or more repetitions of 4231
-            else if (name == 11 && puzzle.rule31Combos != null && puzzle.rule42Combos != null) {
-                println("Encountered Rule #11")
-                return matchRuleEleven(puzzle.rule31Combos!!, puzzle.rule42Combos!!, text, startIndex)
-            }
-
-
             for (subRule in subRules) {
                 val charactersMatched = subRule.matches(puzzle, rules, text, startIndex)
 
@@ -524,78 +509,6 @@ class Puzzle19 {
             }
 
             return -1
-        }
-
-        private fun matchRuleEleven(rule31Combos: Set<String>, rule42Combos: Set<String>, initialText: String, startIndex: Int): Int {
-            var matchAmount = 0
-            var text = initialText.substring(startIndex)
-            var match = rule42Combos.find { text.startsWith(it) }
-            //println(rule42Combos.filter { text.startsWith(it) })
-            var rule42MatchCount = 0
-
-            if (match == null) {
-                //println("rule42MatchCount = $rule42MatchCount")
-                return -1
-            }
-
-            while (match != null) {
-                rule42MatchCount++
-                matchAmount += match.length
-                text = text.substring(match.length)
-                //println("text = $text")
-                match = rule42Combos.find { text.startsWith(it) }
-                //println(rule42Combos.filter { text.startsWith(it) })
-            }
-
-//            println("rule42MatchCount = $rule42MatchCount")
-
-            ////////////////////////////////////////////
-            // Now you must find matchCount rule31Combos
-            ////////////////////////////////////////////
-            var rule31MatchCount = 0
-
-            match = rule31Combos.find { text.startsWith(it) }
-
-            if (match == null) {
-//                println("rule31MatchCount = $rule31MatchCount")
-                return -1
-            }
-
-            while (match != null) {
-                rule31MatchCount++
-                matchAmount += match.length
-                text = text.substring(match.length)
-                //println("text = $text")
-                match = rule31Combos.find { text.startsWith(it) }
-            }
-
-            if (rule31MatchCount == 0 || rule42MatchCount == 0) {
-//                println("matchCounts do not match, returning -1")
-                return -1
-            }
-
-            val charactersMatched = startIndex + matchAmount
-            //println("matchCounts match, returning $charactersMatched")
-
-            return charactersMatched
-        }
-
-        private fun matchRuleEight(rule42Combos: Set<String>, initialText: String, startIndex: Int): Int {
-            var matchAmount = 0
-            var text = initialText.substring(startIndex)
-            var match = rule42Combos.find { text.startsWith(it) }
-
-            if (match == null) {
-                return -1
-            }
-
-            while (match != null) {
-                matchAmount = match.length
-                text = text.substring(matchAmount)
-                match = rule42Combos.find { text.startsWith(it) }
-            }
-
-            return startIndex + matchAmount
         }
 
         fun combos(puzzle: Puzzle19, rules: Map<Int, Rule>, memo: MutableMap<Int, Set<String>>): Set<String> {
@@ -613,25 +526,15 @@ class Puzzle19 {
 
     fun solveOne(puzzleText: String): Int {
         val (rulesText, messagesText) = puzzleText.split("\n\n")
-
         val messages = messagesText.split("\n")
         val rules = parseRules(rulesText)
 
-        return messages.count { message ->
-            val result = matchesRuleZero(rules, message)
-
-            if (result) {
-                println(message)
-            }
-
-            result
-
-        }
+        return messages.count { message -> matchesRuleZero(rules, message) }
     }
 
     fun matchesRuleZero(rules: Map<Int, Rule>, message: String): Boolean {
         val textMatchesRule = textMatchesRule(rules, rules[0]!!, message, 0)
-        println("textMatchesRule = ${textMatchesRule}")
+
         return textMatchesRule == message.length
     }
 
@@ -653,20 +556,38 @@ class Puzzle19 {
         }
     }
 
-    var rule42Combos: Set<String>? = null
-    var rule31Combos: Set<String>? = null
-
     fun solveTwo(puzzleText: String): Int {
         val (rulesText, messagesText) = puzzleText.split("\n\n")
         val messages = messagesText.split("\n")
         val rules = parseRulesTwo(rulesText)
-        setCombos(rules)
-        return messages.count { message -> matchesRuleZero(rules, message) }
+
+        val rule42Combos: Set<String> = combos(rules, rules[42]!!, mutableMapOf())
+        val rule31Combos: Set<String> = combos(rules, rules[31]!!, mutableMapOf())
+
+        return messages.count { message -> matchesPartTwo(rule42Combos, rule31Combos, message) }
     }
 
-    fun setCombos(rules: Map<Int, Rule>) {
-        rule42Combos = combos(rules, rules[42]!!, mutableMapOf())
-        rule31Combos = combos(rules, rules[31]!!, mutableMapOf())
+    fun matchesPartTwo(rule42Combos: Set<String>, rules31Combos: Set<String>, message: String): Boolean {
+        val (remainingMessage, rule31Matches) = chopOffAndCount(message, rules31Combos)
+        val (finalMessage, rule42Matches) = chopOffAndCount(remainingMessage, rule42Combos)
+        return finalMessage.isEmpty() && rule31Matches > 0 && rule42Matches > rule31Matches
+    }
+
+    private fun chopOffAndCount(initialMessage: String, combos: Set<String>): Pair<String, Int> {
+        var count = 0
+        var message = initialMessage
+        var match: String?
+
+        while (true) {
+            match = combos.find { message.endsWith(it) }
+
+            if (match == null) {
+                return message to count
+            }
+
+            count++
+            message = message.substring(0, message.length - match.length)
+        }
     }
 
     fun parseRulesTwo(rulesText: String): Map<Int, Rule> {
