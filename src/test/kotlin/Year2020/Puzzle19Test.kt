@@ -16,6 +16,7 @@ class Puzzle19Test {
     @Test
     fun `puzzle part b`() {
         // 352 too high
+        // 176 not right
         val result = puzzle.solveTwo(puzzleText)
         assertEquals(158661360, result)
     }
@@ -363,13 +364,69 @@ class Puzzle19Test {
         // 3 - ["ab", "ba"]
         // 4 - ["a"]
         // 5 - ["b"]
-
         val rules = puzzle.parseRules(rulesText)
         val combos = puzzle.combos(rules, rules[1]!!, "", mutableMapOf())
         assertEquals(setOf("aaab", "aaba", "bbab", "bbba", "abaa", "baaa", "abbb", "babb"), combos)
     }
 
+    @Test
+    fun `combos for rules - 10`() {
+        val rulesText = "0: 4 1 5\n" +
+                "1: 2 3 | 3 2\n" +
+                "2: 4 4 | 5 5\n" +
+                "3: 4 5 | 5 4\n" +
+                "4: \"a\"\n" +
+                "5: \"b\""
 
+        // 1 - ["aaab", "aaba", "bbab", "bbba", "abaa", "baaa", "abbb", "babb"]
+        // 2 - ["aa", "bb"]
+        // 3 - ["ab", "ba"]
+        // 4 - ["a"]
+        // 5 - ["b"]
+        val rules = puzzle.parseRules(rulesText)
+        val combos = puzzle.combos(rules, rules[0]!!, "", mutableMapOf())
+        assertEquals(setOf("aaaabb", "aaabab", "abbabb", "abbbab", "aabaab", "abaaab", "aabbbb", "ababbb"), combos)
+    }
+
+    @Test
+    fun `examples one by one`() {
+        val rules = puzzle.parseRulesTwo(exampleTwo.split("\n\n")[0])
+        puzzle.setCombos(rules)
+
+        val messages = ("bbabbbbaabaabba\n" +
+                "babbbbaabbbbbabbbbbbaabaaabaaa\n" +
+                "aaabbbbbbaaaabaababaabababbabaaabbababababaaa\n" +
+                "bbbbbbbaaaabbbbaaabbabaaa\n" +
+                "bbbababbbbaaaaaaaabbababaaababaabab\n" +
+                "ababaaaaaabaaab\n" +
+                "ababaaaaabbbaba\n" +
+                "baabbaaaabbaaaababbaababb\n" +
+                "abbbbabbbbaaaababbbbbbaaaababb\n" +
+                "aaaaabbaabaaaaababaa\n" +
+                "aaaabbaabbaaaaaaabbbabbbaaabbaabaaa\n" +
+                "aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba").split("\n")
+
+
+        val errors = messages.filter {
+            val result = puzzle.matchesRuleZero(rules, it)
+            !result
+        }
+
+        println(errors)
+    }
+
+    @Test
+    fun `should match rule zero`() {
+        val rules = puzzle.parseRulesTwo(exampleTwo.split("\n\n")[0])
+        puzzle.setCombos(rules)
+
+        assertEquals(true, puzzle.matchesRuleZero(rules, "babbbbaabbbbbabbbbbbaabaaabaaa"))
+//        assertEquals(true, puzzle.matchesRuleZero(rules, "bbbbbbbaaaabbbbaaabbabaaa"))
+//        assertEquals(true, puzzle.matchesRuleZero(rules, "bbbababbbbaaaaaaaabbababaaababaabab"))
+//        assertEquals(true, puzzle.matchesRuleZero(rules, "abbbbabbbbaaaababbbbbbaaaababb"))
+//        assertEquals(true, puzzle.matchesRuleZero(rules, "aaaaabbaabaaaaababaa"))
+//        assertEquals(true, puzzle.matchesRuleZero(rules, "aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba"))
+    }
 }
 
 class Puzzle19 {
@@ -393,7 +450,6 @@ class Puzzle19 {
             for (token in tokens) {
                 val char = text.getOrNull(textIndex) ?: return -1
 
-                //println("textIndex = $textIndex char = $char token = $token")
                 val (ruleId, tokenChar) = token
 
                 if (ruleId != null) {
@@ -414,7 +470,6 @@ class Puzzle19 {
                 }
             }
 
-            //println("matched up to textIndex $textIndex")
             return textIndex
         }
 
@@ -445,6 +500,17 @@ class Puzzle19 {
 
     data class Rule(val name: Int, val subRules: List<SubRule>) {
         fun matches(puzzle: Puzzle19, rules: Map<Int, Rule>, text: String, startIndex: Int): Int {
+            // Rule 8: 42 | 42 8, aka one or more repetitions of rule #42
+            if (name == 8 && puzzle.rule42Combos != null) {
+                return matchRuleEight(puzzle.rule42Combos!!, text, startIndex)
+            }
+            // Rule 11: 42 31 | 42 11 31, aka one or more repetitions of 4231
+            else if (name == 11 && puzzle.rule31Combos != null && puzzle.rule42Combos != null) {
+                println("Encountered Rule #11")
+                return matchRuleEleven(puzzle.rule31Combos!!, puzzle.rule42Combos!!, text, startIndex)
+            }
+
+
             for (subRule in subRules) {
                 val charactersMatched = subRule.matches(puzzle, rules, text, startIndex)
 
@@ -454,6 +520,78 @@ class Puzzle19 {
             }
 
             return -1
+        }
+
+        private fun matchRuleEleven(rule31Combos: Set<String>, rule42Combos: Set<String>, initialText: String, startIndex: Int): Int {
+            var matchAmount = 0
+            var text = initialText.substring(startIndex)
+            var match = rule42Combos.find { text.startsWith(it) }
+            //println(rule42Combos.filter { text.startsWith(it) })
+            var rule42MatchCount = 0
+
+            if (match == null) {
+                println("rule42MatchCount = $rule42MatchCount")
+                return -1
+            }
+
+            while (match != null) {
+                rule42MatchCount++
+                matchAmount += match.length
+                text = text.substring(match.length)
+                println("text = $text")
+                match = rule42Combos.find { text.startsWith(it) }
+                //println(rule42Combos.filter { text.startsWith(it) })
+            }
+
+            println("rule42MatchCount = $rule42MatchCount")
+
+            ////////////////////////////////////////////
+            // Now you must find matchCount rule31Combos
+            ////////////////////////////////////////////
+            var rule31MatchCount = 0
+
+            match = rule31Combos.find { text.startsWith(it) }
+
+            if (match == null) {
+                println("rule31MatchCount = $rule31MatchCount")
+                return -1
+            }
+
+            while (match != null) {
+                rule31MatchCount++
+                matchAmount += match.length
+                text = text.substring(match.length)
+                println("text = $text")
+                match = rule31Combos.find { text.startsWith(it) }
+            }
+
+            if (rule31MatchCount != rule42MatchCount) {
+                println("matchCounts do not match, returning -1")
+                return -1
+            }
+
+            val charactersMatched = startIndex + matchAmount
+            println("matchCounts match, returning $charactersMatched")
+
+            return charactersMatched
+        }
+
+        private fun matchRuleEight(rule42Combos: Set<String>, initialText: String, startIndex: Int): Int {
+            var matchAmount = 0
+            var text = initialText
+            var match = rule42Combos.find { text.startsWith(it) }
+
+            if (match == null) {
+                return -1
+            }
+
+            while (match != null) {
+                matchAmount = match.length
+                text = text.substring(matchAmount)
+                match = rule42Combos.find { text.startsWith(it) }
+            }
+
+            return startIndex + matchAmount
         }
 
         fun combos(puzzle: Puzzle19, rules: Map<Int, Rule>, prefix: String, memo: MutableMap<Int, Set<String>>): Set<String> {
@@ -487,7 +625,7 @@ class Puzzle19 {
         }
     }
 
-    private fun matchesRuleZero(rules: Map<Int, Rule>, message: String): Boolean {
+    fun matchesRuleZero(rules: Map<Int, Rule>, message: String): Boolean {
         val textMatchesRule = textMatchesRule(rules, rules[0]!!, message, 0)
         println("textMatchesRule = ${textMatchesRule}")
         return textMatchesRule == message.length
@@ -514,14 +652,15 @@ class Puzzle19 {
         return rules.associateBy { it.name }
     }
 
+    var rule42Combos: Set<String>? = null
+    var rule31Combos: Set<String>? = null
+
     fun solveTwo(puzzleText: String): Int {
         val (jurness, messagesText) = puzzleText.split("\n\n")
-
-        val rulesText = jurness.replace("8: 42", "8: 42 | 42 8")
-                .replace("11: 42 31", "11: 42 31 | 42 11 31")
-
         val messages = messagesText.split("\n")
-        val rules = parseRules(rulesText)
+        val rules = parseRulesTwo(jurness)
+
+        setCombos(rules)
 
         return messages.count { message ->
             val result = matchesRuleZero(rules, message)
@@ -533,6 +672,21 @@ class Puzzle19 {
             result
 
         }
+    }
+
+    public fun setCombos(rules: Map<Int, Rule>) {
+        rule42Combos = combos(rules, rules[42]!!, "", mutableMapOf())
+        rule31Combos = combos(rules, rules[31]!!, "", mutableMapOf())
+    }
+
+    fun parseRulesTwo(jurness: String): Map<Int, Rule> {
+        val rulesText = jurness.replace("8: 42", "8: 42 | 42 8")
+                .replace("11: 42 31", "11: 42 31 | 42 11 31")
+
+
+        val rules = parseRules(rulesText)
+        //return Pair(messages, rules)
+        return rules
     }
 
     fun combos(rules: Map<Int, Rule>, rule: Rule, prefix: String, memo: MutableMap<Int, Set<String>>): Set<String> {
