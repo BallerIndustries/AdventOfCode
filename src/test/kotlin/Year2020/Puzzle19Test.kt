@@ -483,7 +483,7 @@ class Puzzle19 {
                     currentStuff = currentStuff.map { it + char.toString() }
                 }
                 else if (ruleId != null) {
-                    currentStuff = currentStuff.flatMap { it ->
+                    currentStuff = currentStuff.flatMap {
                         puzzle.combos(rules, rules[ruleId]!!, memo).map { aaa ->
                             it + aaa
                         }
