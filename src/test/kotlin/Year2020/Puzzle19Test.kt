@@ -532,10 +532,8 @@ class Puzzle19 {
         return messages.count { message -> matchesRuleZero(rules, message) }
     }
 
-    fun matchesRuleZero(rules: Map<Int, Rule>, message: String): Boolean {
-        val textMatchesRule = textMatchesRule(rules, rules[0]!!, message, 0)
-
-        return textMatchesRule == message.length
+    private fun matchesRuleZero(rules: Map<Int, Rule>, message: String): Boolean {
+        return textMatchesRule(rules, rules[0]!!, message, 0) == message.length
     }
 
     fun textMatchesRule(rules: Map<Int, Rule>, rule: Rule, text: String, index: Int): Int {
