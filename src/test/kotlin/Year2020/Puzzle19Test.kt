@@ -35,8 +35,41 @@ class Puzzle19Test {
 }
 
 class Puzzle19 {
+    data class SubRule(val names: List<String>)
+
+    data class Rule(val name: Int, val subRules: List<SubRule>)
+
     fun solveOne(puzzleText: String): Int {
+        val (rulesText, messagesText) = puzzleText.split("\n\n")
+
+        val messages = messagesText.split("\n")
+        val rules = parseRules(rulesText)
+
+        messages.count { message ->
+            matchesRuleZero(rules, message)
+        }
+
+        
+
         return 1
+    }
+
+    private fun matchesRuleZero(rules: Map<Int, Rule>, message: String): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    private fun parseRules(rulesText: String): Map<Int, Rule> {
+        val rules = rulesText.split("\n").map { line ->
+            val (name, jur) = line.split(": ")
+
+            val subRules: List<SubRule> = jur.split(" | ").map { subRuleText ->
+                SubRule(subRuleText.split(" "))
+            }
+
+            Rule(name.toInt(), subRules)
+        }
+
+        return rules.associateBy { it.name }
     }
 
     fun solveTwo(puzzleText: String): Int {
