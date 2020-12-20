@@ -113,7 +113,6 @@ class Puzzle20Test {
         "..#.......\n" +
         "..#.###..."
 
-
     val puzzleText = this::class.java.getResource("/2020/puzzle20.txt").readText().replace("\r", "")
     val puzzle = Puzzle20()
 
@@ -136,18 +135,7 @@ class Puzzle20Test {
         assertEquals(1, puzzle.countPatternOccurrences(tiles, "..###..###"))
         assertEquals(1, puzzle.countPatternOccurrences(tiles, "#...##.#.."))
         assertEquals(2, puzzle.countPatternOccurrences(tiles, "..#.###..."))
-//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
-//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
-//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
-//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
-//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
-//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
-//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
     }
-
-
-
-
 
     @Test
     fun `example part a`() {
@@ -165,90 +153,24 @@ class Puzzle20Test {
 class Puzzle20 {
 
     data class Point(val x: Int, val y: Int) {
-
-        fun rotate(angle: Int): Point {
-            val radians = Math.toRadians(angle.toDouble())
-            val s = Math.sin(radians)
-            val c = Math.cos(radians)
-
-            var thisX = this.x.toDouble()
-            var thisY = this.y.toDouble()
-
-            // translate point back to origin:
-            thisX -= 4.5
-            thisY -= 4.5
-
-            // rotate point
-            // rotate point
-            val xNew = Math.round(((thisX * c) - (thisY * s)) + 4.5)
-            val yNew = Math.round(((thisX * s) + (thisY * c)) + 4.5)
-
-            return Point(xNew.toInt(), yNew.toInt())
-        }
-
-
-        fun neighbors(): List<Point> {
-            val range = (-1 .. 1)
-
-            return range.flatMap { x ->
-                range.map { y ->
-                    Point(this.x + x, this.y + y)
-                }
-            } - this
-        }
+        fun up() = this.copy(y = this.y - 1)
+        fun down() = this.copy(y = this.y + 1)
+        fun left() = this.copy(x = this.x - 1)
+        fun right() = this.copy(x = this.x + 1)
     }
 
     data class Tile(val tileId: Int, val grid: Map<Point, Char>) {
-
-//        fun edgesAsBinary(): Set<Int> {
-//            return listOf(
-//                topPattern(),
-//                bottomPattern(),
-//                leftPattern(),
-//                rightPattern(),
-//            ).map { it.replace("#", "0").replace(".", "1").toInt(2) }.toSet()
-//        }
-
         fun allEdgesAsBinary(): Set<Int> {
             return listOf(
                 topPattern(),
                 bottomPattern(),
                 leftPattern(),
                 rightPattern(),
-
                 topPattern().reversed(),
                 bottomPattern().reversed(),
                 leftPattern().reversed(),
                 rightPattern().reversed()
-
-
             ).map { patternToInt(it) }.toSet()
-        }
-
-
-
-        fun allConfigurations(): List<Tile> {
-            return listOf(
-                this,
-                this.rotate90(),
-                this.rotate180(),
-                this.rotate270(),
-
-                this.horizontallyFlipped(),
-                this.horizontallyFlipped().rotate90(),
-                this.horizontallyFlipped().rotate180(),
-                this.horizontallyFlipped().rotate270(),
-
-                this.verticallyFlipped(),
-                this.verticallyFlipped().rotate90(),
-                this.verticallyFlipped().rotate180(),
-                this.verticallyFlipped().rotate270(),
-
-                this.verticallyFlipped().horizontallyFlipped(),
-                this.verticallyFlipped().horizontallyFlipped().rotate90(),
-                this.verticallyFlipped().horizontallyFlipped().rotate180(),
-                this.verticallyFlipped().horizontallyFlipped().rotate270(),
-            )
         }
 
         fun validateGrid(): Tile {
@@ -263,48 +185,6 @@ class Puzzle20 {
             }
 
             return this
-        }
-
-        fun horizontallyFlipped(): Tile {
-            val flippedGrid = grid.entries.associate { (point, char) ->
-                val newX = 9 - point.x
-                point.copy(x = newX) to char
-            }
-
-            return this.copy(grid = flippedGrid).validateGrid()
-        }
-
-        fun verticallyFlipped(): Tile {
-            val flippedGrid = grid.entries.associate { (point, char) ->
-                val newY = 9 - point.y
-                point.copy(y = newY) to char
-            }
-
-            return this.copy(grid = flippedGrid).validateGrid()
-        }
-
-        fun rotate90(): Tile {
-            val rotatedGrid = grid.entries.associate { (point, char) ->
-                point.rotate(90) to char
-            }
-
-            return this.copy(grid = rotatedGrid).validateGrid()
-        }
-
-        fun rotate180(): Tile {
-            val rotatedGrid = grid.entries.associate { (point, char) ->
-                point.rotate(180) to char
-            }
-
-            return this.copy(grid = rotatedGrid).validateGrid()
-        }
-
-        fun rotate270(): Tile {
-            val rotatedGrid = grid.entries.associate { (point, char) ->
-                point.rotate(270) to char
-            }
-
-            return this.copy(grid = rotatedGrid).validateGrid()
         }
 
         fun topPattern(): String {
@@ -340,15 +220,7 @@ class Puzzle20 {
 
     fun solveOne(puzzleText: String): Long {
         val tiles = parseTiles(puzzleText)
-
-
         val groups = tiles.groupBy { countMatchingEdges(tiles, it) }
-        println(groups)
-        // Should be
-        //   4 tiles with 2 matches
-        //  92 tiles with 3 matches
-        // 191 tiles with 4 matches
-
         return groups[2]!!.fold(1L) { acc, tile -> acc * tile.tileId }
     }
 
@@ -372,6 +244,57 @@ class Puzzle20 {
     }
 
     fun solveTwo(puzzleText: String): Int {
+        val tiles = parseTiles(puzzleText)
+        val joinedTiles = mutableMapOf(Point(0, 0) to tiles[0])
+        val frontier = mutableListOf(tiles[0])
+
+        while (joinedTiles.size < tiles.size) {
+            //println("frontier = ${frontier.map { it.tileId }}")
+            //println("joinedTiles = ${joinedTiles.values.map { it.tileId }}")
+            val currentTile = frontier.removeAt(0)
+            val currentTilePoint = joinedTiles.entries.find { it.value.tileId == currentTile.tileId }!!.key
+
+            // TOP PATTERN
+            val topPattern = currentTile.topPattern()
+            val topTile = getCorrespondingTile(tiles, currentTile, topPattern)
+
+            if (topTile != null) {
+                frontier.add(topTile)
+                joinedTiles[currentTilePoint.up()] = topTile
+                println("Added tile ${topTile.tileId} to frontier and joinedTiles")
+            }
+
+            // BOTTOM PATTERN
+            val bottomPattern = currentTile.bottomPattern()
+            val bottomTile = getCorrespondingTile(tiles, currentTile, bottomPattern)
+
+            if (bottomTile != null) {
+                frontier.add(bottomTile)
+                joinedTiles[currentTilePoint.down()] = bottomTile
+                println("Added tile ${bottomTile.tileId} to frontier and joinedTiles")
+            }
+
+            // LEFT PATTERN
+            val leftPattern = currentTile.leftPattern()
+            val leftTile = getCorrespondingTile(tiles, currentTile, leftPattern)
+
+            if (leftTile != null) {
+                frontier.add(leftTile)
+                joinedTiles[currentTilePoint.left()] = leftTile
+                println("Added tile ${leftTile.tileId} to frontier and joinedTiles")
+            }
+
+            // RIGHT PATTERN
+            val rightPattern = currentTile.rightPattern()
+            val rightTile = getCorrespondingTile(tiles, currentTile, rightPattern)
+
+            if (rightTile != null) {
+                frontier.add(rightTile)
+                joinedTiles[currentTilePoint.right()] = rightTile
+                println("Added tile ${rightTile.tileId} to frontier and joinedTiles")
+            }
+        }
+
         return 1
     }
 
@@ -380,7 +303,7 @@ class Puzzle20 {
         val height = lines.count()
         val width = lines.first().count()
 
-        val grid = (0 until width).flatMap { x ->
+        return (0 until width).flatMap { x ->
             (0 until height).map { y ->
 
                 val p = Point(x, y)
@@ -389,7 +312,22 @@ class Puzzle20 {
                 p to c
             }
         }.toMap()
-        return grid
+    }
+
+    fun getCorrespondingTile(tiles: List<Tile>, originalTile: Tile, pattern: String): Tile? {
+        val patternNumber = patternToInt(pattern)
+
+        for (tile in tiles) {
+            if (tile.tileId == originalTile.tileId) {
+                continue
+            }
+
+            if (patternNumber in tile.allEdgesAsBinary()) {
+                return tile
+            }
+        }
+
+        return null
     }
 
     fun countPatternOccurrences(tiles: List<Tile>, pattern: String): Int {
