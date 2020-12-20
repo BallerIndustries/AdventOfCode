@@ -303,6 +303,14 @@ class Puzzle20 {
                     throw RuntimeException()
             }.joinToString("")
         }
+
+        fun withoutBorder(): Tile {
+            val gridWithoutBorder = grid.entries.filter { (key, value) ->
+                key.x != 0 && key.x != 9 && key.y != 0 && key.y != 9
+            }.associate { it.key to it.value }
+
+            return this.copy(grid = gridWithoutBorder)
+        }
     }
 
     fun solveOne(puzzleText: String): Long {
@@ -331,6 +339,43 @@ class Puzzle20 {
     }
 
     fun solveTwo(puzzleText: String): Int {
+        val joinedTiles = joinTiles(puzzleText).entries.associate { (k, v) -> k to v.withoutBorder() }
+
+        val minX = joinedTiles.keys.minBy { it.x }!!.x
+        val maxX = joinedTiles.keys.maxBy { it.x }!!.x
+        val minY = joinedTiles.keys.minBy { it.y }!!.y
+        val maxY = joinedTiles.keys.maxBy { it.y }!!.y
+        val finalMap = mutableMapOf<Point, Char>()
+
+        (minY .. maxY).forEach { tileY ->
+            (minX .. maxX).forEach { tileX ->
+
+                val point = Point(tileX, tileY)
+                val tile = joinedTiles[point]!!
+
+                (1 .. 8).forEach { x ->
+                    (1 .. 8).forEach { y ->
+
+                        val finalX = ((tileX - minX) * 8) + (x - 1)
+                        val finalY = ((tileY - minY) * 8) + (y - 1)
+                        val char = tile.grid[Point(x, y)]!!
+
+                        finalMap[Point(finalX, finalY)] = char
+                    }
+                }
+            }
+        }
+
+        if (finalMap.size != joinedTiles.size * 64) {
+            throw RuntimeException()
+        }
+
+        println(finalMap.size)
+
+        return 1
+    }
+
+    private fun joinTiles(puzzleText: String): Map<Point, Tile> {
         val tiles = parseTiles(puzzleText).toMutableList()
         val initialSize = tiles.size
         val joinedTiles = mutableMapOf(Point(0, 0) to tiles[0])
@@ -387,8 +432,7 @@ class Puzzle20 {
                 println("Added tile ${rightTile.tileId} to frontier and joinedTiles")
             }
         }
-
-        return 1
+        return joinedTiles
     }
 
     private fun parseGrid(puzzleText: String): Map<Point, Char> {
