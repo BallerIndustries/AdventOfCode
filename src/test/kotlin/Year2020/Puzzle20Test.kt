@@ -153,6 +153,8 @@ class Puzzle20Test {
 class Puzzle20 {
 
     data class Point(val x: Int, val y: Int) {
+        fun delta(xDelta: Int, yDelta: Int) = this.copy(x = this.x + xDelta, y = this.y + yDelta)
+
         fun up() = this.copy(y = this.y - 1)
         fun down() = this.copy(y = this.y + 1)
         fun left() = this.copy(x = this.x - 1)
@@ -213,15 +215,6 @@ class Puzzle20 {
 
             return this.copy(grid = flippedGrid).validateGrid()
         }
-
-//        fun verticallyFlipped(): Tile {
-//            val flippedGrid = grid.entries.associate { (point, char) ->
-//                val newY = 9 - point.y
-//                point.copy(y = newY) to char
-//            }
-//
-//            return this.copy(grid = flippedGrid).validateGrid()
-//        }
 
         fun rotate90(): Tile {
             val rotatedGrid = grid.entries.associate { (point, char) ->
@@ -370,9 +363,53 @@ class Puzzle20 {
             throw RuntimeException()
         }
 
-        println(finalMap.size)
+        return countSeaMonsters(finalMap)
+    }
 
-        return 1
+    private fun countSeaMonsters(finalMap: Map<Point, Char>): Int {
+        val minX = finalMap.keys.minBy { it.x }!!.x
+        val maxX = finalMap.keys.maxBy { it.x }!!.x
+        val minY = finalMap.keys.minBy { it.y }!!.y
+        val maxY = finalMap.keys.maxBy { it.y }!!.y
+
+        val seaMonster =
+            "                  # \n" +
+            "#    ##    ##    ###\n" +
+            " #  #  #  #  #  #   "
+
+        fun hasSeaMonster(finalMap: Map<Point, Char>, point: Point): Boolean {
+            return listOf(
+                finalMap[point],
+                finalMap[point.delta(1, 1)],
+                finalMap[point.delta(4, 1)],
+                finalMap[point.delta(5, 0)],
+                finalMap[point.delta(6, 0)],
+
+                finalMap[point.delta(7, 1)],
+                finalMap[point.delta(10, 1)],
+                finalMap[point.delta(11, 0)],
+                finalMap[point.delta(12, 0)],
+                finalMap[point.delta(13, 1)],
+
+                finalMap[point.delta(16, 1)],
+                finalMap[point.delta(17, 0)],
+                finalMap[point.delta(18, 0)],
+                finalMap[point.delta(18, -1)],
+                finalMap[point.delta(19, 0)],
+            ).all { it == '#' }
+        }
+
+        var count = 0
+
+        (minY .. maxY).forEach { y ->
+            (minX .. maxX).forEach { x ->
+                if (hasSeaMonster(finalMap, Point(x, y))) {
+                    count++
+                }
+            }
+        }
+
+        return count
     }
 
     private fun joinTiles(puzzleText: String): Map<Point, Tile> {
