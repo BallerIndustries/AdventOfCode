@@ -4,13 +4,123 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class Puzzle20Test {
+    val exampleText =
+        "Tile 2311:\n" +
+        "..##.#..#.\n" +
+        "##..#.....\n" +
+        "#...##..#.\n" +
+        "####.#...#\n" +
+        "##.##.###.\n" +
+        "##...#.###\n" +
+        ".#.#.#..##\n" +
+        "..#....#..\n" +
+        "###...#.#.\n" +
+        "..###..###\n" +
+        "\n" +
+        "Tile 1951:\n" +
+        "#.##...##.\n" +
+        "#.####...#\n" +
+        ".....#..##\n" +
+        "#...######\n" +
+        ".##.#....#\n" +
+        ".###.#####\n" +
+        "###.##.##.\n" +
+        ".###....#.\n" +
+        "..#.#..#.#\n" +
+        "#...##.#..\n" +
+        "\n" +
+        "Tile 1171:\n" +
+        "####...##.\n" +
+        "#..##.#..#\n" +
+        "##.#..#.#.\n" +
+        ".###.####.\n" +
+        "..###.####\n" +
+        ".##....##.\n" +
+        ".#...####.\n" +
+        "#.##.####.\n" +
+        "####..#...\n" +
+        ".....##...\n" +
+        "\n" +
+        "Tile 1427:\n" +
+        "###.##.#..\n" +
+        ".#..#.##..\n" +
+        ".#.##.#..#\n" +
+        "#.#.#.##.#\n" +
+        "....#...##\n" +
+        "...##..##.\n" +
+        "...#.#####\n" +
+        ".#.####.#.\n" +
+        "..#..###.#\n" +
+        "..##.#..#.\n" +
+        "\n" +
+        "Tile 1489:\n" +
+        "##.#.#....\n" +
+        "..##...#..\n" +
+        ".##..##...\n" +
+        "..#...#...\n" +
+        "#####...#.\n" +
+        "#..#.#.#.#\n" +
+        "...#.#.#..\n" +
+        "##.#...##.\n" +
+        "..##.##.##\n" +
+        "###.##.#..\n" +
+        "\n" +
+        "Tile 2473:\n" +
+        "#....####.\n" +
+        "#..#.##...\n" +
+        "#.##..#...\n" +
+        "######.#.#\n" +
+        ".#...#.#.#\n" +
+        ".#########\n" +
+        ".###.#..#.\n" +
+        "########.#\n" +
+        "##...##.#.\n" +
+        "..###.#.#.\n" +
+        "\n" +
+        "Tile 2971:\n" +
+        "..#.#....#\n" +
+        "#...###...\n" +
+        "#.#.###...\n" +
+        "##.##..#..\n" +
+        ".#####..##\n" +
+        ".#..####.#\n" +
+        "#..#.#..#.\n" +
+        "..####.###\n" +
+        "..#.#.###.\n" +
+        "...#.#.#.#\n" +
+        "\n" +
+        "Tile 2729:\n" +
+        "...#.#.#.#\n" +
+        "####.#....\n" +
+        "..#.#.....\n" +
+        "....#..#.#\n" +
+        ".##..##.#.\n" +
+        ".#.####...\n" +
+        "####.#.#..\n" +
+        "##.####...\n" +
+        "##..#.##..\n" +
+        "#.##...##.\n" +
+        "\n" +
+        "Tile 3079:\n" +
+        "#.#.#####.\n" +
+        ".#..######\n" +
+        "..#.......\n" +
+        "######....\n" +
+        "####.#..#.\n" +
+        ".#...#.##.\n" +
+        "#.#####.##\n" +
+        "..#.###...\n" +
+        "..#.......\n" +
+        "..#.###..."
+
+
     val puzzleText = this::class.java.getResource("/2020/puzzle20.txt").readText().replace("\r", "")
     val puzzle = Puzzle20()
 
     @Test
     fun `puzzle part a`() {
         val result = puzzle.solveOne(puzzleText)
-        assertEquals(964875, result)
+        assertEquals(8425574315321, result)
     }
 
     @Test
@@ -20,17 +130,35 @@ class Puzzle20Test {
     }
 
     @Test
+    fun `there should be TWO matches for this pattern`() {
+        val tiles = puzzle.parseTiles(exampleText)
+        assertEquals(2, puzzle.countPatternOccurrences(tiles, "..##.#..#."))
+        assertEquals(1, puzzle.countPatternOccurrences(tiles, "..###..###"))
+        assertEquals(1, puzzle.countPatternOccurrences(tiles, "#...##.#.."))
+        assertEquals(2, puzzle.countPatternOccurrences(tiles, "..#.###..."))
+//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
+//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
+//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
+//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
+//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
+//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
+//        assertEquals(2, puzzle.countPatternOccurrences(tiles, ""))
+    }
+
+
+
+
+
+    @Test
     fun `example part a`() {
-        val puzzleText = ""
-        val result = puzzle.solveOne(puzzleText)
-        assertEquals(514579, result)
+        val result = puzzle.solveOne(exampleText)
+        assertEquals(20899048083289, result)
     }
 
     @Test
     fun `example part b`() {
-        val puzzleText = ""
-        val result = puzzle.solveTwo(puzzleText)
-        assertEquals(241861950, result)
+        val result = puzzle.solveTwo(exampleText)
+        assertEquals(273, result)
     }
 }
 
@@ -72,14 +200,14 @@ class Puzzle20 {
 
     data class Tile(val tileId: Int, val grid: Map<Point, Char>) {
 
-        fun edgesAsBinary(): Set<Int> {
-            return listOf(
-                topPattern(),
-                bottomPattern(),
-                leftPattern(),
-                rightPattern(),
-            ).map { it.replace("#", "0").replace(".", "1").toInt(2) }.toSet()
-        }
+//        fun edgesAsBinary(): Set<Int> {
+//            return listOf(
+//                topPattern(),
+//                bottomPattern(),
+//                leftPattern(),
+//                rightPattern(),
+//            ).map { it.replace("#", "0").replace(".", "1").toInt(2) }.toSet()
+//        }
 
         fun allEdgesAsBinary(): Set<Int> {
             return listOf(
@@ -94,7 +222,7 @@ class Puzzle20 {
                 rightPattern().reversed()
 
 
-            ).map { it.replace("#", "0").replace(".", "1").toInt(2) }.toSet()
+            ).map { patternToInt(it) }.toSet()
         }
 
 
@@ -214,51 +342,33 @@ class Puzzle20 {
         val tiles = parseTiles(puzzleText)
 
 
-        val groups = tiles.groupBy { countMaxMatches(tiles, it) }.entries.associate { it.key to it.value.size }
+        val groups = tiles.groupBy { countMatchingEdges(tiles, it) }
         println(groups)
         // Should be
         //   4 tiles with 2 matches
         //  92 tiles with 3 matches
         // 191 tiles with 4 matches
 
-        return 1337L
+        return groups[2]!!.fold(1L) { acc, tile -> acc * tile.tileId }
     }
 
-    private fun countMaxMatches(allTiles: List<Tile>, tile: Tile): Int {
-        //val tilesWithoutMe = allTiles - tile
-        //val myEdges = tile.allConfigurations().flatMap { it.edgesAsBinary() }.toSet()
-        val myEdges = tile.allEdgesAsBinary()
+    private fun countMatchingEdges(tiles: List<Tile>, thisTile: Tile): Int {
+        val otherTiles = tiles.filter { it.tileId != thisTile.tileId }
 
-        if (myEdges != tile.allConfigurations().flatMap { it.edgesAsBinary() }.toSet()) {
-            throw RuntimeException()
-        }
-
-        return allTiles.map { otherTile ->
-            if (otherTile.tileId == tile.tileId) {
-                0
-            }
-            else {
-                val otherTileEdges = otherTile.allEdgesAsBinary()
-                val result: Set<Int> = myEdges.intersect(otherTileEdges)
-
-                if (result.size == 4) {
-                    println("tile.id = ${tile.tileId} otherTile.id = ${otherTile.tileId}")
-                }
-
-                result.size
-            }
-        }.max()!!
+        return countPatternOccurrences(otherTiles, thisTile.topPattern()) +
+                countPatternOccurrences(otherTiles, thisTile.bottomPattern()) +
+                countPatternOccurrences(otherTiles, thisTile.leftPattern()) +
+                countPatternOccurrences(otherTiles, thisTile.rightPattern())
     }
 
-    private fun parseTiles(puzzleText: String): List<Tile> {
-        val tiles = puzzleText.split("\n\n").mapIndexed { index, jur ->
+    fun parseTiles(puzzleText: String): List<Tile> {
+        return puzzleText.split("\n\n").mapIndexed { index, jur ->
             val tmp = jur.split("\n")
             val tileId = tmp[0].replace("Tile ", "").replace(":", "").toInt()
             val grid = parseGrid(tmp.subList(1, tmp.size).joinToString("\n"))
 
             Tile(tileId, grid).validateGrid()
         }
-        return tiles
     }
 
     fun solveTwo(puzzleText: String): Int {
@@ -281,5 +391,19 @@ class Puzzle20 {
         }.toMap()
         return grid
     }
+
+    fun countPatternOccurrences(tiles: List<Tile>, pattern: String): Int {
+        val patternNumber = patternToInt(pattern)
+        var count = 0
+
+        for (tile in tiles) {
+            if (patternNumber in tile.allEdgesAsBinary()) {
+                count++
+            }
+        }
+
+        return count
+    }
 }
 
+fun patternToInt(pattern: String) = pattern.replace("#", "0").replace(".", "1").toInt(2)
