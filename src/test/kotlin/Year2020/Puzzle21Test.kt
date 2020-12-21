@@ -89,40 +89,28 @@ class Puzzle21 {
         val allergenToPossibleIngredient = foods.flatMap { it.allergens }
             .associateWith { mutableSetOf<String>() }
 
-        for (food in foods) {
-            if (food.allergens.size == 1) {
-                val allergen = food.allergens.first()
-                val foodsWithThisAllergen = foods.filter { allergen in it.allergens && it.foodId != food.foodId }
+        var resolvedAllergens = setOf<String>()
 
-                for (ingredient in food.ingredients) {
-                    if (foodsWithThisAllergen.all { ingredient in it.ingredients }) {
-                        allergenToPossibleIngredient[allergen]!!.add(ingredient)
+        while (resolvedAllergens.size < allergenToPossibleIngredient.size) {
+            for (food in foods) {
+                val unresolvedAllergens = food.allergens - resolvedAllergens
+
+                if (unresolvedAllergens.size == 1) {
+                    val allergen = unresolvedAllergens.first()
+                    val foodsWithThisAllergen = foods.filter { allergen in it.allergens && it.foodId != food.foodId }
+
+                    for (ingredient in food.ingredients) {
+                        if (foodsWithThisAllergen.all { ingredient in it.ingredients }) {
+                            allergenToPossibleIngredient[allergen]!!.add(ingredient)
+                        }
                     }
                 }
             }
+
+            shakeTheTree(allergenToPossibleIngredient)
+            resolvedAllergens = allergenToPossibleIngredient.entries.filter { it.value.size == 1 }.map { it.key }.toSet()
         }
 
-        shakeTheTree(allergenToPossibleIngredient)
-
-        // Think I need to do multiple passes
-        val resolvedAllergens = allergenToPossibleIngredient.entries.filter { it.value.size == 1 }.map { it.key }
-
-        for (food in foods) {
-            val unresolvedAllergens = food.allergens - resolvedAllergens
-
-            if (unresolvedAllergens.size == 1) {
-                val allergen = unresolvedAllergens.first()
-                val foodsWithThisAllergen = foods.filter { allergen in it.allergens && it.foodId != food.foodId }
-
-                for (ingredient in food.ingredients) {
-                    if (foodsWithThisAllergen.all { ingredient in it.ingredients }) {
-                        allergenToPossibleIngredient[allergen]!!.add(ingredient)
-                    }
-                }
-            }
-        }
-
-        shakeTheTree(allergenToPossibleIngredient)
         return allergenToPossibleIngredient
     }
 
