@@ -125,7 +125,7 @@ class Puzzle20Test {
     @Test
     fun `puzzle part b`() {
         val result = puzzle.solveTwo(puzzleText)
-        assertEquals(158661360, result)
+        assertEquals(1841, result)
     }
 
     @Test
@@ -147,6 +147,39 @@ class Puzzle20Test {
     fun `example part b`() {
         val result = puzzle.solveTwo(exampleText)
         assertEquals(273, result)
+    }
+
+    @Test
+    fun `should have two sea monsters`() {
+        val text = ".####...#####..#...###..\n" +
+                "#####..#..#.#.####..#.#.\n" +
+                ".#.#...#.###...#.##.##..\n" +
+                "#.#.##.###.#.##.##.#####\n" +
+                "..##.###.####..#.####.##\n" +
+                "...#.#..##.##...#..#..##\n" +
+                "#.##.#..#.#..#..##.#.#..\n" +
+                ".###.##.....#...###.#...\n" +
+                "#.####.#.#....##.#..#.#.\n" +
+                "##...#..#....#..#...####\n" +
+                "..#.##...###..#.#####..#\n" +
+                "....#.##.#.#####....#...\n" +
+                "..##.##.###.....#.##..#.\n" +
+                "#...#...###..####....##.\n" +
+                ".#.##...#.##.#.#.###...#\n" +
+                "#.###.#..####...##..#...\n" +
+                "#.###...#.##...#.######.\n" +
+                ".###.###.#######..#####.\n" +
+                "..##.#..#..#.#######.###\n" +
+                "#.#..##.########..#..##.\n" +
+                "#.#####..#.#...##..#....\n" +
+                "#....##..#.#########..##\n" +
+                "#...#.....#..##...###.##\n" +
+                "#..###....##.#...##.##.#"
+
+        val grid = puzzle.parseGrid(text)
+
+        val result = puzzle.countSeaMonsters(grid)
+        assertEquals(2, result)
     }
 }
 
@@ -208,35 +241,22 @@ class Puzzle20 {
         }
 
         fun horizontallyFlipped(): Tile {
-            val flippedGrid = grid.entries.associate { (point, char) ->
-                val newX = 9 - point.x
-                point.copy(x = newX) to char
-            }
-
+            val flippedGrid = flipGrid(grid)
             return this.copy(grid = flippedGrid).validateGrid()
         }
 
         fun rotate90(): Tile {
-            val rotatedGrid = grid.entries.associate { (point, char) ->
-                point.rotate(90) to char
-            }
-
+            val rotatedGrid = rotateGrid(grid, 90)
             return this.copy(grid = rotatedGrid).validateGrid()
         }
 
         fun rotate180(): Tile {
-            val rotatedGrid = grid.entries.associate { (point, char) ->
-                point.rotate(180) to char
-            }
-
+            val rotatedGrid = rotateGrid(grid, 180)
             return this.copy(grid = rotatedGrid).validateGrid()
         }
 
         fun rotate270(): Tile {
-            val rotatedGrid = grid.entries.associate { (point, char) ->
-                point.rotate(270) to char
-            }
-
+            val rotatedGrid = rotateGrid(grid, 270)
             return this.copy(grid = rotatedGrid).validateGrid()
         }
 
@@ -363,22 +383,26 @@ class Puzzle20 {
             throw RuntimeException()
         }
 
-        return countSeaMonsters(finalMap)
+        allConfigurations(finalMap).forEach { transformedGrid ->
+            val monsterCount = countSeaMonsters(transformedGrid)
+
+            if (monsterCount > 0) {
+                val monsterPixels = monsterCount * 15
+                return transformedGrid.values.count { it == '#' } - monsterPixels
+            }
+        }
+
+        throw RuntimeException()
     }
 
-    private fun countSeaMonsters(finalMap: Map<Point, Char>): Int {
+    fun countSeaMonsters(finalMap: Map<Point, Char>): Int {
         val minX = finalMap.keys.minBy { it.x }!!.x
         val maxX = finalMap.keys.maxBy { it.x }!!.x
         val minY = finalMap.keys.minBy { it.y }!!.y
         val maxY = finalMap.keys.maxBy { it.y }!!.y
 
-        val seaMonster =
-            "                  # \n" +
-            "#    ##    ##    ###\n" +
-            " #  #  #  #  #  #   "
-
         fun hasSeaMonster(finalMap: Map<Point, Char>, point: Point): Boolean {
-            return listOf(
+            val characters = listOf(
                 finalMap[point],
                 finalMap[point.delta(1, 1)],
                 finalMap[point.delta(4, 1)],
@@ -396,7 +420,8 @@ class Puzzle20 {
                 finalMap[point.delta(18, 0)],
                 finalMap[point.delta(18, -1)],
                 finalMap[point.delta(19, 0)],
-            ).all { it == '#' }
+            )
+            return characters.all { it == '#' }
         }
 
         var count = 0
@@ -472,7 +497,7 @@ class Puzzle20 {
         return joinedTiles
     }
 
-    private fun parseGrid(puzzleText: String): Map<Point, Char> {
+    fun parseGrid(puzzleText: String): Map<Point, Char> {
         val lines = puzzleText.split("\n")
         val height = lines.count()
         val width = lines.first().count()
@@ -560,25 +585,6 @@ class Puzzle20 {
         return null
     }
 
-
-
-
-//    fun getCorrespondingTile(tiles: List<Tile>, originalTile: Tile, pattern: String): Tile? {
-//        val patternNumber = patternToInt(pattern)
-//
-//        for (tile in tiles) {
-//            if (tile.tileId == originalTile.tileId) {
-//                continue
-//            }
-//
-//            if (patternNumber in tile.allEdgesAsBinary()) {
-//                return tile
-//            }
-//        }
-//
-//        return null
-//    }
-
     fun countPatternOccurrences(tiles: List<Tile>, pattern: String): Int {
         val patternNumber = patternToInt(pattern)
         var count = 0
@@ -594,3 +600,32 @@ class Puzzle20 {
 }
 
 fun patternToInt(pattern: String) = pattern.replace("#", "0").replace(".", "1").toInt(2)
+
+fun allConfigurations(grid: Map<Puzzle20.Point, Char>): List<Map<Puzzle20.Point, Char>> {
+    return listOf(
+        grid,
+        rotateGrid(grid, 90),
+        rotateGrid(grid, 180),
+        rotateGrid(grid, 270),
+
+        flipGrid(grid),
+        rotateGrid(flipGrid(grid), 90),
+        rotateGrid(flipGrid(grid), 180),
+        rotateGrid(flipGrid(grid), 270),
+    )
+}
+
+private fun rotateGrid(grid: Map<Puzzle20.Point, Char>, angle: Int): Map<Puzzle20.Point, Char> {
+    return grid.entries.associate { (point, char) ->
+        point.rotate(angle) to char
+    }
+}
+
+private fun flipGrid(grid: Map<Puzzle20.Point, Char>): Map<Puzzle20.Point, Char> {
+    val maxX = grid.keys.maxBy { it.x }!!.x
+
+    return grid.entries.associate { (point, char) ->
+        val newX = maxX - point.x
+        point.copy(x = newX) to char
+    }
+}
