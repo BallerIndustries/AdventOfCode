@@ -47,9 +47,8 @@ class Puzzle21 {
     fun solveOne(puzzleText: String): Int {
         val allergenIngredients = findAllergicIngredients(puzzleText).flatMap { it.value }.toSet()
 
-        return parseFoods(puzzleText).flatMap { it.ingredients }.count { ingredient ->
-            ingredient !in allergenIngredients
-        }
+        return parseFoods(puzzleText).flatMap { it.ingredients }
+            .count { ingredient -> ingredient !in allergenIngredients }
     }
 
     private fun parseFoods(puzzleText: String): List<Food> {
@@ -74,8 +73,7 @@ class Puzzle21 {
     fun solveTwo(puzzleText: String): String {
         return findAllergicIngredients(puzzleText).entries.map { it.key to it.value.first() }
             .sortedBy { it.first }
-            .map { it.second }
-            .joinToString(",")
+            .joinToString(",") { it.second }
     }
 
     fun findNonAllergicIngredients(puzzleText: String): Set<String> {
