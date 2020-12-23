@@ -67,13 +67,11 @@ class Puzzle23 {
         override fun toString(): String {
             return value.toString()
         }
-
-
     }
 
     fun solveOne(puzzleText: String, moves: Int): String {
         val cups = puzzleText.map { it.toString().toInt() }
-        val head = Node( null, cups[0])
+        val head = Node(null, cups[0])
         head.next = head
         var tail = head
 
@@ -85,27 +83,18 @@ class Puzzle23 {
         var currentCup = head
         val max = cups.max()!!
 
-        (1 .. moves).forEach { moveNumber ->
-            val threeCups: List<Node> = listOf(currentCup.next!!, currentCup.next!!.next!!, currentCup.next!!.next!!.next!!)
+        (1..moves).forEach {
+            val threeCups = listOf(currentCup.next!!, currentCup.next!!.next!!, currentCup.next!!.next!!.next!!)
             val destinationCupNumber = getDestinationCupNumber(currentCup.value, threeCups.map { it.value }, max)
-
-            println(" --- move $moveNumber --- ")
-            println("cups: ${printCups(head, currentCup.value)}")
-            println("pick up: ${threeCups.map { it.value }}")
-            println("destination: $destinationCupNumber")
-
 
             currentCup.next = threeCups.last().next
             val destinationCup = getNode(head, destinationCupNumber)
             destinationCup.insertAfter(threeCups)
-//            println(printCups(head))
-//            println()
 
             currentCup = currentCup.next!!
         }
 
-        val result = printCups2(getNode(head, 1))
-        return result
+        return printCups(getNode(head, 1))
     }
     private fun getNode(head: Node, target: Int): Node {
         var current = head
@@ -122,22 +111,6 @@ class Puzzle23 {
     }
 
     private fun printCups(head: Node): String {
-        return printCups(head, Int.MAX_VALUE)
-    }
-
-    private fun printCups(head: Node, currentCup: Int): String {
-        val jur = mutableListOf(head.value)
-        var current = head.next!!
-
-        while (current.value != head.value) {
-            jur.add(current.value)
-            current = current.next!!
-        }
-
-        return jur.map { if (it == currentCup) "($it)" else it.toString() }.joinToString(" ")
-    }
-
-    private fun printCups2(head: Node): String {
         val jur = mutableListOf<Int>()
         var current = head.next!!
 
@@ -146,9 +119,7 @@ class Puzzle23 {
             current = current.next!!
         }
 
-
         return jur.joinToString("")
-        //return jur.map { if (it == currentCup) "($it)" else it.toString() }.joinToString(" ")
     }
 
     private fun getDestinationCupNumber(currentCup: Int, threeCups: List<Int>, max: Int): Int {
@@ -171,7 +142,7 @@ class Puzzle23 {
         val head = Node( null, cups[0])
         head.next = head
         var tail = head
-        val numberToNode = mutableMapOf<Int, Node>(cups[0] to head)
+        val numberToNode = mutableMapOf(cups[0] to head)
 
         (1 until cups.size).forEach {
             val cupNumber = cups[it]
@@ -186,42 +157,26 @@ class Puzzle23 {
             val cupNumber = currentNumber
             val node = tail.insertAfter(cupNumber)
             tail = tail.next!!
-
             numberToNode[cupNumber] = node
-
             currentNumber++
         }
 
-
-
-        println(currentNumber)
         val max = currentNumber - 1
-
         var currentCup = head
 
         (1 .. moves).forEach { moveNumber ->
             val threeCups: List<Node> = listOf(currentCup.next!!, currentCup.next!!.next!!, currentCup.next!!.next!!.next!!)
             val destinationCupNumber = getDestinationCupNumber(currentCup.value, threeCups.map { it.value }, max)
 
-            if (moveNumber % 1000 == 0) {
-                println(moveNumber)
-            }
-
             currentCup.next = threeCups.last().next
-            val destinationCup = numberToNode[destinationCupNumber] ?:
-                throw RuntimeException()
+            val destinationCup = numberToNode[destinationCupNumber] ?: throw RuntimeException()
             destinationCup.insertAfter(threeCups)
-//            println(printCups(head))
-//            println()
 
             currentCup = currentCup.next!!
         }
 
         val cupTwo = getNode(head, 1).next!!.value.toLong()
         val cupThree = getNode(head, 1).next!!.next!!.value.toLong()
-
-        println(cupTwo)
-        println(cupThree)
 
         return cupTwo * cupThree
     }
