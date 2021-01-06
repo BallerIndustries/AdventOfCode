@@ -193,13 +193,7 @@ class Puzzle24 {
     }
 
     private fun iterate3D(grid: Map<Point3D, Char>): Map<Point3D, Char> {
-        //val relevantPoints = grid.keys.flatMap { it.neighbors() }.toSet()
-
-        val relevantPoints = grid.entries.filter { it.value == '#' }.flatMap { it.key.neighbors() }
-
-        if (relevantPoints.any { it.x == 2 && it.y ==2 }) {
-            throw RuntimeException()
-        }
+        val relevantPoints = grid.entries.filter { it.value == '#' }.flatMap { it.key.neighbors() }.toSet()
 
         return relevantPoints.associate { point ->
             val adjacentBugCount = point.neighbors().count { grid[it] == '#' }
