@@ -42,7 +42,7 @@ class Puzzle24Test {
     }
 
     @Test
-    fun `3-3-0 neighbors`() {
+    fun `3-3-0 neighbors, vanilla position`() {
         val expected = setOf(
             Puzzle24.Point3D(x=3, y=2, z=0),
             Puzzle24.Point3D(x=3, y=4, z=0),
@@ -53,7 +53,7 @@ class Puzzle24Test {
     }
 
     @Test
-    fun `0-3-0 neighbors`() {
+    fun `0-3-0 neighbors, left edge`() {
         val expected = setOf(
             Puzzle24.Point3D(x=0, y=2, z=0),
             Puzzle24.Point3D(x=0, y=4, z=0),
@@ -87,9 +87,8 @@ class Puzzle24Test {
     }
 
 
-    // Center Points
     @Test
-    fun `1-2-0 neighbors`() {
+    fun `1-2-0 neighbors, left of center`() {
         val expected = setOf(
             Puzzle24.Point3D(x=0, y=2, z=0),
             Puzzle24.Point3D(x=1, y=1, z=0),
@@ -105,7 +104,7 @@ class Puzzle24Test {
     }
 
     @Test
-    fun `3-2-0 neighbors`() {
+    fun `3-2-0 neighbors, right of center`() {
         val expected = setOf(
             Puzzle24.Point3D(x=4, y=2, z=0),
             Puzzle24.Point3D(x=3, y=1, z=0),
@@ -121,7 +120,7 @@ class Puzzle24Test {
     }
 
     @Test
-    fun `2-1-0 neighbors`() {
+    fun `2-1-0 neighbors, north of center`() {
         val expected = setOf(
             Puzzle24.Point3D(x=1, y=1, z=0),
             Puzzle24.Point3D(x=3, y=1, z=0),
@@ -137,7 +136,7 @@ class Puzzle24Test {
     }
 
     @Test
-    fun `2-3-0 neighbors`() {
+    fun `2-3-0 neighbors, south of center`() {
         val expected = setOf(
             Puzzle24.Point3D(x=2, y=4, z=0),
             Puzzle24.Point3D(x=1, y=3, z=0),
