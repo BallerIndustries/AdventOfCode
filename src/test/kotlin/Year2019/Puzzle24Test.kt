@@ -40,6 +40,56 @@ class Puzzle24Test {
         val result = puzzle.solveTwo(puzzleText, 200)
         assertEquals("a", result)
     }
+
+    @Test
+    fun `3-3-0 neighbors`() {
+        val expected = setOf(
+            Puzzle24.Point3D(x=3, y=2, z=0),
+            Puzzle24.Point3D(x=3, y=4, z=0),
+            Puzzle24.Point3D(x=2, y=3, z=0),
+            Puzzle24.Point3D(x=4, y=3, z=0)
+        )
+        assertEquals(expected, Puzzle24.Point3D(3, 3, 0).neighbors())
+    }
+
+    @Test
+    fun `0-3-0 neighbors`() {
+        val expected = setOf(
+            Puzzle24.Point3D(x=0, y=2, z=0),
+            Puzzle24.Point3D(x=0, y=4, z=0),
+            Puzzle24.Point3D(x=1, y=3, z=0),
+            Puzzle24.Point3D(x=4, y=3, z=1),
+        )
+        assertEquals(expected, Puzzle24.Point3D(x=0, y=3, z=0).neighbors())
+    }
+
+    @Test
+    fun `1-3-0 neighbors`() {
+        val expected = setOf(
+            Puzzle24.Point3D(x=0, y=2, z=0),
+            Puzzle24.Point3D(x=1, y=1, z=0),
+            Puzzle24.Point3D(x=1, y=3, z=0),
+
+            // Center
+            Puzzle24.Point3D(x=0, y=0, z=-1),
+            Puzzle24.Point3D(x=0, y=1, z=-1),
+            Puzzle24.Point3D(x=0, y=2, z=-1),
+            Puzzle24.Point3D(x=0, y=3, z=-1),
+            Puzzle24.Point3D(x=0, y=4, z=-1),
+        )
+        assertEquals(expected, Puzzle24.Point3D(x=1, y=2, z=0).neighbors())
+    }
+
+    @Test
+    fun `4-0-0 neighbors`() {
+        val expected = setOf(
+            Puzzle24.Point3D(x=3, y=0, z=0),
+            Puzzle24.Point3D(x=4, y=1, z=0),
+            Puzzle24.Point3D(x=2, y=4, z=1),
+            Puzzle24.Point3D(x=0, y=2, z=1),
+        )
+        assertEquals(expected, Puzzle24.Point3D(x=4, y=0, z=0).neighbors())
+    }
 }
 
 class Puzzle24 {
@@ -113,73 +163,74 @@ class Puzzle24 {
     }
 
     data class Point3D(val x: Int, val y: Int, val z: Int) {
-        fun neighbors(): List<Point3D> {
+        fun neighbors(): Set<Point3D> {
             return up() + down() + left() + right()
         }
 
-        private fun up(): List<Point3D> {
+        private fun up(): Set<Point3D> {
             val new = this.copy(y = y - 1)
             val range: IntRange = (0 .. 4)
 
             // Center point
             if (new.x == 2 && new.y == 2) {
-                return range.map { Point3D(x = it, y = 4, z = z - 1) }
+                return range.map { Point3D(x = it, y = 4, z = z - 1) }.toSet()
             }
 
-            return zabadoo(new, range)
+            if (new.y == -1) {
+                return setOf(Point3D(x = 2, y = 4, z = z + 1))
+            }
+
+            return setOf(new)
         }
 
-        private fun down(): List<Point3D> {
+        private fun down(): Set<Point3D> {
             val new = this.copy(y = y + 1)
             val range: IntRange = (0 .. 4)
 
             // Center point
             if (new.x == 2 && new.y == 2) {
-                return range.map { Point3D(x = it, y = 0, z = z - 1) }
+                return range.map { Point3D(x = it, y = 0, z = z - 1) }.toSet()
             }
 
-            return zabadoo(new, range)
-        }
-
-        private fun zabadoo(
-            new: Point3D,
-            range: IntRange
-        ): List<Point3D> {
-            return when {
-                // Left edge
-                new.x == -1 -> range.map { Point3D(x = 4, y = it, z = z + 1) }
-                // Right edge
-                new.x == 5 -> range.map { Point3D(x = 0, y = it, z = z + 1) }
-                // Top edge
-                new.y == -1 -> range.map { Point3D(x = it, y = 4, z = z + 1) }
-                // Bottom edge
-                new.y == 5 -> range.map { Point3D(x = it, y = 0, z = z + 1) }
-                else -> listOf(new)
+            if (new.y == 5) {
+                return setOf(Point3D(x = 2, y = 0, z = z + 1))
             }
+
+            return setOf(new)
         }
 
-        private fun left(): List<Point3D> {
+        private fun left(): Set<Point3D> {
             val new = this.copy(x = x - 1)
             val range: IntRange = (0 .. 4)
 
             // Center point
             if (new.x == 2 && new.y == 2) {
-                return range.map { Point3D(x = 4, y = it, z = z - 1) }
+                return range.map { Point3D(x = 4, y = it, z = z - 1) }.toSet()
             }
 
-            return zabadoo(new, range)
+            if (new.x == -1) {
+                return setOf(Point3D(x=4, y=y, z=z+1))
+            }
+
+            return setOf(new)
         }
 
-        private fun right(): List<Point3D> {
+        private fun right(): Set<Point3D> {
             val new = this.copy(x = x + 1)
             val range: IntRange = (0 .. 4)
 
             // Center point
             if (new.x == 2 && new.y == 2) {
-                return range.map { Point3D(x = 0, y = it, z = z - 1) }
+                return range.map { Point3D(x = 0, y = it, z = z - 1) }.toSet()
             }
 
-            return zabadoo(new, range)
+            if (new.x == 5) {
+                return setOf(Point3D(x = 0, y = 2, z = z + 1))
+            }
+
+            return setOf(new)
+
+            //return zabadoo(new, range)
         }
     }
 
