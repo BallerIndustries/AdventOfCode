@@ -228,15 +228,9 @@ class Puzzle24 {
     }
 
     fun solveTwo(puzzleText: String, minutes: Int): Int {
-        var grid = parseGrid3D(puzzleText)
-
-        (0 until minutes).forEach {
-           grid = iterate3D(grid)
-        }
-
-        //debugGrid(grid)
-
-        return grid.values.count { it == '#' }
+        return (0 until minutes)
+            .fold(parseGrid3D(puzzleText)) { acc, _ -> iterate3D(acc) }
+            .values.count { it == '#'}
     }
 
     private fun debugGrid(grid: Map<Point3D, Char>) {
