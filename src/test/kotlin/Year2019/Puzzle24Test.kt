@@ -58,19 +58,43 @@ class Puzzle24Test {
             Puzzle24.Point3D(x=0, y=2, z=0),
             Puzzle24.Point3D(x=0, y=4, z=0),
             Puzzle24.Point3D(x=1, y=3, z=0),
-            Puzzle24.Point3D(x=4, y=3, z=1),
+            Puzzle24.Point3D(x=4, y=2, z=1),
         )
         assertEquals(expected, Puzzle24.Point3D(x=0, y=3, z=0).neighbors())
     }
 
     @Test
-    fun `1-3-0 neighbors`() {
+    fun `4-0-0 neighbors, top right corner`() {
+        val expected = setOf(
+            Puzzle24.Point3D(x=3, y=0, z=0),
+            Puzzle24.Point3D(x=4, y=1, z=0),
+            Puzzle24.Point3D(x=2, y=4, z=1),
+            Puzzle24.Point3D(x=0, y=2, z=1),
+        )
+        assertEquals(expected, Puzzle24.Point3D(x=4, y=0, z=0).neighbors())
+    }
+
+    @Test
+    fun `0-4-0 neighbors, bottom left corner`() {
+        val expected = setOf(
+            Puzzle24.Point3D(x=4, y=2, z=1),
+            Puzzle24.Point3D(x=2, y=0, z=1),
+
+            Puzzle24.Point3D(x=0, y=3, z=0),
+            Puzzle24.Point3D(x=1, y=4, z=0),
+        )
+        assertEquals(expected, Puzzle24.Point3D(x=0, y=4, z=0).neighbors())
+    }
+
+
+    // Center Points
+    @Test
+    fun `1-2-0 neighbors`() {
         val expected = setOf(
             Puzzle24.Point3D(x=0, y=2, z=0),
             Puzzle24.Point3D(x=1, y=1, z=0),
             Puzzle24.Point3D(x=1, y=3, z=0),
 
-            // Center
             Puzzle24.Point3D(x=0, y=0, z=-1),
             Puzzle24.Point3D(x=0, y=1, z=-1),
             Puzzle24.Point3D(x=0, y=2, z=-1),
@@ -81,14 +105,51 @@ class Puzzle24Test {
     }
 
     @Test
-    fun `4-0-0 neighbors`() {
+    fun `3-2-0 neighbors`() {
         val expected = setOf(
-            Puzzle24.Point3D(x=3, y=0, z=0),
-            Puzzle24.Point3D(x=4, y=1, z=0),
-            Puzzle24.Point3D(x=2, y=4, z=1),
-            Puzzle24.Point3D(x=0, y=2, z=1),
+            Puzzle24.Point3D(x=4, y=2, z=0),
+            Puzzle24.Point3D(x=3, y=1, z=0),
+            Puzzle24.Point3D(x=3, y=3, z=0),
+
+            Puzzle24.Point3D(x=4, y=0, z=-1),
+            Puzzle24.Point3D(x=4, y=1, z=-1),
+            Puzzle24.Point3D(x=4, y=2, z=-1),
+            Puzzle24.Point3D(x=4, y=3, z=-1),
+            Puzzle24.Point3D(x=4, y=4, z=-1),
         )
-        assertEquals(expected, Puzzle24.Point3D(x=4, y=0, z=0).neighbors())
+        assertEquals(expected, Puzzle24.Point3D(x=3, y=2, z=0).neighbors())
+    }
+
+    @Test
+    fun `2-1-0 neighbors`() {
+        val expected = setOf(
+            Puzzle24.Point3D(x=1, y=1, z=0),
+            Puzzle24.Point3D(x=3, y=1, z=0),
+            Puzzle24.Point3D(x=2, y=0, z=0),
+
+            Puzzle24.Point3D(x=0, y=0, z=-1),
+            Puzzle24.Point3D(x=1, y=0, z=-1),
+            Puzzle24.Point3D(x=2, y=0, z=-1),
+            Puzzle24.Point3D(x=3, y=0, z=-1),
+            Puzzle24.Point3D(x=4, y=0, z=-1),
+        )
+        assertEquals(expected, Puzzle24.Point3D(x=2, y=1, z=0).neighbors())
+    }
+
+    @Test
+    fun `2-3-0 neighbors`() {
+        val expected = setOf(
+            Puzzle24.Point3D(x=2, y=4, z=0),
+            Puzzle24.Point3D(x=1, y=3, z=0),
+            Puzzle24.Point3D(x=3, y=3, z=0),
+
+            Puzzle24.Point3D(x=0, y=4, z=-1),
+            Puzzle24.Point3D(x=1, y=4, z=-1),
+            Puzzle24.Point3D(x=2, y=4, z=-1),
+            Puzzle24.Point3D(x=3, y=4, z=-1),
+            Puzzle24.Point3D(x=4, y=4, z=-1),
+        )
+        assertEquals(expected, Puzzle24.Point3D(x=2, y=3, z=0).neighbors())
     }
 }
 
@@ -209,7 +270,7 @@ class Puzzle24 {
             }
 
             if (new.x == -1) {
-                return setOf(Point3D(x=4, y=y, z=z+1))
+                return setOf(Point3D(x=4, y=2, z=z+1))
             }
 
             return setOf(new)
