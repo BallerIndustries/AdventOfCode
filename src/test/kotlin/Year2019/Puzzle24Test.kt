@@ -20,12 +20,13 @@ class Puzzle24Test {
 
     @Test
     fun `example part b`() {
-        val puzzleText = ".....\n" +
-                ".....\n" +
-                ".....\n" +
-                "#....\n" +
-                ".#..."
-        val result = puzzle.solveTwo(puzzleText, 10)
+        val puzzleText =
+                "....#\n" +
+                "#..#.\n" +
+                "#..##\n" +
+                "..#..\n" +
+                "#...."
+        val result = puzzle.solveTwo(puzzleText, 1)
         assertEquals(99, result)
     }
 
@@ -160,7 +161,7 @@ class Puzzle24 {
 
         while (grid !in grids) {
             grids.add(grid)
-            grid = iterate(grid)
+            grid = iterate2D(grid)
         }
 
         val width = grid.keys.maxBy { it.x }!!.x + 1
@@ -177,7 +178,30 @@ class Puzzle24 {
         }
     }
 
-    private fun iterate(grid: Map<Point2D, Char>): Map<Point2D, Char> {
+    private fun iterate3D(grid: Map<Point3D, Char>): Map<Point3D, Char> {
+        val relevantPoints = grid.keys.flatMap { it.neighbors() }.toSet()
+
+        if (relevantPoints.any { it.x == 2 && it.y ==2 }) {
+            throw RuntimeException()
+        }
+
+        return relevantPoints.associate { point ->
+            val adjacentBugCount = point.neighbors().count { grid[it] == '#' }
+            val char = grid[point] ?: '.'
+
+            if (char == '#' && adjacentBugCount != 1) {
+                point to '.'
+            }
+            else if (char == '.' && (adjacentBugCount == 1 || adjacentBugCount == 2)) {
+                point to '#'
+            }
+            else {
+                point to char
+            }
+        }
+    }
+
+    private fun iterate2D(grid: Map<Point2D, Char>): Map<Point2D, Char> {
         return grid.entries.associate { (point, char) ->
             val adjacentBugCount = point.neighbors().count { grid[it] == '#' }
 
@@ -196,30 +220,37 @@ class Puzzle24 {
     fun solveTwo(puzzleText: String, minutes: Int): Int {
         var grid = parseGrid3D(puzzleText)
 
-        (1 .. minutes).forEach {
+        (0 until minutes).forEach {
            grid = iterate3D(grid)
         }
+
+        debugGrid(grid)
 
         return grid.values.count { it == '#' }
     }
 
-    private fun iterate3D(grid: Map<Point3D, Char>): Map<Point3D, Char> {
-        val relevantPoints = grid.keys.flatMap { it.neighbors() }.toSet()
+    private fun debugGrid(grid: Map<Point3D, Char>) {
+        val minZ = grid.keys.minBy { it.z }!!.z
+        val maxZ = grid.keys.maxBy { it.z }!!.z
 
-        return relevantPoints.associate { point ->
-            val adjacentBugCount = point.neighbors().count { grid[it] == '#' }
-            val char = grid[point] ?: '.'
+        (minZ .. maxZ).forEach { zLevel ->
+            val slice = grid.keys.filter { it.z == zLevel }
+            val minX = slice.minBy { it.x }!!.x
+            val maxX = slice.maxBy { it.x }!!.x
+            val minY = slice.minBy { it.y }!!.y
+            val maxY = slice.maxBy { it.y }!!.y
 
-            if (char == '#' && adjacentBugCount != 1) {
-                point to '.'
-            }
-            else if (char == '.' && (adjacentBugCount == 1 || adjacentBugCount == 2)) {
-                point to '#'
-            }
-            else {
-                point to char
-            }
+            val jur: String = (minY .. maxY).map { y ->
+                (minX .. maxX).map { x ->
+                    grid[Point3D(x, y, zLevel)] ?: '.'
+                }.joinToString("")
+            }.joinToString("\n")
+
+            println("Depth $zLevel")
+            println(jur)
+            println()
         }
+
     }
 
     data class Point3D(val x: Int, val y: Int, val z: Int) {
@@ -318,7 +349,9 @@ class Puzzle24 {
 
                 p to c
             }
-        }.toMap()
+        }.toMap().toMutableMap()
+
+        grid.remove(Point3D(2, 2, 0))
         return grid
     }
 
