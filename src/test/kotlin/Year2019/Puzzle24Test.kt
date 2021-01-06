@@ -26,7 +26,7 @@ class Puzzle24Test {
                 "#....\n" +
                 ".#..."
         val result = puzzle.solveTwo(puzzleText, 10)
-        assertEquals(99L, result)
+        assertEquals(99, result)
     }
 
     @Test
@@ -37,8 +37,9 @@ class Puzzle24Test {
 
     @Test
     fun `puzzle part b`() {
+        // 2019 too high
         val result = puzzle.solveTwo(puzzleText, 200)
-        assertEquals("a", result)
+        assertEquals(1000, result)
     }
 
     @Test
@@ -192,19 +193,18 @@ class Puzzle24 {
         }
     }
 
-    fun solveTwo(puzzleText: String, minutes: Int): Long {
+    fun solveTwo(puzzleText: String, minutes: Int): Int {
         var grid = parseGrid3D(puzzleText)
 
-        (0 until minutes).forEach {
+        (1 .. minutes).forEach {
            grid = iterate3D(grid)
         }
 
-        return grid.values.count { it == '#' }.toLong()
+        return grid.values.count { it == '#' }
     }
 
     private fun iterate3D(grid: Map<Point3D, Char>): Map<Point3D, Char> {
-        val relevantPoints = grid.entries.filter { it.value == '#' }
-            .map { it.key }.flatMap { it.neighbors() }.toSet()
+        val relevantPoints = grid.keys.flatMap { it.neighbors() }.toSet()
 
         return relevantPoints.associate { point ->
             val adjacentBugCount = point.neighbors().count { grid[it] == '#' }
