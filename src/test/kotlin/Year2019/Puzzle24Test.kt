@@ -26,9 +26,23 @@ class Puzzle24Test {
                 "#..##\n" +
                 "..#..\n" +
                 "#...."
-        val result = puzzle.solveTwo(puzzleText, 1)
+        val result = puzzle.solveTwo(puzzleText, 10)
         assertEquals(99, result)
     }
+
+    @Test
+    fun `angus example part b`() {
+        val puzzleText = """
+            .....
+            .....
+            ...#.
+            .....
+            .....
+""".trimIndent()
+        val result = puzzle.solveTwo(puzzleText, 1)
+        assertEquals(8, result)
+    }
+
 
     @Test
     fun `puzzle part a`() {
@@ -179,7 +193,9 @@ class Puzzle24 {
     }
 
     private fun iterate3D(grid: Map<Point3D, Char>): Map<Point3D, Char> {
-        val relevantPoints = grid.keys.flatMap { it.neighbors() }.toSet()
+        //val relevantPoints = grid.keys.flatMap { it.neighbors() }.toSet()
+
+        val relevantPoints = grid.entries.filter { it.value == '#' }.flatMap { it.key.neighbors() }
 
         if (relevantPoints.any { it.x == 2 && it.y ==2 }) {
             throw RuntimeException()
@@ -246,11 +262,12 @@ class Puzzle24 {
                 }.joinToString("")
             }.joinToString("\n")
 
-            println("Depth $zLevel")
-            println(jur)
-            println()
+            if (jur.any { it == '#' }) {
+                println("Depth $zLevel")
+                println(jur)
+                println()
+            }
         }
-
     }
 
     data class Point3D(val x: Int, val y: Int, val z: Int) {
@@ -268,7 +285,7 @@ class Puzzle24 {
             }
 
             if (new.y == -1) {
-                return setOf(Point3D(x = 2, y = 4, z = z - 1))
+                return setOf(Point3D(x = 2, y = 1, z = z - 1))
             }
 
             return setOf(new)
@@ -284,7 +301,7 @@ class Puzzle24 {
             }
 
             if (new.y == 5) {
-                return setOf(Point3D(x = 2, y = 0, z = z - 1))
+                return setOf(Point3D(x = 2, y = 3, z = z - 1))
             }
 
             return setOf(new)
@@ -300,7 +317,7 @@ class Puzzle24 {
             }
 
             if (new.x == -1) {
-                return setOf(Point3D(x=4, y=2, z=z-1))
+                return setOf(Point3D(x=1, y=2, z=z-1))
             }
 
             return setOf(new)
@@ -316,12 +333,10 @@ class Puzzle24 {
             }
 
             if (new.x == 5) {
-                return setOf(Point3D(x = 0, y = 2, z = z - 1))
+                return setOf(Point3D(x = 3, y = 2, z = z - 1))
             }
 
             return setOf(new)
-
-            //return zabadoo(new, range)
         }
     }
 
