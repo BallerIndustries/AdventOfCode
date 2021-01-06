@@ -54,7 +54,7 @@ class Puzzle24Test {
     fun `puzzle part b`() {
         // 2019 too high
         val result = puzzle.solveTwo(puzzleText, 200)
-        assertEquals(1000, result)
+        assertEquals(1983, result)
     }
 
     @Test
@@ -74,7 +74,7 @@ class Puzzle24Test {
             Puzzle24.Point3D(x=0, y=2, z=0),
             Puzzle24.Point3D(x=0, y=4, z=0),
             Puzzle24.Point3D(x=1, y=3, z=0),
-            Puzzle24.Point3D(x=4, y=2, z=-1),
+            Puzzle24.Point3D(x=1, y=2, z=-1),
         )
         assertEquals(expected, Puzzle24.Point3D(x=0, y=3, z=0).neighbors())
     }
@@ -84,8 +84,8 @@ class Puzzle24Test {
         val expected = setOf(
             Puzzle24.Point3D(x=3, y=0, z=0),
             Puzzle24.Point3D(x=4, y=1, z=0),
-            Puzzle24.Point3D(x=2, y=4, z=-1),
-            Puzzle24.Point3D(x=0, y=2, z=-1),
+            Puzzle24.Point3D(x=2, y=1, z=-1),
+            Puzzle24.Point3D(x=3, y=2, z=-1),
         )
         assertEquals(expected, Puzzle24.Point3D(x=4, y=0, z=0).neighbors())
     }
@@ -93,8 +93,8 @@ class Puzzle24Test {
     @Test
     fun `0-4-0 neighbors, bottom left corner`() {
         val expected = setOf(
-            Puzzle24.Point3D(x=4, y=2, z=-1),
-            Puzzle24.Point3D(x=2, y=0, z=-1),
+            Puzzle24.Point3D(x=1, y=2, z=-1),
+            Puzzle24.Point3D(x=2, y=3, z=-1),
 
             Puzzle24.Point3D(x=0, y=3, z=0),
             Puzzle24.Point3D(x=1, y=4, z=0),
@@ -240,7 +240,7 @@ class Puzzle24 {
            grid = iterate3D(grid)
         }
 
-        debugGrid(grid)
+        //debugGrid(grid)
 
         return grid.values.count { it == '#' }
     }
