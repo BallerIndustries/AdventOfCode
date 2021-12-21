@@ -26,8 +26,30 @@ class Puzzle18NeoTest {
     @Test
     fun `puzzle part a`() {
         val result: Int = puzzle.solveOne(puzzleText)
-        assertEquals(4140, result)
+        assertEquals(4417, result)
     }
+
+    @Test
+    fun `puzzle part b`() {
+        val result: Int = puzzle.solveTwo(puzzleText)
+        assertEquals(4796, result)
+    }
+
+    @Test
+    fun `example part b`() {
+        val result: Int = puzzle.solveTwo("[[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]\n" +
+                "[[[5,[2,8]],4],[5,[[9,9],0]]]\n" +
+                "[6,[[[6,2],[5,6]],[[7,6],[4,7]]]]\n" +
+                "[[[6,[0,7]],[0,9]],[4,[9,[9,0]]]]\n" +
+                "[[[7,[6,4]],[3,[1,3]]],[[[5,5],1],9]]\n" +
+                "[[6,[[7,3],[3,2]]],[[[3,8],[5,7]],4]]\n" +
+                "[[[[5,4],[7,7]],8],[[8,3],8]]\n" +
+                "[[9,3],[[9,9],[6,[4,9]]]]\n" +
+                "[[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]\n" +
+                "[[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]")
+        assertEquals(3993, result)
+    }
+
 
     @Test
     fun `reduce and render 1`() {
@@ -222,8 +244,6 @@ class Puzzle18Neo {
     }
 
     fun reduce(head: Node) {
-        println(render(head))
-
         while (true) {
             val heavilyNested = findHeavilyNested(head)
 
@@ -330,25 +350,6 @@ class Puzzle18Neo {
         node.value = null
         node.left = Node(nodeIdCounter++, left, null, null)
         node.right = Node(nodeIdCounter++, right, null, null)
-
-//        val leftValue = node.leftValue
-//        val rightValue = node.rightValue
-//
-//        if (leftValue != null && leftValue >= 10 && node.left == null) {
-//            node.leftValue = null
-//            val l = leftValue / 2
-//            val r = (leftValue / 2) + (leftValue % 2)
-//            node.left = Node(nodeIdCounter++, null, l, null, r)
-//        }
-//        else if (rightValue != null && rightValue >= 10 && node.right == null) {
-//            node.rightValue = null
-//            val l = rightValue / 2
-//            val r = (rightValue / 2) + (rightValue % 2)
-//            node.right = Node(nodeIdCounter++, null, l, null, r)
-//        }
-//        else {
-//            throw RuntimeException()
-//        }
     }
 
     private fun findBigNumber(node: Node): Node? {
@@ -424,13 +425,35 @@ class Puzzle18Neo {
     }
 
     fun reduceAndRender(s: String): String {
-        val node = parseLine(s);
+        val node = parseLine(s)
         reduce(node)
         return render(node)
     }
 
-//    private fun addNumber(left: Node, right: Node): Node {
-//        return Node(nodeIdCounter++, left, null, right, null)
-//    }
+    fun solveTwo(puzzleText: String): Int {
+        val nodes = puzzleText.split("\n")
+        var max = Int.MIN_VALUE
+
+        for (i in 0 until nodes.count()) {
+            for (j in 0 until nodes.count()) {
+                if (i == j) {
+                    continue
+                }
+
+                val left = parseLine(nodes[i])
+                val right = parseLine(nodes[j])
+
+                val head = addNumber(left, right)
+                reduce(head)
+                val magnitude = magnitude(head)
+
+                if (magnitude > max) {
+                    max = magnitude
+                }
+            }
+        }
+
+        return max
+    }
 }
 
