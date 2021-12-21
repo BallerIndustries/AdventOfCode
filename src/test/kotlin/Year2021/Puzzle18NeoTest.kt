@@ -9,6 +9,27 @@ class Puzzle18NeoTest {
     val puzzle = Puzzle18Neo()
 
     @Test
+    fun `example part a`() {
+        val result: Int = puzzle.solveOne("[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]\n" +
+                "[[[5,[2,8]],4],[5,[[9,9],0]]]\n" +
+                "[6,[[[6,2],[5,6]],[[7,6],[4,7]]]]\n" +
+                "[[[6,[0,7]],[0,9]],[4,[9,[9,0]]]]\n" +
+                "[[[7,[6,4]],[3,[1,3]]],[[[5,5],1],9]]\n" +
+                "[[6,[[7,3],[3,2]]],[[[3,8],[5,7]],4]]\n" +
+                "[[[[5,4],[7,7]],8],[[8,3],8]]\n" +
+                "[[9,3],[[9,9],[6,[4,9]]]]\n" +
+                "[[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]\n" +
+                "[[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]")
+        assertEquals(4140, result)
+    }
+
+    @Test
+    fun `puzzle part a`() {
+        val result: Int = puzzle.solveOne(puzzleText)
+        assertEquals(4140, result)
+    }
+
+    @Test
     fun `reduce and render 1`() {
         val result: String = puzzle.reduceAndRender("[[[[[9,8],1],2],3],4]")
         assertEquals("[[[[0,9],2],3],4]", result)
@@ -35,8 +56,8 @@ class Puzzle18NeoTest {
     }
 
     @Test
-    fun `example part a 1`() {
-        val result = puzzle.solveOne("[1,1]\n" +
+    fun `reduce example part a 1`() {
+        val result = puzzle.addAndRender("[1,1]\n" +
                 "[2,2]\n" +
                 "[3,3]\n" +
                 "[4,4]")
@@ -44,8 +65,8 @@ class Puzzle18NeoTest {
     }
 
     @Test
-    fun `example part a 2`() {
-        val result = puzzle.solveOne("[1,1]\n" +
+    fun `reduce example part a 2`() {
+        val result = puzzle.addAndRender("[1,1]\n" +
                 "[2,2]\n" +
                 "[3,3]\n" +
                 "[4,4]\n" +
@@ -54,8 +75,8 @@ class Puzzle18NeoTest {
     }
 
     @Test
-    fun `example part a 3`() {
-        val result = puzzle.solveOne("[1,1]\n" +
+    fun `reduce example part a 3`() {
+        val result = puzzle.addAndRender("[1,1]\n" +
                 "[2,2]\n" +
                 "[3,3]\n" +
                 "[4,4]\n" +
@@ -65,8 +86,8 @@ class Puzzle18NeoTest {
     }
 
     @Test
-    fun `example part a 4`() {
-        val result = puzzle.solveOne("[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]]\n" +
+    fun `reduce example part a 4`() {
+        val result = puzzle.addAndRender("[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]]\n" +
                 "[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]\n" +
                 "[[2,[[0,8],[3,4]]],[[[6,7],1],[7,[1,6]]]]\n" +
                 "[[[[2,4],7],[6,[0,5]]],[[[6,8],[2,8]],[[2,1],[4,5]]]]\n" +
@@ -167,7 +188,25 @@ class Puzzle18Neo {
 //        return render(sum)
 //    }
 
-    fun solveOne(puzzleText: String): String {
+    private fun magnitude(node: Node): Int {
+        if (node.value != null) {
+            return node.value!!
+        }
+
+        return (magnitude(node.left!!) * 3) + (magnitude(node.right!!) * 2)
+    }
+
+    fun addAndRender(puzzleText: String): String {
+        val sum = addNumbers(puzzleText)
+        return render(sum)
+    }
+
+    fun solveOne(puzzleText: String): Int {
+        val sum = addNumbers(puzzleText)
+        return magnitude(sum)
+    }
+
+    private fun addNumbers(puzzleText: String): Node {
         val nodes = puzzleText.split("\n").map { parseLine(it) }
         var sum = nodes[0]
 
@@ -175,8 +214,7 @@ class Puzzle18Neo {
             sum = addNumber(sum, nodes[index])
             reduce(sum)
         }
-
-        return render(sum)
+        return sum
     }
 
     fun addNumber(left: Node, right: Node): Node {
