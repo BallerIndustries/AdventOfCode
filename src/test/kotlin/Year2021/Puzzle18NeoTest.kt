@@ -34,14 +34,50 @@ class Puzzle18NeoTest {
         assertEquals("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]", puzzle.reduceAndRender("[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]"))
     }
 
+    @Test
+    fun `example part a 1`() {
+        val result = puzzle.solveOne("[1,1]\n" +
+                "[2,2]\n" +
+                "[3,3]\n" +
+                "[4,4]")
+        assertEquals("[[[[1,1],[2,2]],[3,3]],[4,4]]", result)
+    }
 
+    @Test
+    fun `example part a 2`() {
+        val result = puzzle.solveOne("[1,1]\n" +
+                "[2,2]\n" +
+                "[3,3]\n" +
+                "[4,4]\n" +
+                "[5,5]")
+        assertEquals("[[[[3,0],[5,3]],[4,4]],[5,5]]", result)
+    }
 
+    @Test
+    fun `example part a 3`() {
+        val result = puzzle.solveOne("[1,1]\n" +
+                "[2,2]\n" +
+                "[3,3]\n" +
+                "[4,4]\n" +
+                "[5,5]\n" +
+                "[6,6]")
+        assertEquals("[[[[5,0],[7,4]],[5,5]],[6,6]]", result)
+    }
 
-
-
-
-
-
+    @Test
+    fun `example part a 4`() {
+        val result = puzzle.solveOne("[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]]\n" +
+                "[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]\n" +
+                "[[2,[[0,8],[3,4]]],[[[6,7],1],[7,[1,6]]]]\n" +
+                "[[[[2,4],7],[6,[0,5]]],[[[6,8],[2,8]],[[2,1],[4,5]]]]\n" +
+                "[7,[5,[[3,8],[1,4]]]]\n" +
+                "[[2,[2,2]],[8,[8,1]]]\n" +
+                "[2,9]\n" +
+                "[1,[[[9,3],9],[[9,0],[0,7]]]]\n" +
+                "[[[5,[7,4]],7],1]\n" +
+                "[[[[4,2],2],6],[8,7]]")
+        assertEquals("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]", result)
+    }
 
     @Test
     fun `parse line 1`() {
@@ -131,21 +167,21 @@ class Puzzle18Neo {
 //        return render(sum)
 //    }
 
-//    fun solveOne(puzzleText: String): Int {
-//        val nodes = puzzleText.split("\n").map { parseLine(it) }
-//        var sum = nodes[0]
-//
-//        for (index in 1 until nodes.count()) {
-//            sum = addNumber(sum, nodes[index])
-//            reduce(sum)
-//            println(render(sum))
-//        }
-//
-//
-//        println()
-//
-//        TODO("Not yet implemented")
-//    }
+    fun solveOne(puzzleText: String): String {
+        val nodes = puzzleText.split("\n").map { parseLine(it) }
+        var sum = nodes[0]
+
+        for (index in 1 until nodes.count()) {
+            sum = addNumber(sum, nodes[index])
+            reduce(sum)
+        }
+
+        return render(sum)
+    }
+
+    fun addNumber(left: Node, right: Node): Node {
+        return Node(nodeIdCounter++, null, left, right)
+    }
 
     fun reduce(head: Node) {
         println(render(head))
